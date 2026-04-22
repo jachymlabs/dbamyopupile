@@ -1,0 +1,65 @@
+---
+import type { BrandStoryProps } from '../../types/sections';
+import { sanitizeHtml } from '@/lib/sanitize';
+
+interface Props extends BrandStoryProps {}
+
+const {
+  id,
+  theme = 'light',
+  paddingY = 'md',
+  headline,
+  bodyHtml,
+  imageUrl,
+  imageAlignment = 'right',
+} = Astro.props;
+
+const bgClasses: Record<string, string> = {
+  light: 'bg-white text-gray-900',
+  dark: 'bg-gray-900 text-white',
+  brand: 'bg-blue-600 text-white',
+  accent: 'bg-amber-50 text-gray-900',
+};
+
+const paddingClasses: Record<string, string> = {
+  none: '',
+  sm: 'py-8',
+  md: 'py-12',
+  lg: 'py-16',
+  xl: 'py-24',
+};
+
+const isImageLeft = imageAlignment === 'left';
+---
+
+<section
+  id={id}
+  class:list={[bgClasses[theme], paddingClasses[paddingY]]}
+>
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class:list={[
+      'grid items-center gap-8 lg:grid-cols-2 lg:gap-12',
+      imageUrl && isImageLeft && 'lg:[&>*:first-child]:order-2',
+    ]}>
+      {/* Text */}
+      <div>
+        <h2 class="mb-4 text-2xl font-bold sm:text-3xl">{headline}</h2>
+        <div class="rich-text" set:html={sanitizeHtml(bodyHtml)} />
+      </div>
+
+      {/* Image */}
+      {imageUrl && (
+        <div>
+          <img
+            src={imageUrl}
+            alt={headline}
+            width="500"
+            height="400"
+            class="w-full rounded-2xl object-cover"
+            loading="lazy"
+          />
+        </div>
+      )}
+    </div>
+  </div>
+</section>

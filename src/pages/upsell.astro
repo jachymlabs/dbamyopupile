@@ -1,0 +1,235 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { formatPrice } from '@/lib/utils';
+
+// PLACEHOLDER: Upsell page with hardcoded data — no backend logic yet.
+// TODO: Connect to Vendure API to actually add upsell product to order.
+// Disabled in production until backend logic is implemented.
+if (import.meta.env.PROD) {
+  const confirmCode = Astro.url.searchParams.get('code');
+  return Astro.redirect(confirmCode ? `/potwierdzenie?code=${confirmCode}` : '/');
+}
+
+// Require order code param — otherwise redirect home
+const code = Astro.url.searchParams.get('code');
+if (!code) {
+  return Astro.redirect('/');
+}
+
+// Placeholder upsell product data — replace per store
+const upsellProduct = {
+  name: 'Produkt uzupelniajacy',
+  description: 'Idealnie pasuje do Twojego zamowienia — klienci czesto kupuja razem.',
+  originalPrice: 79_99, // grosze
+  discountedPrice: 55_99, // 30% rabatu
+  discountPercent: 30,
+};
+
+const downsellProduct = {
+  name: 'Wersja podstawowa',
+  description: 'Mniejsza wersja w super cenie — tylko teraz.',
+  originalPrice: 49_99,
+  discountedPrice: 24_99,
+  discountPercent: 50,
+};
+
+
+const confirmationUrl = `/potwierdzenie?code=${code}`;
+---
+
+<BaseLayout title="Oferta specjalna" noindex={true}>
+  <!-- Hide default header/footer via style override — clean upsell page -->
+  <Fragment slot="head">
+    <style>
+      /* Minimal header: hide nav, cart, mobile menu — keep logo only */
+      header nav, header [data-cart], header [data-mobile-menu],
+      header button[aria-label], header .cart-badge,
+      /* Hide promo bar and footer */
+      [data-promo-bar], footer {
+        display: none !important;
+      }
+    </style>
+  </Fragment>
+
+  <div class="min-h-screen bg-gray-50 flex items-start justify-center px-4 py-8 sm:py-16">
+    <div class="w-full max-w-lg">
+
+      <!-- Countdown timer -->
+      <div class="text-center mb-6" id="timer-section">
+        <p class="text-sm text-gray-500">
+          Oferta wygasa za <span id="countdown" class="font-semibold text-gray-900">5:00</span>
+        </p>
+      </div>
+
+      <!-- PRIMARY UPSELL -->
+      <div id="upsell-primary">
+        <div class="text-center mb-8">
+          <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+            Poczekaj! Mamy specjalna oferte tylko dla Ciebie
+          </h1>
+          <p class="text-gray-600">
+            Dodaj do swojego zamowienia z {upsellProduct.discountPercent}% rabatem
+          </p>
+        </div>
+
+        <!-- Product card -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 sm:p-8 mb-6">
+          <!-- Placeholder image -->
+          <div class="w-full aspect-square max-w-[200px] mx-auto mb-6 bg-gray-200 rounded-xl flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
+            </svg>
+          </div>
+
+          <h2 class="text-xl font-bold text-gray-900 text-center mb-2">
+            {upsellProduct.name}
+          </h2>
+
+          <p class="text-sm text-gray-600 text-center mb-4">
+            {upsellProduct.description}
+          </p>
+
+          <!-- Pricing -->
+          <div class="flex items-center justify-center gap-3 mb-6">
+            <span class="text-gray-400 line-through text-sm">
+              {formatPrice(upsellProduct.originalPrice)}
+            </span>
+            <span class="text-2xl font-bold text-gray-900">
+              {formatPrice(upsellProduct.discountedPrice)}
+            </span>
+            <span class="bg-red-100 text-red-700 text-xs font-semibold px-2 py-1 rounded-full">
+              -{upsellProduct.discountPercent}%
+            </span>
+          </div>
+
+          <!-- CTA button -->
+          <!-- TODO: Wire up backend — currently redirects to confirmation without adding product -->
+          <a
+            href={`${confirmationUrl}&upsell=accepted`}
+            class="block w-full rounded-xl bg-green-600 hover:bg-green-700 text-white text-center font-semibold text-lg py-4 transition-colors min-h-[56px] flex items-center justify-center"
+          >
+            Tak, dodaj do zamowienia!
+          </a>
+
+          <p class="text-xs text-gray-500 text-center mt-3">
+            Zostanie dodane do Twojej przesylki — bez dodatkowych kosztow wysylki
+          </p>
+        </div>
+
+        <!-- Decline link — triggers downsell -->
+        <div class="text-center">
+          <button
+            type="button"
+            id="decline-upsell"
+            class="text-sm text-gray-400 hover:text-gray-600 transition-colors py-2 underline underline-offset-2"
+          >
+            Nie, dziekuje — przejdz do potwierdzenia
+          </button>
+        </div>
+      </div>
+
+      <!-- DOWNSELL (hidden by default) -->
+      <div id="upsell-downsell" class="hidden">
+        <div class="text-center mb-8">
+          <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+            Moze zainteresuje Cie mniejsza wersja?
+          </h1>
+          <p class="text-gray-600">
+            Specjalna cena — {downsellProduct.discountPercent}% taniej
+          </p>
+        </div>
+
+        <!-- Downsell product card -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 sm:p-8 mb-6">
+          <!-- Placeholder image -->
+          <div class="w-full aspect-square max-w-[160px] mx-auto mb-6 bg-gray-200 rounded-xl flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
+            </svg>
+          </div>
+
+          <h2 class="text-lg font-bold text-gray-900 text-center mb-2">
+            {downsellProduct.name}
+          </h2>
+
+          <p class="text-sm text-gray-600 text-center mb-4">
+            {downsellProduct.description}
+          </p>
+
+          <!-- Pricing -->
+          <div class="flex items-center justify-center gap-3 mb-6">
+            <span class="text-gray-400 line-through text-sm">
+              {formatPrice(downsellProduct.originalPrice)}
+            </span>
+            <span class="text-xl font-bold text-gray-900">
+              {formatPrice(downsellProduct.discountedPrice)}
+            </span>
+            <span class="bg-red-100 text-red-700 text-xs font-semibold px-2 py-1 rounded-full">
+              -{downsellProduct.discountPercent}%
+            </span>
+          </div>
+
+          <!-- CTA -->
+          <!-- TODO: Wire up backend — currently redirects to confirmation without adding product -->
+          <a
+            href={`${confirmationUrl}&upsell=downsell`}
+            class="block w-full rounded-xl bg-green-600 hover:bg-green-700 text-white text-center font-semibold text-base py-3.5 transition-colors min-h-[48px] flex items-center justify-center"
+          >
+            Tak, prosze!
+          </a>
+        </div>
+
+        <!-- Final decline -->
+        <div class="text-center">
+          <a
+            href={confirmationUrl}
+            class="text-sm text-gray-400 hover:text-gray-600 transition-colors py-2 underline underline-offset-2"
+          >
+            Nie, przejdz do potwierdzenia
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script is:inline>
+  (function() {
+    // --- Countdown timer (5 minutes) ---
+    var DURATION = 5 * 60; // seconds
+    var remaining = DURATION;
+    var countdownEl = document.getElementById('countdown');
+    var confirmUrl = new URLSearchParams(window.location.search).get('code');
+    var baseConfirm = '/potwierdzenie?code=' + encodeURIComponent(confirmUrl || '');
+
+    function pad(n) { return n < 10 ? '0' + n : n; }
+
+    function updateTimer() {
+      if (remaining <= 0) {
+        window.location.href = baseConfirm;
+        return;
+      }
+      var m = Math.floor(remaining / 60);
+      var s = remaining % 60;
+      if (countdownEl) countdownEl.textContent = m + ':' + pad(s);
+      remaining--;
+    }
+
+    updateTimer();
+    var upsellTimer = setInterval(updateTimer, 1000);
+    document.addEventListener('astro:before-swap', function() { clearInterval(upsellTimer); }, { once: true });
+
+    // --- Downsell toggle ---
+    var declineBtn = document.getElementById('decline-upsell');
+    var primarySection = document.getElementById('upsell-primary');
+    var downsellSection = document.getElementById('upsell-downsell');
+
+    if (declineBtn && primarySection && downsellSection) {
+      declineBtn.addEventListener('click', function() {
+        primarySection.classList.add('hidden');
+        downsellSection.classList.remove('hidden');
+      });
+    }
+  })();
+  </script>
+</BaseLayout>

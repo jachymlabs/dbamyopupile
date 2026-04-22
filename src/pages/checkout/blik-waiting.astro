@@ -1,0 +1,124 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+
+const code = Astro.url.searchParams.get('code') || '';
+if (!code) {
+  return Astro.redirect('/');
+}
+---
+
+<BaseLayout title="Potwierdzanie platnosci BLIK" noindex={true}>
+  <div class="min-h-[60vh] flex items-center justify-center px-4">
+    <div class="max-w-sm w-full text-center">
+      <!-- Spinner -->
+      <div id="blik-spinner" class="mx-auto mb-6 h-16 w-16 animate-spin rounded-full border-4 border-gray-200 border-t-gray-900"></div>
+
+      <h1 id="blik-title" class="text-xl font-bold text-gray-900 mb-2">
+        Potwierdz platnosc w aplikacji bankowej
+      </h1>
+      <p id="blik-subtitle" class="text-sm text-gray-500 mb-6">
+        Otwórz aplikację banku i zatwierdź płatność BLIK. Czekamy na potwierdzenie...
+      </p>
+
+      <div id="blik-timer" class="text-xs text-gray-400 mb-4">
+        Pozostalo: <span id="blik-countdown">120</span>s
+      </div>
+
+      <!-- Error state (hidden by default) -->
+      <div id="blik-error" class="hidden">
+        <p class="text-sm text-red-600 mb-4">Platnosc nie zostala potwierdzona.</p>
+        <a href="/checkout" class="inline-flex items-center justify-center rounded-lg bg-gray-900 px-6 py-3 text-sm font-medium text-white hover:bg-gray-800 transition-colors">
+          Sprobuj ponownie
+        </a>
+      </div>
+
+      <!-- Success state (hidden by default) -->
+      <div id="blik-success" class="hidden">
+        <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <p class="text-sm text-green-700 font-medium">Platnosc potwierdzona! Przekierowujemy...</p>
+      </div>
+    </div>
+  </div>
+
+  <script is:inline define:vars={{ orderCode: code }}>
+  (function() {
+    var countdown = 120;
+    var countdownEl = document.getElementById('blik-countdown');
+    var spinnerEl = document.getElementById('blik-spinner');
+    var titleEl = document.getElementById('blik-title');
+    var subtitleEl = document.getElementById('blik-subtitle');
+    var timerEl = document.getElementById('blik-timer');
+    var errorEl = document.getElementById('blik-error');
+    var successEl = document.getElementById('blik-success');
+    var done = false;
+
+    function showSuccess() {
+      done = true;
+      spinnerEl.classList.add('hidden');
+      titleEl.classList.add('hidden');
+      subtitleEl.classList.add('hidden');
+      timerEl.classList.add('hidden');
+      successEl.classList.remove('hidden');
+      setTimeout(function() {
+        window.location.href = '/potwierdzenie?code=' + orderCode;
+      }, 1500);
+    }
+
+    function showError() {
+      done = true;
+      spinnerEl.classList.add('hidden');
+      titleEl.textContent = 'Platnosc nie powiodla sie';
+      subtitleEl.classList.add('hidden');
+      timerEl.classList.add('hidden');
+      errorEl.classList.remove('hidden');
+    }
+
+    function checkStatus() {
+      if (done) return;
+      fetch('/api/payment/status?code=' + orderCode)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.status === 'COMPLETED') {
+            showSuccess();
+          } else if (data.status === 'FAILED') {
+            showError();
+          }
+          // PENDING — keep polling
+        })
+        .catch(function() {
+          // Network error — keep trying
+        });
+    }
+
+    // Poll every 2 seconds
+    var pollInterval = setInterval(function() {
+      if (done) { clearInterval(pollInterval); return; }
+      checkStatus();
+    }, 2000);
+
+    // Countdown timer
+    var timerInterval = setInterval(function() {
+      countdown--;
+      if (countdownEl) countdownEl.textContent = countdown;
+      if (countdown <= 0) {
+        clearInterval(timerInterval);
+        clearInterval(pollInterval);
+        if (!done) showError();
+      }
+    }, 1000);
+
+    // First check immediately
+    checkStatus();
+
+    // Cleanup on navigation
+    document.addEventListener('astro:before-swap', function() {
+      clearInterval(pollInterval);
+      clearInterval(timerInterval);
+    }, { once: true });
+  })();
+  </script>
+</BaseLayout>

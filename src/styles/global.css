@@ -1,0 +1,125 @@
+@import "tailwindcss";
+
+/* ============================================ */
+/* BRAND COLORS — DbamyOPupile.pl                */
+/* ============================================ */
+/* CSS custom properties (dla stylow inline / dynamicznych) */
+:root {
+  --brand-primary: #B8D8E8;    /* akcenty, ikony — pastelowy blekit */
+  --brand-secondary: #1E3A5F;  /* guziki, pogrubienia — granatowy */
+  --brand-canvas: #FAF7F2;     /* tlo strony — kremowy off-white */
+  --brand-text: #1A1A1A;       /* body, naglowki — prawie czarny */
+}
+
+/* Tailwind 4 theme tokens */
+@theme {
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --color-brand-primary: #B8D8E8;
+  --color-brand-secondary: #1E3A5F;
+  --color-brand-canvas: #FAF7F2;
+  --color-brand-text: #1A1A1A;
+}
+
+/* Base styles */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-brand-canvas text-brand-text font-sans;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  main {
+    flex: 1;
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  a {
+    @apply text-gray-900 underline-offset-2;
+  }
+
+  /* Focus visible for accessibility */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-gray-900;
+  }
+}
+
+/* Rich text content from Vendure (shortDescription, description) */
+.rich-text strong,
+.rich-text b {
+  @apply font-semibold text-gray-900;
+}
+.rich-text em,
+.rich-text i {
+  font-style: italic;
+}
+.rich-text ul {
+  @apply list-disc pl-5 my-2 space-y-1;
+}
+.rich-text ol {
+  @apply list-decimal pl-5 my-2 space-y-1;
+}
+.rich-text p {
+  @apply my-1.5;
+}
+.rich-text a {
+  @apply underline text-gray-900 hover:text-gray-600;
+}
+.rich-text h3, .rich-text h4 {
+  @apply font-semibold text-gray-900 mt-3 mb-1;
+}
+
+/* Gallery horizontal scroll — hide scrollbar */
+.gallery-scroll {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.gallery-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Overlay animations (ExitIntentOverlay, SMSCaptureOverlay) */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes smsFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes smsSlideUp {
+  from { opacity: 0; transform: translateY(100%); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (min-width: 640px) {
+  @keyframes smsSlideUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out both;
+}
+.animate-slideUp {
+  animation: slideUp 0.3s ease-out both;
+}
+.animate-smsFadeIn {
+  animation: smsFadeIn 0.2s ease-out both;
+}
+.animate-smsSlideUp {
+  animation: smsSlideUp 0.3s ease-out both;
+}

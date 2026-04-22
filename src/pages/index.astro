@@ -1,0 +1,112 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import ProductCard from '@/components/ProductCard.astro';
+import Button from '@/components/Button.astro';
+import { shopApi } from '@/lib/vendure';
+import { GET_COLLECTIONS, SEARCH_PRODUCTS } from '@/lib/queries';
+import { buildAssetUrl } from '@/lib/utils';
+import { getStoreConfig } from '@/lib/store-config';
+
+const config = await getStoreConfig(Astro.request);
+
+let collections: any[] = [];
+let products: any[] = [];
+let error: string | null = null;
+
+try {
+  const [collectionsData, productsData] = await Promise.all([
+    shopApi<any>(GET_COLLECTIONS, {}, Astro.request),
+    shopApi<any>(SEARCH_PRODUCTS, {
+      input: { take: 12, groupByProduct: true },
+    }, Astro.request),
+  ]);
+  collections = collectionsData.collections?.items ?? [];
+  products = productsData.search?.items ?? [];
+} catch (e: any) {
+  error = 'Przepraszamy, wystąpił problem z ładowaniem sklepu. Spróbuj odświeżyć stronę.';
+}
+---
+
+<BaseLayout title="Sklep internetowy" description="Odkryj nasz wybór produktów w najlepszych cenach. Szybka dostawa, bezpieczne płatności.">
+  {error && (
+    <div class="bg-red-50 border border-red-200 rounded-lg p-4 mx-4 mt-4 sm:mx-6 lg:mx-8">
+      <p class="text-sm text-red-700">
+        {error}
+      </p>
+    </div>
+  )}
+
+  <!-- Hero -->
+  <section class="bg-gray-50 py-12 sm:py-16 lg:py-20">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
+      <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 tracking-tight">
+        Witaj w sklepie
+      </h1>
+      <p class="mt-4 text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
+        Odkryj nasz wybór produktów w najlepszych cenach.
+      </p>
+      <div class="mt-6">
+        <Button href="#produkty" variant="primary" size="lg">
+          Zobacz produkty
+        </Button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Collections grid -->
+  {collections.length > 0 && (
+    <section class="py-10 sm:py-14">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-6">Kolekcje</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          {collections.map((col: any) => (
+            <a
+              href={`/kolekcje/${col.slug}`}
+              class="group relative flex items-center justify-center rounded-lg bg-gray-100 p-6 sm:p-8 text-center no-underline hover:bg-gray-200 transition-colors overflow-hidden"
+            >
+              {col.featuredAsset?.preview && (
+                <img
+                  src={buildAssetUrl(col.featuredAsset.preview, 'small')}
+                  alt=""
+                  class="absolute inset-0 h-full w-full object-cover opacity-20 group-hover:opacity-30 transition-opacity"
+                />
+              )}
+              <span class="relative text-sm sm:text-base font-semibold text-gray-900">
+                {col.name}
+              </span>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <!-- Products grid -->
+  <section id="produkty" class="py-10 sm:py-14">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-6">Produkty</h2>
+      {products.length > 0 ? (
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+          {products.map((p: any) => (
+            <ProductCard
+              name={p.productName}
+              slug={p.slug}
+              imageUrl={p.productAsset?.preview}
+              priceWithTax={p.priceWithTax}
+              currencyCode={p.currencyCode}
+            />
+          ))}
+        </div>
+      ) : (
+        <p class="text-gray-500">Brak produktów do wyświetlenia.</p>
+      )}
+    </div>
+  </section>
+
+  <script is:inline type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": config.storeName,
+    "url": Astro.url.origin,
+  })} slot="head" />
+</BaseLayout>

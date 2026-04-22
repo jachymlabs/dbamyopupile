@@ -1,0 +1,64 @@
+---
+import { shopApi } from '@/lib/vendure';
+import { GET_COLLECTIONS, GET_ACTIVE_ORDER } from '@/lib/queries';
+import CartBadge from './CartBadge';
+import type { VendureCollection } from '@/types/vendure';
+
+interface Props {
+  storeName?: string;
+  hideCart?: boolean;
+}
+const { storeName = 'Store', hideCart = false } = Astro.props;
+
+let collections: VendureCollection[] = [];
+let cartQuantity = 0;
+
+try {
+  const [collectionsData, orderData] = await Promise.all([
+    shopApi<any>(GET_COLLECTIONS, {}, Astro.request),
+    shopApi<any>(GET_ACTIVE_ORDER, {}, Astro.request),
+  ]);
+  collections = collectionsData.collections?.items ?? [];
+  cartQuantity = orderData.activeOrder?.totalQuantity ?? 0;
+} catch (e: any) {
+  if (import.meta.env.DEV) console.error('Header data fetch failed:', e?.message);
+}
+---
+
+<header class="sticky top-0 z-50 border-b border-gray-200 bg-white/95 backdrop-blur-sm">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="flex h-14 items-center justify-between gap-4">
+      <!-- Logo -->
+      <a href="/" class="text-lg font-bold text-gray-900 no-underline shrink-0">
+        {storeName}
+      </a>
+
+      <!-- Navigation -->
+      <nav class="hidden sm:flex items-center gap-6">
+        {collections.map((col: VendureCollection) => (
+          <a
+            href={`/kolekcje/${col.slug}`}
+            class="text-sm text-gray-600 hover:text-gray-900 transition-colors no-underline"
+          >
+            {col.name}
+          </a>
+        ))}
+      </nav>
+
+      <!-- Cart button (opens drawer) -->
+      {!hideCart && <CartBadge client:only="react" initialQuantity={cartQuantity} />}
+    </div>
+  </div>
+
+  <!-- Mobile nav -->
+  <nav class="sm:hidden border-t border-gray-100 px-4 py-2 flex gap-4 overflow-x-auto">
+    {collections.map((col: VendureCollection) => (
+      <a
+        href={`/kolekcje/${col.slug}`}
+        class="text-sm text-gray-600 hover:text-gray-900 whitespace-nowrap no-underline"
+      >
+        {col.name}
+      </a>
+    ))}
+  </nav>
+</header>

@@ -1,0 +1,19 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Button from '@/components/Button.astro';
+---
+
+<BaseLayout title="Nie znaleziono strony" noindex>
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 text-center">
+    <p class="text-6xl font-bold text-gray-200">404</p>
+    <h1 class="mt-4 text-2xl sm:text-3xl font-bold text-gray-900">Nie znaleziono strony</h1>
+    <p class="mt-3 text-base text-gray-500">
+      Strona, ktorej szukasz, nie istnieje lub zostala przeniesiona.
+    </p>
+    <div class="mt-8">
+      <Button href="/" variant="primary" size="lg">
+        Wroc na strone glowna
+      </Button>
+    </div>
+  </div>
+</BaseLayout>

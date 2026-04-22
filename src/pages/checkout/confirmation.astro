@@ -1,0 +1,103 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { shopApi } from '@/lib/vendure';
+
+// This page handles PayU continueUrl redirects.
+// After payment, PayU sends the customer back here.
+// We check order state and redirect to /potwierdzenie when ready.
+
+// 1. Try activeOrder (still in session before settlement)
+const data = await shopApi<any>(`{ activeOrder { id code state } }`, {}, Astro.request);
+let order = data?.activeOrder;
+
+// 2. Fallback: try orderByCode if ?code= param exists
+// Security note: orderByCode in Vendure Shop API requires active session —
+// it only returns orders belonging to the current customer/session, preventing IDOR.
+// Combined with 16-char alphanumeric codes, brute force is impractical.
+if (!order) {
+  const code = Astro.url.searchParams.get('code');
+  if (code) {
+    try {
+      const byCode = await shopApi<any>(
+        `query OrderByCode($code: String!) { orderByCode(code: $code) { id code state } }`,
+        { code },
+        Astro.request,
+      );
+      order = byCode?.orderByCode;
+    } catch {
+      // Session may not own this order — ignore
+    }
+  }
+}
+
+// 3. Last fallback: after settlement activeOrder=null and no ?code= param.
+//    Find the most recent completed order for this session via customer orders.
+if (!order) {
+  try {
+    const customerData = await shopApi<any>(
+      `{ activeCustomer { orders(options: { take: 1, sort: { createdAt: DESC } }) { items { id code state } } } }`,
+      {},
+      Astro.request,
+    );
+    const lastOrder = customerData?.activeCustomer?.orders?.items?.[0];
+    if (lastOrder) {
+      order = lastOrder;
+    }
+  } catch {
+    // Guest checkout may not have activeCustomer — ignore
+  }
+}
+
+// Redirect to confirmation if payment is done
+if (order && ['PaymentSettled', 'PaymentAuthorized', 'ArrangingAdditionalPayment'].includes(order.state)) {
+  return Astro.redirect(`/potwierdzenie?code=${order.code}`);
+}
+
+// If order is cancelled/failed — show message
+if (order && ['PaymentFailed', 'Cancelled'].includes(order.state)) {
+  return Astro.redirect('/koszyk');
+}
+
+// Otherwise: webhook hasn't arrived yet. Show waiting screen with auto-refresh.
+---
+<BaseLayout title="Potwierdzenie platnosci" noindex={true}>
+  <div class="min-h-[60vh] flex flex-col items-center justify-center px-4 text-center">
+    <div class="w-10 h-10 border-3 border-gray-300 border-t-gray-900 rounded-full animate-spin mb-6"></div>
+    <h1 class="text-xl font-semibold text-gray-900 mb-2">Przetwarzamy Twoja platnosc...</h1>
+    <p class="text-sm text-gray-500 mb-8">To moze zajac kilka sekund. Strona odswieza sie automatycznie.</p>
+    <a href="/" class="text-sm text-gray-500 underline hover:text-gray-700">Wroc do sklepu</a>
+  </div>
+
+  <script>
+    let refreshTimer: ReturnType<typeof setInterval>;
+    let attempts = 0;
+    const MAX_ATTEMPTS = 20; // 60 seconds max
+
+    async function checkStatus() {
+      try {
+        const code = new URLSearchParams(window.location.search).get('code');
+        if (!code) { window.location.reload(); return; }
+        const res = await fetch('/api/payment/status');
+        const data = await res.json();
+        if (data.status === 'COMPLETED') {
+          clearInterval(refreshTimer);
+          window.location.href = `/potwierdzenie?code=${code}`;
+          return;
+        }
+      } catch {
+        // fetch failed — will retry on next interval
+      }
+      attempts++;
+      if (attempts >= MAX_ATTEMPTS) {
+        clearInterval(refreshTimer);
+        window.location.href = '/';
+      }
+    }
+
+    refreshTimer = setInterval(checkStatus, 3000);
+
+    document.addEventListener('astro:before-swap', () => {
+      clearInterval(refreshTimer);
+    }, { once: true });
+  </script>
+</BaseLayout>

@@ -1,0 +1,272 @@
+---
+/**
+ * ProductDetail — stała karta produktu (zdjęcie, nazwa, cena, warianty, dodaj do koszyka).
+ * Identyczna na każdym produkcie, dane z Vendure.
+ * Używana w [slug].astro i w override stronach per produkt.
+ */
+import Price from '@/components/Price.astro';
+import Breadcrumbs from '@/components/Breadcrumbs.astro';
+import Button from '@/components/Button.astro';
+import TrustBadges from '@/components/TrustBadges.astro';
+import { buildAssetUrl } from '@/lib/utils';
+import { sanitizeHtml } from '@/lib/sanitize';
+import type { VendureProduct, VendureVariant, VendureAsset, VendureCollection } from '@/types/vendure';
+
+interface Props {
+  product: VendureProduct;
+}
+
+const { product } = Astro.props;
+
+const parentCollection = product?.collections?.find((c: VendureCollection) => c.parent?.id === '1');
+const mainImage = product?.featuredAsset || product?.assets?.[0];
+
+// Stock count logic
+const firstVariantStock = product?.variants?.[0]?.stockLevel;
+const stockNum = parseInt(firstVariantStock, 10);
+const showStockCritical = !isNaN(stockNum) && stockNum <= 2;
+const showStockLow = !isNaN(stockNum) && stockNum > 2 && stockNum <= 5;
+
+// Omnibus: najnizsza cena z 30 dni
+const firstVariantForOmnibus = product?.variants?.[0];
+const lowestPrice30d = firstVariantForOmnibus?.customFields?.lowestPrice30d;
+const currentPrice = firstVariantForOmnibus?.priceWithTax;
+const showOmnibus = lowestPrice30d && lowestPrice30d > 0 && currentPrice < lowestPrice30d;
+const omnibusFormatted = showOmnibus
+  ? new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(lowestPrice30d / 100)
+  : '';
+---
+
+<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
+  <Breadcrumbs items={[
+    { label: 'Strona główna', href: '/' },
+    ...(parentCollection ? [{ label: parentCollection.name, href: `/kolekcje/${parentCollection.slug}` }] : []),
+    { label: product.name },
+  ]} />
+
+  <div class="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+    {/* Image */}
+    <div class="aspect-square overflow-hidden rounded-lg bg-gray-100">
+      {mainImage ? (
+        <img
+          src={buildAssetUrl(mainImage.preview, 'large')}
+          alt={product.name}
+          width="800"
+          height="800"
+          class="h-full w-full object-cover"
+          fetchpriority="high"
+          loading="eager"
+        />
+      ) : (
+        <div class="flex h-full w-full items-center justify-center text-gray-400">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        </div>
+      )}
+    </div>
+
+    {/* Product info + form */}
+    <div>
+      <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">{product.name}</h1>
+
+      {product.variants.length === 1 ? (
+        <Price price={product.variants[0].priceWithTax} class="mt-3 text-xl" />
+      ) : (
+        <div class="mt-3">
+          <Price
+            priceRange={{
+              __typename: 'PriceRange',
+              min: Math.min(...product.variants.map((v: VendureVariant) => v.priceWithTax)),
+              max: Math.max(...product.variants.map((v: VendureVariant) => v.priceWithTax)),
+            }}
+            class="text-xl"
+          />
+        </div>
+      )}
+
+      {/* Omnibus: najnizsza cena z 30 dni */}
+      {showOmnibus && (
+        <p class="mt-1 text-xs text-gray-500">
+          Najnizsza cena z 30 dni: {omnibusFormatted}
+        </p>
+      )}
+
+      {/* Stock count */}
+      {showStockCritical && (
+        <p class="mt-2 text-sm font-semibold text-red-600">
+          Ostatnie {stockNum} {stockNum === 1 ? 'sztuka' : 'sztuki'}!
+        </p>
+      )}
+      {showStockLow && (
+        <p class="mt-2 text-sm font-medium text-amber-600">
+          Zostalo {stockNum} sztuk
+        </p>
+      )}
+
+      {/* Short description (rich text from Vendure) */}
+      {product.customFields?.shortDescription && (
+        <div
+          class="mt-4 text-sm text-gray-600 leading-relaxed rich-text"
+          set:html={sanitizeHtml(product.customFields.shortDescription)}
+        />
+      )}
+
+      <form method="POST" class="mt-6 space-y-4">
+        {/* Variant selector */}
+        {product.variants.length > 1 ? (
+          <div>
+            <label for="variantId" class="block text-sm font-medium text-gray-700 mb-1.5">
+              Wariant
+            </label>
+            <select
+              name="variantId"
+              id="variantId"
+              required
+              class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-gray-900 focus:ring-1 focus:ring-gray-900 focus:outline-none"
+            >
+              {product.variants.map((v: VendureVariant) => (
+                <option value={v.id} disabled={v.stockLevel === 'OUT_OF_STOCK'}>
+                  {v.name} — {new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(v.priceWithTax / 100)}
+                  {v.stockLevel === 'OUT_OF_STOCK' ? ' (brak)' : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : (
+          <input type="hidden" name="variantId" value={product.variants[0]?.id} />
+        )}
+
+        {/* Quantity */}
+        <div>
+          <label for="quantity" class="block text-sm font-medium text-gray-700 mb-1.5">
+            Ilosc
+          </label>
+          <input
+            type="number"
+            name="quantity"
+            id="quantity"
+            value="1"
+            min="1"
+            max="99"
+            required
+            class="w-20 rounded-lg border border-gray-300 px-3 py-2 text-sm text-center focus:border-gray-900 focus:ring-1 focus:ring-gray-900 focus:outline-none"
+          />
+        </div>
+
+        <Button type="submit" variant="primary" size="lg" class="w-full sm:w-auto" id="primary-atc-btn">
+          Dodaj do koszyka
+        </Button>
+
+        {/* Shipping urgency */}
+        <p id="shipping-urgency" class="text-sm text-green-700 font-medium mt-2"></p>
+      </form>
+
+      <TrustBadges />
+    </div>
+  </div>
+
+  {/* Additional images */}
+  {product.assets?.length > 1 && (
+    <div class="mt-8">
+      <h2 class="text-lg font-semibold text-gray-900 mb-3">Zdjecia</h2>
+
+      {/* Mobile: horizontal scroll snap */}
+      <div class="sm:hidden">
+        <div class="gallery-scroll flex gap-2 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-3 -mx-4 px-4">
+          {product.assets.map((asset: VendureAsset) => (
+            <div class="snap-center shrink-0 w-[75vw] aspect-square overflow-hidden rounded-lg bg-gray-100">
+              <img
+                src={buildAssetUrl(asset.preview, 'medium')}
+                alt={product.name}
+                width="400"
+                height="400"
+                loading="lazy"
+                class="h-full w-full object-cover"
+              />
+            </div>
+          ))}
+        </div>
+        {/* Pagination dots */}
+        <div class="flex justify-center gap-1.5 mt-2">
+          {product.assets.map((_: VendureAsset, i: number) => (
+            <span class="gallery-dot w-1.5 h-1.5 rounded-full bg-gray-300 transition-colors" data-index={i} />
+          ))}
+        </div>
+      </div>
+
+      {/* Desktop: 3-column grid */}
+      <div class="hidden sm:grid sm:grid-cols-3 gap-2">
+        {product.assets.map((asset: VendureAsset) => (
+          <div class="aspect-square overflow-hidden rounded-lg bg-gray-100">
+            <img
+              src={buildAssetUrl(asset.preview, 'small')}
+              alt={product.name}
+              width="200"
+              height="200"
+              loading="lazy"
+              class="h-full w-full object-cover"
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  )}
+</div>
+
+<script is:inline>
+(function() {
+  var scroller = document.querySelector('.gallery-scroll');
+  if (!scroller) return;
+  var dots = document.querySelectorAll('.gallery-dot');
+  if (!dots.length) return;
+  dots[0].classList.remove('bg-gray-300');
+  dots[0].classList.add('bg-gray-900');
+  scroller.addEventListener('scroll', function() {
+    var children = scroller.children;
+    var scrollLeft = scroller.scrollLeft;
+    var w = children[0].offsetWidth;
+    var idx = Math.round(scrollLeft / (w + 8));
+    dots.forEach(function(d, i) {
+      d.classList.toggle('bg-gray-900', i === idx);
+      d.classList.toggle('bg-gray-300', i !== idx);
+    });
+  });
+})();
+</script>
+
+<script is:inline>
+(function() {
+  var el = document.getElementById('shipping-urgency');
+  if (!el) return;
+
+  function update() {
+    var now = new Date();
+    // Przelicz na CET/CEST (Europe/Warsaw)
+    var waw = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Warsaw' }));
+    var day = waw.getDay(); // 0=niedziela, 6=sobota
+    var hours = waw.getHours();
+    var minutes = waw.getMinutes();
+
+    if (day === 0 || day === 6) {
+      el.textContent = 'Zamow teraz \u2014 wysylka w poniedzialek!';
+      return;
+    }
+
+    var cutoff = 14;
+    if (hours >= cutoff) {
+      el.textContent = 'Zamow teraz \u2014 wysylka jutro!';
+      return;
+    }
+
+    var remainH = cutoff - hours - 1;
+    var remainM = 60 - minutes;
+    if (remainM === 60) { remainM = 0; remainH++; }
+    el.textContent = 'Zamow w ciagu ' + remainH + ' godz. ' + remainM + ' min \u2014 wysylka dzisiaj!';
+  }
+
+  update();
+  const urgencyTimer = setInterval(update, 60000);
+  document.addEventListener('astro:before-swap', () => clearInterval(urgencyTimer), { once: true });
+})();
+</script>

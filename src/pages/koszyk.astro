@@ -1,0 +1,234 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Breadcrumbs from '@/components/Breadcrumbs.astro';
+import Price from '@/components/Price.astro';
+import Button from '@/components/Button.astro';
+import { shopApi, shopApiRaw, redirectWithToken } from '@/lib/vendure';
+import { GET_ACTIVE_ORDER } from '@/lib/queries';
+import { ADJUST_CART_ITEM, REMOVE_FROM_CART } from '@/lib/mutations';
+import type { VendureOrder } from '@/types/vendure';
+import { buildAssetUrl } from '@/lib/utils';
+
+// Handle POST actions (adjust quantity, remove)
+if (Astro.request.method === 'POST') {
+  let lastToken: string | undefined;
+  try {
+    const formData = await Astro.request.formData();
+    const action = formData.get('action') as string;
+    const lineId = formData.get('lineId') as string;
+
+    if (action === 'adjust' && lineId) {
+      const rawQty = parseInt(formData.get('quantity') as string || '1', 10);
+      const quantity = Math.max(1, Math.min(99, isNaN(rawQty) ? 1 : rawQty));
+      const result = await shopApiRaw<any>(ADJUST_CART_ITEM, { lineId, quantity }, Astro.request);
+      lastToken = result.authToken;
+    } else if (action === 'remove' && lineId) {
+      const result = await shopApiRaw<any>(REMOVE_FROM_CART, { lineId }, Astro.request);
+      lastToken = result.authToken;
+    }
+  } catch {
+    // Continue rendering — cart will show current state
+  }
+  return redirectWithToken('/koszyk', lastToken);
+}
+
+// Fetch active order
+let order: VendureOrder | null = null;
+try {
+  const data = await shopApi<any>(GET_ACTIVE_ORDER, {}, Astro.request);
+  order = data.activeOrder;
+} catch {
+  // Silently fail
+}
+
+const lines = order?.lines ?? [];
+---
+
+<BaseLayout title="Koszyk" noindex>
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
+    <Breadcrumbs items={[
+      { label: 'Strona główna', href: '/' },
+      { label: 'Koszyk' },
+    ]} />
+
+    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mt-2 mb-8">Koszyk</h1>
+
+    {lines.length > 0 ? (
+      <div class="lg:grid lg:grid-cols-12 lg:gap-8">
+        <!-- Cart items -->
+        <div class="lg:col-span-8">
+          <ul class="divide-y divide-gray-200">
+            {lines.map((line: any) => {
+              const productImage = line.productVariant?.product?.featuredAsset?.preview;
+              const productSlug = line.productVariant?.product?.slug;
+              const productName = line.productVariant?.product?.name || line.productVariant?.name;
+              const variantName = line.productVariant?.name;
+
+              return (
+                <li class="flex gap-4 py-5">
+                  {/* Image */}
+                  <div class="h-20 w-20 sm:h-24 sm:w-24 shrink-0 overflow-hidden rounded-lg bg-gray-100">
+                    {productImage ? (
+                      <a href={`/produkty/${productSlug}`}>
+                        <img
+                          src={buildAssetUrl(productImage, 'thumb')}
+                          alt={productName}
+                          width="96"
+                          height="96"
+                          class="h-full w-full object-cover"
+                        />
+                      </a>
+                    ) : (
+                      <div class="flex h-full w-full items-center justify-center text-gray-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Info */}
+                  <div class="flex flex-1 flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                    <div class="min-w-0">
+                      <a href={`/produkty/${productSlug}`} class="text-sm font-medium text-gray-900 hover:text-gray-600 no-underline line-clamp-2">
+                        {productName}
+                      </a>
+                      {variantName !== productName && (
+                        <p class="mt-0.5 text-xs text-gray-500">{variantName}</p>
+                      )}
+                      <Price price={line.unitPriceWithTax} class="mt-1 text-sm" />
+                    </div>
+
+                    <div class="flex items-center gap-3 shrink-0">
+                      {/* Quantity form */}
+                      <form method="POST" class="flex items-center gap-1.5">
+                        <input type="hidden" name="action" value="adjust" />
+                        <input type="hidden" name="lineId" value={line.id} />
+                        <label for={`qty-${line.id}`} class="sr-only">Ilosc</label>
+                        <select
+                          name="quantity"
+                          id={`qty-${line.id}`}
+                          class="rounded border border-gray-300 bg-white px-2 py-1 text-sm focus:border-gray-900 focus:ring-1 focus:ring-gray-900 focus:outline-none"
+                          onchange="this.form.submit()"
+                        >
+                          {[1,2,3,4,5,6,7,8,9,10].map((n) => (
+                            <option value={n} selected={n === line.quantity}>{n}</option>
+                          ))}
+                        </select>
+                      </form>
+
+                      {/* Line total */}
+                      <Price price={line.linePriceWithTax} class="text-sm w-20 text-right" />
+
+                      {/* Remove */}
+                      <form method="POST">
+                        <input type="hidden" name="action" value="remove" />
+                        <input type="hidden" name="lineId" value={line.id} />
+                        <button
+                          type="submit"
+                          class="text-gray-400 hover:text-red-500 transition-colors p-1"
+                          aria-label={`Usun ${productName}`}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+
+        <!-- Summary -->
+        <div class="lg:col-span-4 mt-8 lg:mt-0">
+          <div class="rounded-lg bg-gray-50 p-6 sticky top-20">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Podsumowanie</h2>
+
+            <dl class="space-y-3 text-sm">
+              <div class="flex justify-between">
+                <dt class="text-gray-500">Produkty ({order?.totalQuantity ?? 0})</dt>
+                <dd><Price price={order?.subTotalWithTax ?? 0} /></dd>
+              </div>
+
+              {(order?.shippingWithTax ?? 0) > 0 && (
+                <div class="flex justify-between">
+                  <dt class="text-gray-500">Dostawa</dt>
+                  <dd><Price price={order!.shippingWithTax} /></dd>
+                </div>
+              )}
+
+              {order?.discounts?.length && order.discounts.length > 0 && order.discounts.map((d: any) => (
+                <div class="flex justify-between text-green-600">
+                  <dt>{d.description}</dt>
+                  <dd>-<Price price={Math.abs(d.amountWithTax)} /></dd>
+                </div>
+              ))}
+
+              <div class="flex justify-between pt-3 border-t border-gray-200 text-base font-semibold">
+                <dt>Razem</dt>
+                <dd><Price price={order?.totalWithTax ?? 0} class="text-base" /></dd>
+              </div>
+            </dl>
+
+            <div class="mt-6">
+              <Button href="/checkout" variant="primary" size="lg" class="w-full">
+                Przejdz do kasy
+              </Button>
+            </div>
+
+            <div class="mt-4">
+              <Button href="/" variant="outline" size="sm" class="w-full">
+                Kontynuuj zakupy
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    ) : (
+      <div class="py-16 text-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+        </svg>
+        <h2 class="mt-4 text-lg font-medium text-gray-900">Koszyk jest pusty</h2>
+        <p class="mt-2 text-sm text-gray-500">Dodaj produkty, zeby kontynuowac zakupy.</p>
+        <div class="mt-6">
+          <Button href="/" variant="primary">
+            Przegladaj produkty
+          </Button>
+        </div>
+      </div>
+    )}
+  </div>
+  {/* Loading state: disable forms on submit, prevent double-submit */}
+  <script>
+    function initCartForms() {
+      const forms = document.querySelectorAll<HTMLFormElement>('form[method="POST"]');
+      forms.forEach((form) => {
+        form.addEventListener('submit', () => {
+          // Disable all buttons and selects in this form
+          form.querySelectorAll<HTMLButtonElement | HTMLSelectElement>('button, select').forEach((el) => {
+            el.disabled = true;
+          });
+          // If it has a submit button (remove), add visual feedback
+          const btn = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+          if (btn) {
+            btn.classList.add('opacity-50');
+          }
+        });
+      });
+
+      // Selects with onchange submit — also handle
+      const selects = document.querySelectorAll<HTMLSelectElement>('select[onchange]');
+      selects.forEach((select) => {
+        select.addEventListener('change', () => {
+          select.disabled = true;
+          select.classList.add('opacity-50');
+        });
+      });
+    }
+    initCartForms();
+  </script>
+</BaseLayout>

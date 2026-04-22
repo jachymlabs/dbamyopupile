@@ -1,0 +1,165 @@
+---
+import type { HeroProps } from '../../types/sections';
+import IconRenderer from './IconRenderer.astro';
+
+interface Props extends HeroProps {}
+
+const {
+  id,
+  theme = 'light',
+  paddingY = 'lg',
+  badge,
+  headline,
+  subheadline,
+  features,
+  rating,
+  reviewCount,
+  imageUrl,
+  mobileImageUrl,
+  primaryCtaLabel,
+  primaryCtaUrl,
+  secondaryCtaLabel,
+  secondaryCtaUrl,
+} = Astro.props;
+
+const bgClasses: Record<string, string> = {
+  light: 'bg-white text-gray-900',
+  dark: 'bg-gray-900 text-white',
+  brand: 'bg-blue-600 text-white',
+  accent: 'bg-amber-50 text-gray-900',
+};
+
+const paddingClasses: Record<string, string> = {
+  none: '',
+  sm: 'py-8',
+  md: 'py-12',
+  lg: 'py-16',
+  xl: 'py-24',
+};
+
+const stars = rating ? Array.from({ length: 5 }, (_, i) => i < Math.round(rating)) : [];
+---
+
+<section
+  id={id}
+  class:list={[bgClasses[theme], paddingClasses[paddingY]]}
+>
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    {/* Mobile image — top */}
+    {imageUrl && (
+      <div class="mb-8 lg:hidden">
+        <img
+          src={mobileImageUrl || imageUrl}
+          alt={headline}
+          width="600"
+          height="600"
+          class="w-full rounded-2xl object-cover"
+          loading="eager"
+        />
+      </div>
+    )}
+
+    <div class="grid items-center gap-8 lg:grid-cols-2 lg:gap-12">
+      {/* Text column */}
+      <div>
+        {badge && (
+          <span class:list={[
+            'mb-4 inline-block rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide',
+            theme === 'light' ? 'bg-gray-100 text-gray-700' : 'bg-white/20 text-white',
+          ]}>
+            {badge}
+          </span>
+        )}
+
+        <h1 class="text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl">
+          {headline}
+        </h1>
+
+        {subheadline && (
+          <p class:list={[
+            'mt-4 text-lg',
+            theme === 'light' ? 'text-gray-600' : 'text-white/80',
+          ]}>
+            {subheadline}
+          </p>
+        )}
+
+        {features && features.length > 0 && (
+          <ul class="mt-6 space-y-2">
+            {features.map((feature) => (
+              <li class="flex items-center gap-2">
+                <IconRenderer name="check-circle" size={20} class="shrink-0 text-green-500" />
+                <span class="text-sm">{feature}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {rating && (
+          <div class="mt-6 flex items-center gap-2">
+            <div class="flex text-amber-400">
+              {stars.map((filled) => (
+                <span class:list={['text-lg', filled ? 'text-amber-400' : 'text-gray-300']}>
+                  &#9733;
+                </span>
+              ))}
+            </div>
+            {reviewCount && (
+              <span class:list={[
+                'text-sm',
+                theme === 'light' ? 'text-gray-500' : 'text-white/70',
+              ]}>
+                {reviewCount} opinii
+              </span>
+            )}
+          </div>
+        )}
+
+        {(primaryCtaLabel || secondaryCtaLabel) && (
+          <div class="mt-8 flex flex-wrap gap-3">
+            {primaryCtaLabel && primaryCtaUrl && (
+              <a
+                href={primaryCtaUrl}
+                class:list={[
+                  'inline-flex items-center justify-center rounded-lg px-6 py-3 text-sm font-medium transition-colors',
+                  theme === 'light'
+                    ? 'bg-gray-900 text-white hover:bg-gray-800'
+                    : 'bg-white text-gray-900 hover:bg-gray-100',
+                ]}
+              >
+                {primaryCtaLabel}
+              </a>
+            )}
+            {secondaryCtaLabel && secondaryCtaUrl && (
+              <a
+                href={secondaryCtaUrl}
+                class:list={[
+                  'inline-flex items-center justify-center rounded-lg border px-6 py-3 text-sm font-medium transition-colors',
+                  theme === 'light'
+                    ? 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                    : 'border-white/30 text-white hover:bg-white/10',
+                ]}
+              >
+                {secondaryCtaLabel}
+              </a>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Desktop image column */}
+      {imageUrl && (
+        <div class="hidden lg:block">
+          <img
+            src={imageUrl}
+            alt={headline}
+            width="600"
+            height="600"
+            class="w-full rounded-2xl object-cover"
+            loading="eager"
+          />
+        </div>
+      )}
+    </div>
+  </div>
+</section>

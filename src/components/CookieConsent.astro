@@ -1,0 +1,71 @@
+---
+/**
+ * RODO Cookie Consent banner.
+ * Shows only if cookie_consent is not yet set.
+ * Sets cookie for 1 year on accept/reject.
+ */
+---
+
+<div id="cookie-consent-banner" class="fixed bottom-0 inset-x-0 z-50 hidden">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-4">
+    <div class="rounded-lg bg-white border border-gray-200 shadow-lg p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+      <p class="text-sm text-gray-700 flex-1">
+        Ta strona uzywa plikow cookies do celow analitycznych i reklamowych.
+        <a href="/polityka-prywatnosci" class="underline hover:text-gray-900">Dowiedz się więcej</a>.
+      </p>
+      <div class="flex gap-2 shrink-0">
+        <button
+          id="cookie-reject"
+          type="button"
+          class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+        >
+          Odrzucam
+        </button>
+        <button
+          id="cookie-accept"
+          type="button"
+          class="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 transition-colors"
+        >
+          Akceptuje
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script is:inline>
+  (function() {
+    var banner = document.getElementById('cookie-consent-banner');
+    if (!banner) return;
+
+    // Check if consent already given
+    var hasConsent = document.cookie.split(';').some(function(c) {
+      return c.trim().startsWith('cookie_consent=');
+    });
+
+    if (hasConsent) return;
+
+    // Show banner
+    banner.classList.remove('hidden');
+
+    function setCookie(value) {
+      var d = new Date();
+      d.setTime(d.getTime() + 365 * 24 * 60 * 60 * 1000); // 1 year
+      document.cookie = 'cookie_consent=' + value + ';expires=' + d.toUTCString() + ';path=/;SameSite=Lax;Secure';
+      banner.classList.add('hidden');
+
+      // If accepted, reload to trigger pixel load
+      if (value === 'accepted') {
+        window.location.reload();
+      }
+    }
+
+    document.getElementById('cookie-accept').addEventListener('click', function() {
+      setCookie('accepted');
+    });
+
+    document.getElementById('cookie-reject').addEventListener('click', function() {
+      setCookie('rejected');
+    });
+  })();
+</script>

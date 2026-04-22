@@ -1,0 +1,186 @@
+---
+import Price from '@/components/Price.astro';
+import { buildAssetUrl } from '@/lib/utils';
+import type { VendureOrder, VendureOrderLine, VendureDiscount } from '@/types/vendure';
+
+interface Props {
+  order: VendureOrder;
+  class?: string;
+}
+
+const { order, class: className = '' } = Astro.props;
+const lines = order?.lines ?? [];
+---
+
+<div id="order-summary" class:list={['', className]}>
+  {/* Line items */}
+  <ul class="divide-y divide-gray-100" id="order-lines">
+    {lines.map((line: VendureOrderLine) => {
+      const productImage = line.productVariant?.product?.featuredAsset?.preview;
+      const productName = line.productVariant?.product?.name || line.productVariant?.name;
+      const variantName = line.productVariant?.name;
+      const showVariant = variantName && variantName !== productName;
+
+      return (
+        <li class="flex gap-3 py-3" data-line={line.id}>
+          <div class="h-16 w-16 shrink-0 overflow-hidden rounded-md bg-gray-100">
+            {productImage ? (
+              <img
+                src={buildAssetUrl(productImage, 'thumb')}
+                alt={productName}
+                width="64"
+                height="64"
+                class="h-full w-full object-cover"
+              />
+            ) : (
+              <div class="flex h-full w-full items-center justify-center text-gray-300">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+            )}
+          </div>
+
+          <div class="flex flex-1 flex-col min-w-0">
+            <p class="text-sm font-medium text-gray-900 truncate">{productName}</p>
+            {showVariant && (
+              <p class="text-xs text-gray-500">{variantName}</p>
+            )}
+            <div class="flex items-center gap-2 mt-1">
+              <button type="button" data-adjust-qty data-line-id={line.id} data-delta="-1" class="w-6 h-6 flex items-center justify-center rounded border border-gray-300 text-gray-500 hover:bg-gray-100 text-xs leading-none">-</button>
+              <span data-qty class="text-xs text-gray-700 min-w-[1.2rem] text-center">{line.quantity}</span>
+              <button type="button" data-adjust-qty data-line-id={line.id} data-delta="1" class="w-6 h-6 flex items-center justify-center rounded border border-gray-300 text-gray-500 hover:bg-gray-100 text-xs leading-none">+</button>
+              <span class="text-xs text-gray-400 ml-1">x <Price price={line.unitPriceWithTax} class="text-xs font-normal" /></span>
+            </div>
+          </div>
+
+          <div class="shrink-0 text-right">
+            <span data-line-total class="text-sm font-semibold text-gray-900"><Price price={line.linePriceWithTax} class="text-sm" /></span>
+          </div>
+        </li>
+      );
+    })}
+  </ul>
+
+  {/* Totals */}
+  <dl class="mt-4 space-y-2 border-t border-gray-200 pt-4 text-sm">
+    <div class="flex justify-between">
+      <dt class="text-gray-500">Produkty (<span id="summary-qty">{order.totalQuantity}</span>)</dt>
+      <dd id="summary-subtotal"><Price price={order.subTotalWithTax} /></dd>
+    </div>
+
+    <div class="flex justify-between" id="summary-shipping-row">
+      <dt class="text-gray-500">Dostawa</dt>
+      <dd id="summary-shipping">{order.shippingWithTax > 0 ? <Price price={order.shippingWithTax} /> : <span class="text-green-600 font-medium">Gratis</span>}</dd>
+    </div>
+
+    {order.discounts?.length > 0 && order.discounts.map((d: VendureDiscount) => (
+      <div class="flex justify-between text-green-600">
+        <dt>{d.description}</dt>
+        <dd>-<Price price={Math.abs(d.amountWithTax)} /></dd>
+      </div>
+    ))}
+
+    <div class="flex justify-between pt-2 border-t border-gray-200 text-base font-semibold text-gray-900">
+      <dt>Razem</dt>
+      <dd id="summary-total"><Price price={order.totalWithTax} class="text-base" /></dd>
+    </div>
+  </dl>
+</div>
+
+<script>
+  function fmtPrice(grosze: number): string {
+    return (grosze / 100).toLocaleString('pl-PL', { style: 'currency', currency: 'PLN', minimumFractionDigits: 2 });
+  }
+
+  function updateSummaryFromOrder(order: any) {
+    if (!order) return;
+
+    // Update line quantities and prices
+    const lines = order.lines || [];
+    for (const line of lines) {
+      const li = document.querySelector(`[data-line="${line.id}"]`);
+      if (!li) continue;
+      const qtyEl = li.querySelector('[data-qty]');
+      const totalEl = li.querySelector('[data-line-total]');
+      if (qtyEl) qtyEl.textContent = String(line.quantity);
+      if (totalEl) totalEl.textContent = fmtPrice(line.linePriceWithTax);
+    }
+
+    // Remove lines that no longer exist
+    document.querySelectorAll('[data-line]').forEach(li => {
+      const id = li.getAttribute('data-line');
+      if (!lines.find((l: any) => String(l.id) === id)) li.remove();
+    });
+
+    // If cart is empty, redirect to home
+    if (lines.length === 0) {
+      window.location.href = '/';
+      return;
+    }
+
+    // Update totals
+    const qtyEl = document.getElementById('summary-qty');
+    const subEl = document.getElementById('summary-subtotal');
+    const shipEl = document.getElementById('summary-shipping');
+    const totalEl = document.getElementById('summary-total');
+
+    if (qtyEl) qtyEl.textContent = String(order.totalQuantity);
+    if (subEl) subEl.textContent = fmtPrice(order.subTotalWithTax);
+    if (shipEl) {
+      shipEl.innerHTML = order.shippingWithTax > 0
+        ? fmtPrice(order.shippingWithTax)
+        : '<span class="text-green-600 font-medium">Gratis</span>';
+    }
+    if (totalEl) totalEl.textContent = fmtPrice(order.totalWithTax);
+  }
+
+  function bindQtyButtons() {
+    document.querySelectorAll<HTMLButtonElement>('[data-adjust-qty]').forEach(btn => {
+      // Remove old listeners by cloning
+      const newBtn = btn.cloneNode(true) as HTMLButtonElement;
+      btn.parentNode?.replaceChild(newBtn, btn);
+
+      newBtn.addEventListener('click', async () => {
+        const lineId = newBtn.dataset.lineId;
+        const delta = parseInt(newBtn.dataset.delta || '0', 10);
+        if (!lineId) return;
+
+        newBtn.disabled = true;
+        newBtn.style.opacity = '0.5';
+
+        try {
+          const qtySpan = newBtn.parentElement?.querySelector('[data-qty]');
+          const currentQty = parseInt(qtySpan?.textContent || '1', 10);
+          const newQty = currentQty + delta;
+
+          let res;
+          if (newQty <= 0) {
+            res = await fetch('/api/cart/remove', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ lineId }),
+            });
+          } else {
+            res = await fetch('/api/cart/adjust', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ lineId, quantity: newQty }),
+            });
+          }
+
+          const data = await res.json();
+          updateSummaryFromOrder(data.order);
+        } catch {
+          // fallback: reload on error
+          window.location.reload();
+        } finally {
+          newBtn.disabled = false;
+          newBtn.style.opacity = '1';
+        }
+      });
+    });
+  }
+
+  bindQtyButtons();
+</script>

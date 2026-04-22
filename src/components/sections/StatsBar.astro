@@ -1,0 +1,46 @@
+---
+import type { StatsBarProps } from '../../types/sections';
+
+interface Props extends StatsBarProps {}
+
+const {
+  id,
+  theme = 'light',
+  paddingY = 'md',
+  stats,
+} = Astro.props;
+
+const bgClasses: Record<string, string> = {
+  light: 'bg-white text-gray-900',
+  dark: 'bg-gray-900 text-white',
+  brand: 'bg-blue-600 text-white',
+  accent: 'bg-amber-50 text-gray-900',
+};
+
+const paddingClasses: Record<string, string> = {
+  none: '',
+  sm: 'py-8',
+  md: 'py-12',
+  lg: 'py-16',
+  xl: 'py-24',
+};
+
+const labelColor = theme === 'light' || theme === 'accent' ? 'text-gray-500' : 'text-white/60';
+const dividerColor = theme === 'light' || theme === 'accent' ? 'divide-gray-200' : 'divide-white/10';
+---
+
+<section
+  id={id}
+  class:list={[bgClasses[theme], paddingClasses[paddingY]]}
+>
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class:list={['grid gap-8 text-center', `grid-cols-${Math.min(stats.length, 2)}`, `sm:grid-cols-${Math.min(stats.length, 4)}`]}>
+      {stats.map((stat) => (
+        <div>
+          <p class="text-3xl font-bold sm:text-4xl">{stat.value}</p>
+          <p class:list={['mt-1 text-sm', labelColor]}>{stat.label}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

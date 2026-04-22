@@ -1,0 +1,27 @@
+---
+import { formatPrice, formatPriceRange } from '@/lib/utils';
+
+interface Props {
+  /** Single price in cents (grosze) */
+  price?: number;
+  /** Price range from Vendure search */
+  priceRange?: { __typename: string; min?: number; max?: number; value?: number };
+  currencyCode?: string;
+  class?: string;
+}
+
+const { price, priceRange, currencyCode = 'PLN', class: className = '' } = Astro.props;
+
+let displayPrice = '';
+if (price != null) {
+  displayPrice = formatPrice(price, currencyCode);
+} else if (priceRange) {
+  displayPrice = formatPriceRange(priceRange, currencyCode);
+}
+---
+
+{displayPrice && (
+  <span class:list={['font-semibold text-gray-900', className]}>
+    {displayPrice}
+  </span>
+)}

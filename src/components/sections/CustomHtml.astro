@@ -1,0 +1,35 @@
+---
+import type { CustomHtmlProps } from '../../types/sections';
+import { sanitizeHtml } from '@/lib/sanitize';
+
+interface Props extends CustomHtmlProps {}
+
+const {
+  id,
+  theme = 'light',
+  paddingY = 'md',
+  htmlContent,
+} = Astro.props;
+
+const bgClasses: Record<string, string> = {
+  light: 'bg-white text-gray-900',
+  dark: 'bg-gray-900 text-white',
+  brand: 'bg-blue-600 text-white',
+  accent: 'bg-amber-50 text-gray-900',
+};
+
+const paddingClasses: Record<string, string> = {
+  none: '',
+  sm: 'py-8',
+  md: 'py-12',
+  lg: 'py-16',
+  xl: 'py-24',
+};
+---
+
+<section
+  id={id}
+  class:list={[bgClasses[theme], paddingClasses[paddingY]]}
+>
+  <div class="rich-text mx-auto max-w-7xl px-4 sm:px-6 lg:px-8" set:html={sanitizeHtml(htmlContent)} />
+</section>

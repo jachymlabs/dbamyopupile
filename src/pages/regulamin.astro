@@ -1,0 +1,135 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Regulamin" description="Regulamin sklepu internetowego." noindex={true}>
+  <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-10">
+    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-8">Regulamin sklepu internetowego</h1>
+
+    <div class="prose prose-sm prose-gray max-w-none">
+
+      <h2>§ 1. Postanowienia ogolne i dane kontaktowe</h2>
+      <ol>
+        <li>Sklep internetowy dzialajacy pod adresem <strong>[ADRES_WWW]</strong> prowadzony jest przez <strong>[IMIE_NAZWISKO]</strong> prowadzacego dzialalnosc gospodarcza pod firma <strong>[NAZWA_FIRMY]</strong>, z siedziba pod adresem: <strong>[ADRES_SIEDZIBY]</strong>, wpisanego do Centralnej Ewidencji i Informacji o Dzialalnosci Gospodarczej (CEIDG), NIP: <strong>[NIP]</strong>, REGON: <strong>[REGON]</strong>, zwanego dalej "Sprzedawca".</li>
+        <li>Niniejszy Regulamin okresla zasady korzystania ze Sklepu, w tym zasady zawierania Umow Sprzedazy Towarow na odleglosc, zasady dostarczania Towarow, tryb postepowania reklamacyjnego oraz zasady odstapienia od umowy, zgodnie z wymogami ustawy z dnia 30 maja 2014 r. o prawach konsumenta oraz ustawy z dnia 18 lipca 2002 r. o swiadczeniu uslug droga elektroniczna.</li>
+        <li>Kontakt ze Sprzedawca jest mozliwy za posrednictwem:
+          <ul>
+            <li>poczty e-mail: <strong>[EMAIL]</strong></li>
+            <li>telefonu: <strong>[TELEFON]</strong> (koszt polaczenia wg taryfy operatora)</li>
+            <li>pisemnie na adres: <strong>[ADRES_SIEDZIBY]</strong></li>
+          </ul>
+        </li>
+        <li>Zlozenie zamowienia w Sklepie jest rownoznaczne z zapoznaniem sie i zaakceptowaniem postanowien niniejszego Regulaminu. Regulamin jest udostepniany Kupujacemu nieprzerwanie w sposob umozliwiajacy jego pozyskanie, odtwarzanie i utrwalanie (art. 384 Kodeksu cywilnego).</li>
+      </ol>
+
+      <h2>§ 2. Definicje</h2>
+      <ul>
+        <li><strong>Konsument</strong> — osoba fizyczna dokonujaca ze Sprzedawca czynnosci prawnej niezwiazanej bezposrednio z jej dzialalnoscia gospodarcza lub zawodowa.</li>
+        <li><strong>Przedsiebiorca na prawach konsumenta</strong> — osoba fizyczna zawierajaca Umowe Sprzedazy bezposrednio zwiazana z jej dzialalnoscia gospodarcza, gdy z tresci tej umowy wynika, ze nie posiada ona dla tej osoby charakteru zawodowego.</li>
+        <li><strong>Kupujacy</strong> — kazdy podmiot skladajacy Zamowienie w Sklepie.</li>
+        <li><strong>Towar</strong> — dostepna w Sklepie rzecz ruchoma bedaca przedmiotem Umowy Sprzedazy.</li>
+        <li><strong>Zamowienie</strong> — oswiadczenie woli Kupujacego zmierzajace bezposrednio do zawarcia Umowy Sprzedazy.</li>
+      </ul>
+
+      <h2>§ 3. Wymagania techniczne</h2>
+      <p>Do korzystania ze Sklepu niezbedne sa:</p>
+      <ul>
+        <li>urzadzenie koncowe z dostepem do sieci Internet i przegladarka internetowa w aktualnej wersji,</li>
+        <li>aktywne konto poczty elektronicznej (e-mail),</li>
+        <li>wlaczona obsluga plikow cookies oraz skryptow JavaScript.</li>
+      </ul>
+
+      <h2>§ 4. Zasady skladania Zamowien i zawierania Umowy Sprzedazy</h2>
+      <ol>
+        <li>Sklep prowadzi sprzedaz detaliczna na terytorium Rzeczypospolitej Polskiej.</li>
+        <li>Kupujacy moze skladac Zamowienia jako gosc, bez koniecznosci rejestracji konta uzytkownika w Sklepie.</li>
+        <li>W celu zlozenia Zamowienia Kupujacy:
+          <ul>
+            <li>dodaje wybrany Towar do wirtualnego koszyka,</li>
+            <li>przechodzi do formularza zamowienia, podajac dane niezbedne do realizacji dostawy (imie, nazwisko, adres e-mail, numer telefonu, adres docelowy lub paczkomat),</li>
+            <li>wybiera sposob dostawy oraz metode platnosci.</li>
+          </ul>
+        </li>
+        <li>Przed finalizacja Zamowienia Kupujacy jest jednoznacznie informowany o lacznej cenie Towaru wraz z podatkami oraz kosztami dostawy.</li>
+        <li>Zawarcie Umowy Sprzedazy nastepuje w momencie klikniecia przez Kupujacego przycisku „Zamawiam z obowiazkiem zaplaty". Klikniecie tego przycisku stanowi oswiadczenie woli Kupujacego pociagajace za soba obowiazek zaplaty i skutkuje prawnym zwiazaniem postanowieniami niniejszego Regulaminu.</li>
+        <li>Po zlozeniu Zamowienia Sprzedawca niezwlocznie potwierdza jego otrzymanie i przyjecie do realizacji poprzez przeslanie Kupujacemu wiadomosci e-mail.</li>
+      </ol>
+
+      <h2>§ 5. Ceny, metody platnosci i dostawa</h2>
+      <ol>
+        <li>Wszystkie ceny w Sklepie podane sa w polskich zlotych (PLN) i stanowia ceny brutto (zawieraja podatek VAT).</li>
+        <li>Zgodnie z dyrektywa Omnibus, w przypadku ogloszenia promocji lub obnizki ceny, Sprzedawca obok informacji o obnizzonej cenie uwidacznia informacje o najnizszej cenie tego Towaru, ktora obowiazywala w okresie 30 dni przed wprowadzeniem obnizki.</li>
+        <li>Sprzedawca udostepnia nastepujace metody platnosci:
+          <ul>
+            <li>system platnosci mobilnych BLIK,</li>
+            <li>szybkie przelewy elektroniczne (PayU),</li>
+            <li>platnosc karta platnicza (Visa, Mastercard),</li>
+            <li>PayPo — platnosc odroczona (kup teraz, zaplac w ciagu 30 dni),</li>
+            <li>platnosc przy odbiorze (pobranie).</li>
+          </ul>
+        </li>
+        <li>Kupujacy zobowiazany jest do dokonania platnosci niezwlocznie po zlozeniu zamowienia. W przypadku braku zaksiegowania platnosci w terminie 24 godzin, Zamowienie zostaje automatycznie anulowane.</li>
+        <li>Dostawa Towaru realizowana jest wylacznie na terytorium Polski za posrednictwem:
+          <ul>
+            <li>sieci automatow paczkowych InPost Paczkomaty 24/7,</li>
+            <li>przesylki kurierskiej InPost.</li>
+          </ul>
+        </li>
+        <li>Koszty dostawy sa wskazywane w formularzu zamowienia przed jego finalizacja.</li>
+        <li>Czas realizacji Zamowienia (przekazania przewoznikowi) wynosi od 1 do 2 dni roboczych od momentu zaksiegowania platnosci.</li>
+      </ol>
+
+      <h2>§ 6. Prawo odstapienia od umowy (Zwroty)</h2>
+      <ol>
+        <li>Konsument oraz Przedsiebiorca na prawach konsumenta maja prawo odstapic od Umowy Sprzedazy bez podania przyczyny w terminie 14 dni od dnia objecia Towaru w posiadanie.</li>
+        <li>Aby skorzystac z prawa odstapienia, Kupujacy musi poinformowac Sprzedawce o swojej decyzji w drodze jednoznacznego oswiadczenia (pismo pocztowe na adres: <strong>[ADRES]</strong> lub poczta elektroniczna na adres: <strong>[EMAIL]</strong>).</li>
+        <li>Kupujacy moze skorzystac ze wzoru formularza odstapienia (Zalacznik nr 1), jednak nie jest to obowiazkowe.</li>
+        <li>W przypadku odstapienia Sprzedawca zwraca wszystkie otrzymane platnosci, w tym koszty dostarczenia Towaru (z wyjatkiem dodatkowych kosztow wynikajacych z wybranego sposobu dostarczenia innego niz najtanszy), niezwlocznie, nie pozniej niz 14 dni od dnia otrzymania oswiadczenia o odstapieniu. Sprzedawca moze wstrzymac sie ze zwrotem do czasu otrzymania Towaru z powrotem.</li>
+        <li>Zwrot platnosci dokonywany jest przy uzyciu takich samych sposobow platnosci, jakie zostaly uzyte w pierwotnej transakcji.</li>
+        <li>Kupujacy ponosi bezposrednie koszty zwrotu Towaru do Sprzedawcy. Towar nalezy odeslac na adres: <strong>[ADRES_ZWROTOW]</strong>.</li>
+        <li>Kupujacy odpowiada za zmniejszenie wartosci Towaru wynikajace z korzystania z niego w sposob inny niz konieczny do stwierdzenia charakteru, cech i funkcjonowania Towaru.</li>
+      </ol>
+
+      <h2>§ 7. Reklamacje (Brak zgodnosci Towaru z umowa)</h2>
+      <ol>
+        <li>Sprzedawca jest zobowiazany do dostarczenia Towaru zgodnego z Umowa Sprzedazy.</li>
+        <li>Wobec Konsumentow oraz Przedsiebiorcow na prawach konsumenta zastosowanie maja przepisy Rozdzialu 5a ustawy o prawach konsumenta regulujace odpowiedzialnosc za brak zgodnosci towaru z umowa.</li>
+        <li>Jezeli Towar jest niezgodny z umowa, Konsument moze w pierwszej kolejnosci zadac jego naprawy lub wymiany.</li>
+        <li>Konsument moze zlozyc oswiadczenie o obnizeniu ceny albo odstapieniu od umowy w sytuacjach okreslonych w ustawie.</li>
+        <li>Reklamacje nalezy zglaszac na adres e-mail: <strong>[EMAIL]</strong> lub pisemnie na adres Sprzedawcy. Zgloszenie powinno zawierac dane Kupujacego, opis niezgodnosci oraz wybrane roszczenie.</li>
+        <li>Sprzedawca ustosunkuje sie do reklamacji niezwlocznie, nie pozniej niz w terminie 14 dni od dnia jej otrzymania.</li>
+      </ol>
+
+      <h2>§ 8. Opinie o Towarach</h2>
+      <p>Jezeli Sklep udostepnia mozliwosc publikowania opinii, Sprzedawca zapewnia, ze zamieszczone opinie pochodza wylacznie od zweryfikowanych Konsumentow, ktorzy faktycznie kupili dany Towar.</p>
+
+      <h2>§ 9. Ochrona Danych Osobowych (RODO)</h2>
+      <ol>
+        <li>Administratorem danych osobowych jest Sprzedawca.</li>
+        <li>Dane osobowe Kupujacych przetwarzane sa w celu zawarcia i wykonania Umowy Sprzedazy na podstawie art. 6 ust. 1 lit. b RODO, a takze w celu wypelnienia obowiazkow prawnych na podstawie art. 6 ust. 1 lit. c RODO.</li>
+        <li>Podanie danych osobowych jest dobrowolne, jednakze jest warunkiem koniecznym do zlozenia Zamowienia.</li>
+        <li>Szczegolowe zasady przetwarzania danych osobowych zawarte sa w <a href="/polityka-prywatnosci">Polityce Prywatnosci</a>.</li>
+      </ol>
+
+      <h2>§ 10. Postanowienia koncowe</h2>
+      <ol>
+        <li>Konsument ma mozliwosc skorzystania z pozasadowych sposobow rozpatrywania reklamacji i dochodzenia roszczen.</li>
+        <li>Pod adresem <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener">https://ec.europa.eu/consumers/odr</a> Konsument ma dostep do unijnej platformy internetowego rozstrzygania sporow (Platforma ODR).</li>
+        <li>W sprawach nieuregulowanych w niniejszym Regulaminie maja zastosowanie powszechnie obowiazujace przepisy prawa polskiego.</li>
+        <li>Regulamin obowiazuje od dnia <strong>[DATA]</strong>. Sprzedawca zastrzega sobie prawo do zmian Regulaminu z waznych przyczyn. Do umow zawartych przed wejsciem w zycie zmian stosuje sie postanowienia Regulaminu obowiazujacego w chwili zlozenia Zamowienia.</li>
+      </ol>
+
+      <h2>Zalacznik nr 1 — Wzor formularza odstapienia od umowy</h2>
+      <p><em>(Formularz ten nalezy wypelnic i odeslac tylko w przypadku checi odstapienia od umowy)</em></p>
+      <p>Adresat: <strong>[NAZWA_FIRMY]</strong>, <strong>[ADRES_SIEDZIBY]</strong>, <strong>[EMAIL]</strong></p>
+      <p>Ja/My(*) niniejszym informuje/informujemy(*) o moim/naszym odstapieniu od umowy sprzedazy nastepujacych rzeczy: ________________</p>
+      <p>Data zawarcia umowy / odbioru: ________________</p>
+      <p>Imie i nazwisko konsumenta: ________________</p>
+      <p>Adres konsumenta: ________________</p>
+      <p>Podpis konsumenta (tylko jezeli formularz jest przesylany w wersji papierowej): ________________</p>
+      <p>Data: ________________</p>
+      <p>(*) Niepotrzebne skreslic.</p>
+
+    </div>
+  </div>
+</BaseLayout>

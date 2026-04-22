@@ -1,0 +1,48 @@
+---
+import type { PageSection } from '../../types/sections';
+import HeroSection from './HeroSection.astro';
+import FeaturesGrid from './FeaturesGrid.astro';
+import TestimonialQuote from './TestimonialQuote.astro';
+import BeforeAfter from './BeforeAfter.astro';
+import FaqAccordion from './FaqAccordion.astro';
+import ComparisonTable from './ComparisonTable.astro';
+import StatsBar from './StatsBar.astro';
+import ReviewsCarousel from './ReviewsCarousel.astro';
+import BrandStory from './BrandStory.astro';
+import CustomHtml from './CustomHtml.astro';
+
+interface Props {
+  sections: PageSection[];
+}
+
+const { sections } = Astro.props;
+
+const componentMap: Record<string, any> = {
+  'hero': HeroSection,
+  'features-grid': FeaturesGrid,
+  'testimonial-quote': TestimonialQuote,
+  'before-after': BeforeAfter,
+  'faq-accordion': FaqAccordion,
+  'comparison-table': ComparisonTable,
+  'stats-bar': StatsBar,
+  'reviews-carousel': ReviewsCarousel,
+  'brand-story': BrandStory,
+  'custom-html': CustomHtml,
+};
+
+const isDev = import.meta.env.DEV;
+---
+
+{sections.map((section) => {
+  const Component = componentMap[section.type];
+
+  if (!Component) {
+    return isDev ? (
+      <div class="border-2 border-red-500 bg-red-50 p-4 text-center text-sm text-red-700">
+        <strong>Unknown section type:</strong> "{section.type}"
+      </div>
+    ) : null;
+  }
+
+  return <Component {...section.props} />;
+})}

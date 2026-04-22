@@ -1,0 +1,103 @@
+---
+import type { BeforeAfterProps } from '../../types/sections';
+
+interface Props extends BeforeAfterProps {}
+
+const {
+  id,
+  theme = 'light',
+  paddingY = 'md',
+  headline,
+  beforeImageUrl,
+  beforeLabel = 'Przed',
+  afterImageUrl,
+  afterLabel = 'Po',
+  description,
+  authorName,
+  authorTitle,
+} = Astro.props;
+
+const bgClasses: Record<string, string> = {
+  light: 'bg-white text-gray-900',
+  dark: 'bg-gray-900 text-white',
+  brand: 'bg-blue-600 text-white',
+  accent: 'bg-amber-50 text-gray-900',
+};
+
+const paddingClasses: Record<string, string> = {
+  none: '',
+  sm: 'py-8',
+  md: 'py-12',
+  lg: 'py-16',
+  xl: 'py-24',
+};
+---
+
+<section
+  id={id}
+  class:list={[bgClasses[theme], paddingClasses[paddingY]]}
+>
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <h2 class="mb-10 text-center text-2xl font-bold sm:text-3xl">
+      {headline}
+    </h2>
+
+    <div class="grid gap-6 sm:grid-cols-2">
+      {/* Before */}
+      <div class="relative overflow-hidden rounded-xl shadow-md">
+        <img
+          src={beforeImageUrl}
+          alt={beforeLabel}
+          width="500"
+          height="400"
+          class="w-full object-cover"
+          loading="lazy"
+        />
+        <span class="absolute left-3 top-3 rounded-full bg-black/60 px-3 py-1 text-xs font-semibold text-white">
+          {beforeLabel}
+        </span>
+      </div>
+
+      {/* After */}
+      <div class="relative overflow-hidden rounded-xl shadow-md">
+        <img
+          src={afterImageUrl}
+          alt={afterLabel}
+          width="500"
+          height="400"
+          class="w-full object-cover"
+          loading="lazy"
+        />
+        <span class="absolute left-3 top-3 rounded-full bg-black/60 px-3 py-1 text-xs font-semibold text-white">
+          {afterLabel}
+        </span>
+      </div>
+    </div>
+
+    {(description || authorName) && (
+      <div class="mt-8 text-center">
+        {description && (
+          <p class:list={[
+            'text-sm',
+            theme === 'light' || theme === 'accent' ? 'text-gray-600' : 'text-white/70',
+          ]}>
+            {description}
+          </p>
+        )}
+        {authorName && (
+          <p class="mt-2 text-sm font-semibold">
+            {authorName}
+            {authorTitle && (
+              <span class:list={[
+                'font-normal',
+                theme === 'light' || theme === 'accent' ? 'text-gray-500' : 'text-white/60',
+              ]}>
+                {' '}&mdash; {authorTitle}
+              </span>
+            )}
+          </p>
+        )}
+      </div>
+    )}
+  </div>
+</section>

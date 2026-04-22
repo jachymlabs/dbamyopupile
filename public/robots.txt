@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /koszyk
+Disallow: /checkout
+Disallow: /potwierdzenie
+Sitemap: https://example.com/sitemap-index.xml

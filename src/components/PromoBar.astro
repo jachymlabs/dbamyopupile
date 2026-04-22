@@ -1,0 +1,98 @@
+---
+/**
+ * PromoBar — announcement bar na górze sklepu.
+ * Konfigurowalny tekst, link, kolor. Zamykalny z localStorage persistence.
+ *
+ * Użycie w BaseLayout:
+ *   <PromoBar text="Darmowa dostawa od 150 zł!" />
+ *   <PromoBar text="Kod LATO15 = -15%" href="/produkty" linkText="Kup teraz" />
+ *   <PromoBar text="Ostatnie sztuki!" theme="warning" />
+ *   <PromoBar text="" /> ← ukryty gdy pusty text
+ */
+
+interface Props {
+  text: string;
+  href?: string;
+  linkText?: string;
+  theme?: 'dark' | 'accent' | 'warning';
+  dismissible?: boolean;
+  id?: string; // unique ID for localStorage dismiss key
+}
+
+const {
+  text,
+  href,
+  linkText,
+  theme = 'dark',
+  dismissible = true,
+  id = 'promo-bar',
+} = Astro.props;
+
+if (!text) return null;
+
+const themeClasses: Record<string, string> = {
+  dark: 'bg-gray-900 text-white',
+  accent: 'bg-indigo-600 text-white',
+  warning: 'bg-amber-500 text-gray-900',
+};
+---
+
+<div
+  id={id}
+  class:list={[
+    'relative flex items-center justify-center px-4 py-2 text-center text-sm font-medium',
+    themeClasses[theme] || themeClasses.dark,
+  ]}
+  data-promo-id={id}
+>
+  <p class="flex items-center gap-2 flex-wrap justify-center">
+    <span>{text}</span>
+    {href && linkText && (
+      <a href={href} class="underline underline-offset-2 font-semibold hover:opacity-80 transition-opacity">
+        {linkText}
+      </a>
+    )}
+  </p>
+
+  {dismissible && (
+    <button
+      type="button"
+      class="absolute right-2 top-1/2 -translate-y-1/2 p-1 opacity-70 hover:opacity-100 transition-opacity min-w-[44px] min-h-[44px] flex items-center justify-center"
+      aria-label="Zamknij"
+      data-dismiss-promo={id}
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  )}
+</div>
+
+<script>
+  // Dismiss promo bar + persist in localStorage
+  document.querySelectorAll<HTMLButtonElement>('[data-dismiss-promo]').forEach((btn) => {
+    const id = btn.dataset.dismissPromo;
+    if (!id) return;
+
+    const bar = document.getElementById(id);
+    if (!bar) return;
+
+    // Check if already dismissed
+    if (localStorage.getItem(`promo-dismissed-${id}`) === '1') {
+      bar.remove();
+      return;
+    }
+
+    btn.addEventListener('click', () => {
+      bar.style.transition = 'max-height 0.3s ease, opacity 0.3s ease';
+      bar.style.maxHeight = bar.offsetHeight + 'px';
+      requestAnimationFrame(() => {
+        bar.style.maxHeight = '0';
+        bar.style.opacity = '0';
+        bar.style.overflow = 'hidden';
+      });
+      setTimeout(() => bar.remove(), 300);
+      localStorage.setItem(`promo-dismissed-${id}`, '1');
+    });
+  });
+</script>

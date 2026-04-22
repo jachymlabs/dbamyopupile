@@ -1,0 +1,1297 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Breadcrumbs from '@/components/Breadcrumbs.astro';
+import OrderSummary from '@/components/OrderSummary.astro';
+import Button from '@/components/Button.astro';
+import { shopApi, shopApiRaw, saveAuthToken, redirectWithToken } from '@/lib/vendure';
+import { formatPrice } from '@/lib/utils';
+import { GET_ACTIVE_ORDER, GET_ELIGIBLE_SHIPPING_METHODS } from '@/lib/queries';
+import {
+  SET_CUSTOMER_FOR_ORDER,
+  SET_ORDER_SHIPPING_ADDRESS,
+  SET_ORDER_SHIPPING_METHOD,
+  SET_ORDER_CUSTOM_FIELDS,
+  TRANSITION_ORDER_TO_STATE,
+  ADD_PAYMENT_TO_ORDER,
+} from '@/lib/mutations';
+import { sendCAPIEvent, buildUserData, generateEventId } from '@/lib/meta-capi';
+import { getStoreConfig } from '@/lib/store-config';
+const storeConfig = await getStoreConfig(Astro.request);
+
+// --- Types ---
+interface FormErrors {
+  [key: string]: string;
+}
+
+let errors: FormErrors = {};
+let formValues: Record<string, string> = {};
+let globalError = '';
+
+// --- POST: Process checkout ---
+// CSRF protection: SameSite=Lax cookie is primary defense.
+// Origin check as secondary layer — compare against PUBLIC_SITE_URL (not Astro.url which is localhost behind proxy).
+if (Astro.request.method === 'POST') {
+  const origin = Astro.request.headers.get('origin');
+  const allowedOrigin = (import.meta.env.PUBLIC_SITE_URL || process.env.PUBLIC_SITE_URL || '').trim();
+  if (origin) {
+    // If we have allowedOrigin configured — validate. If not — reject in production.
+    if (allowedOrigin && !origin.startsWith(allowedOrigin)) {
+      return new Response('Forbidden', { status: 403 });
+    }
+    if (!allowedOrigin && import.meta.env.PROD) {
+      console.error('CSRF check: PUBLIC_SITE_URL not set in production — rejecting POST');
+      return new Response('Forbidden', { status: 403 });
+    }
+  }
+  try {
+    const formData = await Astro.request.formData();
+
+    // Extract form values
+    formValues = {
+      email: (formData.get('email') as string || '').trim(),
+      phone: (formData.get('phone') as string || '').trim(),
+      shippingMethodId: (formData.get('shippingMethodId') as string || ''),
+      street: (formData.get('street') as string || '').trim(),
+      city: (formData.get('city') as string || '').trim(),
+      postalCode: (formData.get('postalCode') as string || '').trim(),
+      fullName: (formData.get('fullName') as string || '').trim(),
+      firstName: '',
+      lastName: '',
+      paymentMethodCode: (formData.get('paymentMethodCode') as string || ''),
+      flowType: (formData.get('flowType') as string || ''),
+      blikCode: (formData.get('blikCode') as string || '').trim(),
+      nip: (formData.get('nip') as string || '').trim(),
+      notes: (formData.get('notes') as string || '').trim(),
+      needsInvoice: formData.get('needsInvoice') ? 'on' : '',
+      acceptTerms: formData.get('acceptTerms') ? 'on' : '',
+      inpostLockerId: (formData.get('inpostLockerId') as string || '').trim(),
+    };
+
+    // --- Validation ---
+    if (formValues.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formValues.email)) {
+      errors.email = 'Ups! Wygląda na to, że adres email jest nieprawidłowy.';
+    }
+    if (!formValues.phone) {
+      errors.phone = 'Ups! Wygląda na to, że brakuje numeru telefonu.';
+    } else if (!/^[\d\s+\-()]{7,15}$/.test(formValues.phone)) {
+      errors.phone = 'Ups! Wygląda na to, że numer telefonu jest nieprawidłowy.';
+    }
+    if (!formValues.shippingMethodId) errors.shippingMethodId = 'Ups! Wygląda na to, że nie wybrano metody dostawy.';
+
+    // Determine shipping type from method name
+    let shippingType: 'paczkomat' | 'kurier' | 'pobranie' = 'kurier';
+    try {
+      const shippingData = await shopApi<any>(GET_ELIGIBLE_SHIPPING_METHODS, {}, Astro.request);
+      const methods = shippingData.eligibleShippingMethods ?? [];
+      const selectedShipping = methods.find((m: any) => m.id === formValues.shippingMethodId);
+      const name = selectedShipping?.name?.toLowerCase() || '';
+      const code = selectedShipping?.code?.toLowerCase() || '';
+      if (code.includes('pobranie') || name.includes('pobranie')) {
+        shippingType = 'pobranie';
+      } else if (code.includes('paczkomat') || name.includes('paczkomat')) {
+        shippingType = 'paczkomat';
+      }
+    } catch { /* fallback: kurier */ }
+
+    // Paczkomat: require locker selection
+    if (shippingType === 'paczkomat' && !formValues.inpostLockerId) {
+      errors.inpostLockerId = 'Ups! Wygląda na to, że nie wybrano paczkomatu.';
+    }
+
+    // Address validation only for courier methods (not paczkomat)
+    if (shippingType !== 'paczkomat') {
+      if (!formValues.street) errors.street = 'Ups! Wygląda na to, że brakuje ulicy i numeru.';
+      if (!formValues.city) errors.city = 'Ups! Wygląda na to, że brakuje miasta.';
+      if (!formValues.postalCode) {
+        errors.postalCode = 'Ups! Wygląda na to, że brakuje kodu pocztowego.';
+      } else if (!/^\d{2}-\d{3}$/.test(formValues.postalCode)) {
+        errors.postalCode = 'Ups! Kod pocztowy powinien miec format XX-XXX.';
+      }
+    }
+
+    if (!formValues.fullName) {
+      errors.fullName = 'Ups! Wygląda na to, że brakuje imienia i nazwiska.';
+    } else {
+      const nameParts = formValues.fullName.split(/\s+/);
+      formValues.firstName = nameParts[0];
+      formValues.lastName = nameParts.slice(1).join(' ') || nameParts[0];
+    }
+
+    // Payment validation — skip for COD (pobranie)
+    if (shippingType !== 'pobranie') {
+      if (!formValues.flowType) errors.paymentMethodCode = 'Ups! Wygląda na to, że nie wybrano metody płatności.';
+      if (formValues.flowType === 'BLIK' && (!formValues.blikCode || formValues.blikCode.length !== 6)) {
+        errors.blikCode = 'Ups! Wygląda na to, że kod BLIK jest nieprawidłowy (6 cyfr).';
+      }
+    }
+    // Terms accepted implicitly by placing order (no checkbox needed)
+
+    // Invoice/NIP removed — handled via BaseLinker
+
+    // If no validation errors, proceed with Vendure mutations
+    if (Object.keys(errors).length === 0) {
+      // 0. Ensure order is in AddingItems state
+      try {
+        const orderCheck = await shopApi<any>(GET_ACTIVE_ORDER, {}, Astro.request);
+        const currentState = orderCheck.activeOrder?.state;
+        if (currentState && currentState !== 'AddingItems') {
+          await shopApiRaw<any>(TRANSITION_ORDER_TO_STATE, { state: 'AddingItems' }, Astro.request);
+        }
+      } catch { /* ignore */ }
+
+      // 1. Set customer
+      // TODO [M6]: Vendure wymaga emaila. Gdy klient podaje tylko telefon, generujemy
+      // syntetyczny adres. Docelowo: dedykowany flow phone-only checkout.
+      const customerEmail = formValues.email || `tel-${formValues.phone.replace(/\D/g, '')}-${Date.now()}@phone-checkout.internal`;
+      const customerRaw = await shopApiRaw<any>(SET_CUSTOMER_FOR_ORDER, {
+        input: {
+          firstName: formValues.firstName,
+          lastName: formValues.lastName,
+          emailAddress: customerEmail,
+          phoneNumber: formValues.phone,
+        },
+      }, Astro.request);
+      saveAuthToken(customerRaw.authToken, Astro.response.headers);
+
+      const customerResponse = customerRaw.data.setCustomerForOrder;
+      if (customerResponse.__typename !== 'Order' && customerResponse.__typename !== 'AlreadyLoggedInError') {
+        globalError = 'Nie udalo sie zapisac danych kontaktowych. Sprawdz dane i sprobuj ponownie.';
+      }
+
+      if (!globalError) {
+        // 2. Set shipping address
+        const addressInput = shippingType === 'paczkomat'
+          ? {
+              fullName: `${formValues.firstName} ${formValues.lastName}`,
+              streetLine1: `Paczkomat ${formValues.inpostLockerId || ''}`,
+              city: 'InPost',
+              postalCode: '00-000',
+              countryCode: 'PL',
+              phoneNumber: formValues.phone,
+            }
+          : {
+              fullName: `${formValues.firstName} ${formValues.lastName}`,
+              streetLine1: formValues.street,
+              city: formValues.city,
+              postalCode: formValues.postalCode,
+              countryCode: 'PL',
+              phoneNumber: formValues.phone,
+            };
+
+        const addressRaw = await shopApiRaw<any>(SET_ORDER_SHIPPING_ADDRESS, {
+          input: addressInput,
+        }, Astro.request);
+
+        const addressResponse = addressRaw.data.setOrderShippingAddress;
+        if (addressResponse.__typename !== 'Order') {
+          globalError = 'Nie udało się zapisać adresu dostawy. Sprawdź dane i spróbuj ponownie.';
+        }
+
+        // 2b. Save InPost locker ID
+        if (!globalError && shippingType === 'paczkomat' && formValues.inpostLockerId) {
+          await shopApiRaw<any>(SET_ORDER_CUSTOM_FIELDS, {
+            input: {
+              customFields: {
+                inpostLockerId: formValues.inpostLockerId,
+              },
+            },
+          }, Astro.request);
+        }
+      }
+
+      if (!globalError) {
+        // 3. Set shipping method
+        const shippingRaw = await shopApiRaw<any>(SET_ORDER_SHIPPING_METHOD, {
+          shippingMethodId: [formValues.shippingMethodId],
+        }, Astro.request);
+
+        const shippingResponse = shippingRaw.data.setOrderShippingMethod;
+        if (shippingResponse.__typename !== 'Order') {
+          globalError = `Nie udało się ustawić metody dostawy: ${shippingResponse?.message || shippingResponse?.__typename || 'unknown'}`;
+        }
+      }
+
+      if (!globalError) {
+        // 4. Transition to ArrangingPayment
+        const transitionRaw = await shopApiRaw<any>(TRANSITION_ORDER_TO_STATE, {
+          state: 'ArrangingPayment',
+        }, Astro.request);
+
+        const transitionResponse = transitionRaw.data.transitionOrderToState;
+        if (transitionResponse.__typename === 'OrderStateTransitionError') {
+          globalError = 'Nie udało się przejść do płatności. Spróbuj ponownie.';
+        }
+      }
+
+      // Save UTM data from URL/cookies to order
+      if (!globalError) {
+        try {
+          const url = Astro.url;
+          const utmParams: Record<string, string> = {};
+          ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'].forEach(key => {
+            const val = url.searchParams.get(key);
+            if (val) utmParams[key] = val;
+          });
+          // Also check cookies for stored UTM (set by landing page JS)
+          const utmCookie = Astro.request.headers.get('cookie')?.match(/utm_data=([^;]+)/)?.[1];
+          if (utmCookie) {
+            try { Object.assign(utmParams, JSON.parse(decodeURIComponent(utmCookie))); } catch {}
+          }
+          if (Object.keys(utmParams).length > 0) {
+            await shopApiRaw<any>(SET_ORDER_CUSTOM_FIELDS, {
+              input: { customFields: { utmData: JSON.stringify(utmParams) } },
+            }, Astro.request);
+          }
+        } catch {
+          // UTM save is best-effort — don't block checkout
+        }
+      }
+
+      if (!globalError) {
+        // 5. Add payment
+        const paymentMethod = shippingType === 'pobranie' ? 'cod' : 'payu';
+        const paymentMetadata: Record<string, string> = {};
+
+        if (shippingType !== 'pobranie') {
+          paymentMetadata.flowType = formValues.flowType;
+          paymentMetadata.email = formValues.email || customerEmail;
+          paymentMetadata.phone = formValues.phone;
+          paymentMetadata.firstName = formValues.firstName;
+          paymentMetadata.lastName = formValues.lastName;
+          paymentMetadata.customerIp = Astro.request.headers.get('x-forwarded-for')?.split(',')[0] || '';
+          if (formValues.flowType === 'BLIK' && formValues.blikCode) {
+            paymentMetadata.blikCode = formValues.blikCode;
+          }
+        }
+
+        const paymentRaw = await shopApiRaw<any>(ADD_PAYMENT_TO_ORDER, {
+          input: {
+            method: paymentMethod,
+            metadata: paymentMetadata,
+          },
+        }, Astro.request);
+
+        const paymentResponse = paymentRaw.data.addPaymentToOrder;
+        if (paymentResponse.__typename !== 'Order') {
+          globalError = 'Nie udało się przetworzyć płatności. Spróbuj ponownie lub wybierz inną metodę.';
+        } else {
+          // CAPI: Purchase event — only send if user consented to tracking (RODO)
+          const purchaseCookies = Astro.request.headers.get('cookie') || '';
+          const purchaseHasConsent = purchaseCookies.includes('cookie_consent=accepted');
+          if (purchaseHasConsent) {
+            const purchaseUserData = await buildUserData(Astro.request, {
+              email: formValues.email,
+              phone: formValues.phone,
+              firstName: formValues.firstName,
+              lastName: formValues.lastName,
+              city: formValues.city,
+              postalCode: formValues.postalCode,
+            });
+
+            sendCAPIEvent({
+              event_name: 'Purchase',
+              event_time: Math.floor(Date.now() / 1000),
+              event_id: generateEventId(),
+              event_source_url: Astro.url.href,
+              action_source: 'website',
+              user_data: purchaseUserData,
+              custom_data: {
+                value: paymentResponse.totalWithTax / 100,
+                currency: 'PLN',
+                order_id: paymentResponse.code,
+                num_items: paymentResponse.totalQuantity,
+                content_type: 'product',
+                content_ids: paymentResponse.lines?.map((l: any) => l.productVariant?.sku).filter(Boolean) || [],
+                contents: paymentResponse.lines?.map((l: any) => ({
+                  id: l.productVariant?.sku,
+                  quantity: l.quantity,
+                  item_price: l.unitPriceWithTax / 100,
+                })) || [],
+              },
+            }, storeConfig.metaDatasetId);
+          }
+
+          // Check for PayU redirect URI (REDIRECT/PAYPO flows)
+          if (shippingType !== 'pobranie') {
+            // Take the LAST payment (order may have earlier failed attempts)
+            const payments = paymentResponse.payments ?? [];
+            const lastPayment = payments[payments.length - 1];
+            const paymentMeta = lastPayment?.metadata;
+            const redirectUri = paymentMeta?.public?.redirectUri;
+            if (redirectUri && (formValues.flowType === 'REDIRECT' || formValues.flowType === 'PAYPO')) {
+              // Validate redirect URL — only allow PayU domains
+              const allowedRedirectDomains = ['secure.payu.com', 'merch-prod.snd.payu.com', 'secure.snd.payu.com'];
+              let redirectBlocked = false;
+              try {
+                const redirectUrl = new URL(redirectUri);
+                if (!allowedRedirectDomains.some(d => redirectUrl.hostname.endsWith(d))) {
+                  console.error('Blocked redirect to untrusted domain:', redirectUrl.hostname);
+                  globalError = 'Wystąpił błąd płatności. Spróbuj ponownie.';
+                  redirectBlocked = true;
+                }
+              } catch {
+                globalError = 'Nieprawidłowy adres płatności.';
+                redirectBlocked = true;
+              }
+              if (!redirectBlocked) {
+                return redirectWithToken(redirectUri, paymentRaw.authToken);
+              }
+            }
+          }
+
+          // BLIK → wait for bank confirmation before proceeding
+          if (formValues.flowType === 'BLIK') {
+            return redirectWithToken(`/checkout/blik-waiting?code=${paymentResponse.code}`, customerRaw.authToken);
+          }
+
+          // COD or fallback — redirect to upsell interstitial (then confirmation)
+          return redirectWithToken(`/upsell?code=${paymentResponse.code}`, customerRaw.authToken);
+        }
+      }
+    }
+  } catch (err: any) {
+    globalError = 'Wystąpił nieoczekiwany błąd. Spróbuj ponownie.';
+    console.error('Checkout error:', err instanceof Error ? err.message : 'Unknown error');
+    // Try to reset order state on failure
+    try {
+      await shopApi<any>(`mutation { transitionOrderToState(state: "AddingItems") { __typename ... on Order { id state } ... on OrderStateTransitionError { errorCode } } }`, {}, Astro.request);
+    } catch {
+      // Best effort — ignore if reset fails
+    }
+  }
+}
+
+// --- GET: Fetch data (parallel) ---
+let order: any = null;
+let shippingMethods: any[] = [];
+let inpostToken = '';
+
+try {
+  const [orderData, shippingData, channelData] = await Promise.all([
+    shopApi<any>(GET_ACTIVE_ORDER, {}, Astro.request),
+    shopApi<any>(GET_ELIGIBLE_SHIPPING_METHODS, {}, Astro.request),
+    shopApi<any>(`{ activeChannel { customFields { inpostGeowidgetToken } } }`, {}, Astro.request),
+  ]);
+
+  order = orderData.activeOrder;
+  shippingMethods = shippingData.eligibleShippingMethods ?? [];
+  inpostToken = channelData?.activeChannel?.customFields?.inpostGeowidgetToken || '';
+} catch {
+  // Silently fail — will show empty cart
+}
+
+if (!inpostToken) {
+  inpostToken = import.meta.env.PUBLIC_INPOST_GEOWIDGET_TOKEN || '';
+}
+
+// Redirect if cart is empty
+if (!order || !order.lines?.length) {
+  return Astro.redirect('/koszyk');
+}
+
+// InitiateCheckout pixel data
+const checkoutValue = order ? order.totalWithTax / 100 : 0;
+const checkoutNumItems = order ? order.totalQuantity : 0;
+
+// Detect free shipping: check order discounts (after shipping set) OR channel threshold (before)
+const hasFreeShippingFromDiscounts = (order?.discounts ?? []).some((d: any) =>
+  d.description?.toLowerCase().includes('darmowa dostawa') || d.description?.toLowerCase().includes('free shipping')
+);
+const channelThreshold = storeConfig?.freeShippingThreshold ?? 0;
+const hasFreeShippingPromo = hasFreeShippingFromDiscounts
+  || (channelThreshold > 0 && (order?.subTotalWithTax ?? 0) >= channelThreshold);
+
+// Check if form was submitted with errors
+const hasErrors = Object.keys(errors).length > 0 || !!globalError;
+---
+
+<BaseLayout title="Zamówienie" noindex hideCart hideFooter>
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
+    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-8">Zamówienie</h1>
+
+    {globalError && (
+      <div class="mb-6 rounded-lg bg-red-50 border border-red-200 p-4">
+        <p class="text-sm text-red-700">{globalError}</p>
+      </div>
+    )}
+
+    <form method="POST" id="checkout-form" novalidate>
+      <div class="md:grid md:grid-cols-5 md:gap-8">
+
+        {/* LEFT: Form (3fr) */}
+        <div class="md:col-span-3 space-y-8">
+
+          {/* SECTION 1: Kontakt */}
+          <section id="section-contact">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Dane kontaktowe</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formValues.email || ''}
+                  autocomplete="email"
+                  inputmode="email"
+                  placeholder="Twój e-mail (do wysłania potwierdzenia)"
+                  class:list={[
+                    'w-full rounded-lg border px-3 py-2.5 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent',
+                    errors.email ? 'border-red-400 bg-red-50' : 'border-gray-300',
+                  ]}
+                />
+                {errors.email && <p class="mt-1 text-xs text-red-600">{errors.email}</p>}
+              </div>
+
+              <div>
+                <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Telefon *</label>
+                <input
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  value={formValues.phone || ''}
+                  placeholder="Numer telefonu"
+                  required
+                  inputmode="tel"
+                  autocomplete="tel"
+                  class:list={[
+                    'w-full rounded-lg border px-3 py-2.5 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent',
+                    errors.phone ? 'border-red-400 bg-red-50' : 'border-gray-300',
+                  ]}
+                />
+                {errors.phone && <p class="mt-1 text-xs text-red-600">{errors.phone}</p>}
+              </div>
+            </div>
+          </section>
+
+          {/* SECTION 2: Dostawa */}
+          <section id="section-shipping">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Metoda dostawy</h2>
+            {errors.shippingMethodId && <p class="mb-2 text-xs text-red-600">{errors.shippingMethodId}</p>}
+
+            {shippingMethods.length > 0 ? (
+              <div class="space-y-2">
+                {shippingMethods.map((method: any) => {
+                  const isPobranie = method.code?.toLowerCase().includes('pobranie') || method.name?.toLowerCase().includes('pobranie');
+                  const showFreeShipping = hasFreeShippingPromo && method.priceWithTax > 0;
+                  return (
+                    <label class="flex items-center gap-3 rounded-lg border border-gray-200 p-4 cursor-pointer hover:bg-gray-50 transition-colors has-[:checked]:border-gray-900 has-[:checked]:bg-gray-50 min-h-[44px]">
+                      <input
+                        type="radio"
+                        name="shippingMethodId"
+                        value={method.id}
+                        data-code={method.code}
+                        checked={formValues.shippingMethodId === method.id || (shippingMethods.length === 1)}
+                        class="text-gray-900 focus:ring-gray-900"
+                      />
+                      <div class="flex-1">
+                        <span class="text-sm font-medium text-gray-900">{method.name}</span>
+                        {method.description && (
+                          <p class="text-xs text-gray-500 mt-0.5">{method.description}</p>
+                        )}
+                      </div>
+                      <span class="text-sm font-semibold text-gray-900">
+                        {showFreeShipping
+                          ? <><s class="text-gray-400 text-xs mr-1">{formatPrice(method.priceWithTax)}</s><span class="text-green-600 font-semibold">Gratis</span></>
+                          : method.priceWithTax === 0
+                            ? 'Gratis'
+                            : formatPrice(method.priceWithTax)}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            ) : (
+              <p class="text-sm text-gray-500">Brak dostępnych metod dostawy.</p>
+            )}
+          </section>
+
+          {/* InPost Paczkomat selection */}
+          <div id="section-inpost" class="hidden">
+            {errors.inpostLockerId && <p class="mb-2 text-xs text-red-600">{errors.inpostLockerId}</p>}
+
+            <button
+              type="button"
+              id="open-geowidget"
+              class="w-full rounded-lg border-2 border-dashed border-gray-300 p-6 text-center text-sm text-gray-600 hover:border-gray-400 hover:text-gray-800 transition-colors min-h-[44px] cursor-pointer"
+            >
+              Wybierz paczkomat
+            </button>
+
+            <div id="selected-locker" class="hidden mt-3 rounded-lg border border-green-200 bg-green-50 p-3 flex items-center justify-between gap-3">
+              <div class="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+                <div>
+                  <p id="locker-name" class="text-sm font-semibold text-gray-900"></p>
+                  <p id="locker-address" class="text-xs text-gray-500 mt-0.5"></p>
+                </div>
+              </div>
+              <button
+                type="button"
+                id="change-locker"
+                class="text-sm text-gray-600 underline hover:text-gray-900 whitespace-nowrap min-h-[44px] flex items-center"
+              >
+                Zmien
+              </button>
+            </div>
+
+            <input type="hidden" name="inpostLockerId" id="inpostLockerId" value={formValues.inpostLockerId || ''} />
+          </div>
+
+          {/* SECTION 3: Adres dostawy (kurier + pobranie only) */}
+          <section id="section-address">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Adres dostawy</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="sm:col-span-2">
+                <label for="street" class="block text-sm font-medium text-gray-700 mb-1">Ulica i numer *</label>
+                <input
+                  type="text"
+                  id="street"
+                  name="street"
+                  value={formValues.street || ''}
+                  required
+                  autocomplete="street-address"
+                  class:list={[
+                    'w-full rounded-lg border px-3 py-2.5 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent',
+                    errors.street ? 'border-red-400 bg-red-50' : 'border-gray-300',
+                  ]}
+                />
+                {errors.street && <p class="mt-1 text-xs text-red-600">{errors.street}</p>}
+              </div>
+
+              <div>
+                <label for="postalCode" class="block text-sm font-medium text-gray-700 mb-1">Kod pocztowy *</label>
+                <input
+                  type="text"
+                  id="postalCode"
+                  name="postalCode"
+                  value={formValues.postalCode || ''}
+                  placeholder="XX-XXX"
+                  required
+                  inputmode="numeric"
+                  autocomplete="postal-code"
+                  class:list={[
+                    'w-full rounded-lg border px-3 py-2.5 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent',
+                    errors.postalCode ? 'border-red-400 bg-red-50' : 'border-gray-300',
+                  ]}
+                />
+                {errors.postalCode && <p class="mt-1 text-xs text-red-600">{errors.postalCode}</p>}
+              </div>
+
+              <div>
+                <label for="city" class="block text-sm font-medium text-gray-700 mb-1">Miasto *</label>
+                <input
+                  type="text"
+                  id="city"
+                  name="city"
+                  value={formValues.city || ''}
+                  required
+                  autocomplete="address-level2"
+                  class:list={[
+                    'w-full rounded-lg border px-3 py-2.5 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent',
+                    errors.city ? 'border-red-400 bg-red-50' : 'border-gray-300',
+                  ]}
+                />
+                {errors.city && <p class="mt-1 text-xs text-red-600">{errors.city}</p>}
+              </div>
+            </div>
+          </section>
+
+          {/* SECTION 4: Dane osobowe */}
+          <section id="section-personal">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Dane osobowe</h2>
+            <div>
+              <label for="fullName" class="block text-sm font-medium text-gray-700 mb-1">Imię i nazwisko *</label>
+              <input
+                type="text"
+                id="fullName"
+                name="fullName"
+                value={formValues.fullName || ''}
+                required
+                autocomplete="name"
+                class:list={[
+                  'w-full rounded-lg border px-3 py-2.5 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent',
+                  errors.fullName ? 'border-red-400 bg-red-50' : 'border-gray-300',
+                ]}
+              />
+              {errors.fullName && <p class="mt-1 text-xs text-red-600">{errors.fullName}</p>}
+            </div>
+          </section>
+
+          {/* SECTION 5: Platnosc (NOT for pobranie) */}
+          <section id="section-payment">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Metoda płatności</h2>
+            {errors.paymentMethodCode && <p class="mb-2 text-xs text-red-600">{errors.paymentMethodCode}</p>}
+
+            <input type="hidden" name="paymentMethodCode" value="payu" />
+            <input type="hidden" name="flowType" id="flowType" value={formValues.flowType || ''} />
+
+            <div class="space-y-2">
+              {/* BLIK */}
+              <label class="flex items-center gap-3 rounded-lg border border-gray-200 p-4 cursor-pointer hover:bg-gray-50 transition-colors has-[:checked]:border-gray-900 has-[:checked]:bg-gray-50 min-h-[44px]">
+                <input
+                  type="radio"
+                  name="paymentFlow"
+                  value="BLIK"
+                  checked={formValues.flowType === 'BLIK'}
+                  class="text-gray-900 focus:ring-gray-900"
+                />
+                <div class="flex-1">
+                  <span class="text-sm font-medium text-gray-900">BLIK</span>
+                  <p class="text-xs text-gray-500 mt-0.5">Wpisz kod z aplikacji bankowej</p>
+                </div>
+              </label>
+
+              {/* BLIK code input */}
+              <div id="blik-code-section" class={formValues.flowType === 'BLIK' ? 'pl-9' : 'pl-9 hidden'}>
+                <label for="blikCode" class="block text-sm font-medium text-gray-700 mb-1">Kod BLIK</label>
+                <input
+                  type="text"
+                  id="blikCode"
+                  name="blikCode"
+                  value={formValues.blikCode || ''}
+                  placeholder="______"
+                  inputmode="numeric"
+                  maxlength="6"
+                  autocomplete="one-time-code"
+                  class:list={[
+                    'w-32 rounded-lg border px-3 py-2.5 text-sm min-h-[44px] font-mono tracking-widest text-center focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent',
+                    errors.blikCode ? 'border-red-400 bg-red-50' : 'border-gray-300',
+                  ]}
+                />
+                {errors.blikCode && <p class="mt-1 text-xs text-red-600">{errors.blikCode}</p>}
+              </div>
+
+              {/* Płatność online (redirect) */}
+              <label class="flex items-center gap-3 rounded-lg border border-gray-200 p-4 cursor-pointer hover:bg-gray-50 transition-colors has-[:checked]:border-gray-900 has-[:checked]:bg-gray-50 min-h-[44px]">
+                <input
+                  type="radio"
+                  name="paymentFlow"
+                  value="REDIRECT"
+                  checked={formValues.flowType === 'REDIRECT'}
+                  class="text-gray-900 focus:ring-gray-900"
+                />
+                <div class="flex-1">
+                  <span class="text-sm font-medium text-gray-900">Płatność online</span>
+                  <p class="text-xs text-gray-500 mt-0.5">Karta, przelew — przekierowanie do PayU</p>
+                </div>
+              </label>
+
+              {/* PayPo */}
+              <label class="flex items-center gap-3 rounded-lg border border-gray-200 p-4 cursor-pointer hover:bg-gray-50 transition-colors has-[:checked]:border-gray-900 has-[:checked]:bg-gray-50 min-h-[44px]">
+                <input
+                  type="radio"
+                  name="paymentFlow"
+                  value="PAYPO"
+                  checked={formValues.flowType === 'PAYPO'}
+                  class="text-gray-900 focus:ring-gray-900"
+                />
+                <div class="flex-1">
+                  <span class="text-sm font-medium text-gray-900">PayPo</span>
+                  <p class="text-xs text-gray-500 mt-0.5">Kup teraz, zaplac za 30 dni</p>
+                </div>
+              </label>
+            </div>
+          </section>
+
+          {/* COD Notice (only for pobranie, replaces section 5) */}
+          <div id="cod-notice" class="hidden rounded-lg bg-amber-50 border border-amber-200 p-4">
+            <p class="text-sm font-medium text-amber-800">Płatność przy odbiorze</p>
+            <p class="text-xs text-amber-700 mt-1">Zaplacisz kurierowi przy odbiorze przesylki.</p>
+          </div>
+
+          {/* SECTION 6: Finalizacja */}
+          <section id="section-finalize">
+            {/* Notes */}
+            <div class="mb-6">
+              <label for="notes" class="block text-sm font-medium text-gray-700 mb-1">Uwagi do zamówienia (opcjonalne)</label>
+              <textarea
+                id="notes"
+                name="notes"
+                rows="2"
+                class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none"
+              >{formValues.notes || ''}</textarea>
+            </div>
+
+            {/* Submit + legal notice */}
+            <div class="space-y-3">
+              <Button type="submit" id="submit-btn" variant="primary" size="lg" class="w-full md:w-auto md:px-12 min-h-[44px]">
+                Zamawiam z obowiązkiem zapłaty
+              </Button>
+              <p class="text-xs text-gray-500">
+                Klikając przycisk zamówienia, potwierdzasz, że akceptujesz <a href="/regulamin" target="_blank" class="underline hover:text-gray-700">Regulamin sklepu</a> oraz zapoznałeś/aś się z <a href="/polityka-prywatnosci" target="_blank" class="underline hover:text-gray-700">Polityka prywatności</a>.
+              </p>
+            </div>
+          </section>
+        </div>
+
+        {/* RIGHT: Order summary (2fr) */}
+        <div class="md:col-span-2 mt-8 md:mt-0">
+          <div class="rounded-lg bg-gray-50 p-6 sticky top-20">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Twoje zamówienie</h2>
+            <OrderSummary order={order} />
+
+            {/* Coupon code */}
+            <div class="mt-4 border-t border-gray-200 pt-4">
+              {/* Applied coupons */}
+              {order.couponCodes?.length > 0 && (
+                <div class="mb-3 flex flex-wrap gap-2" id="applied-coupons">
+                  {order.couponCodes.map((code: string) => (
+                    <span class="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800" data-coupon={code}>
+                      {code}
+                      <button type="button" class="remove-coupon ml-1 text-green-600 hover:text-green-900" data-code={code} aria-label={`Usun kod ${code}`}>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              <button type="button" id="coupon-toggle" class="text-sm text-gray-500 underline hover:text-gray-700">
+                Masz kod rabatowy?
+              </button>
+              <div id="coupon-field" class="hidden mt-2">
+                <div class="flex gap-2">
+                  <input type="text" id="couponInput" placeholder="Wpisz kod" class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm min-h-[44px]" />
+                  <button type="button" id="apply-coupon" class="rounded-lg bg-gray-900 px-3 py-2 text-sm text-white hover:bg-gray-800 min-h-[44px]">
+                    Zastosuj
+                  </button>
+                </div>
+                <p id="coupon-error" class="hidden mt-1 text-xs text-red-600"></p>
+                <p id="coupon-success" class="hidden mt-1 text-xs text-green-600"></p>
+              </div>
+            </div>
+
+            <div class="mt-4">
+              <Button href="/koszyk" variant="outline" size="sm" class="w-full">
+                Wroc do koszyka
+              </Button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </form>
+  </div>
+
+  {/* InPost Geowidget Modal */}
+  <div id="geowidget-modal" class="hidden fixed inset-0 z-50">
+    <div id="geowidget-backdrop" class="absolute inset-0 bg-black/50"></div>
+    <div class="absolute inset-0 sm:inset-4 lg:inset-8 bg-white rounded-lg sm:rounded-xl flex flex-col overflow-hidden z-10">
+      <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+        <h3 class="text-base font-semibold text-gray-900">Wybierz paczkomat</h3>
+        <button
+          type="button"
+          id="close-geowidget"
+          class="rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 min-w-[44px] min-h-[44px] flex items-center justify-center"
+          aria-label="Zamknij"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+          </svg>
+        </button>
+      </div>
+      <div class="flex-1 overflow-hidden">
+        <inpost-geowidget
+          id="inpost-geowidget"
+          onpoint="onpointselect"
+          token={inpostToken}
+          language="pl"
+          config="parcelCollect"
+          style="width:100%;height:100%;display:block;"
+        ></inpost-geowidget>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+{/* InPost Geowidget SDK */}
+<script is:inline src="https://geowidget.inpost.pl/inpost-geowidget.js" defer></script>
+
+{/* InitiateCheckout pixel event */}
+<script
+  is:inline
+  define:vars={{ icValue: checkoutValue, icNumItems: checkoutNumItems }}
+>
+  if (typeof fbq !== 'undefined') {
+    fbq('track', 'InitiateCheckout', {
+      value: icValue,
+      currency: 'PLN',
+      num_items: icNumItems,
+    });
+  }
+</script>
+
+<script>
+  // ============================================================
+  // CHECKOUT — Progressive Disclosure + Interactions
+  // ============================================================
+
+  // --- DOM References ---
+  const phoneInput = document.getElementById('phone') as HTMLInputElement | null;
+  const streetInput = document.getElementById('street') as HTMLInputElement | null;
+  const fullNameInput = document.getElementById('fullName') as HTMLInputElement | null;
+  const postalInput = document.getElementById('postalCode') as HTMLInputElement | null;
+  const blikCodeInput = document.getElementById('blikCode') as HTMLInputElement | null;
+  const flowTypeInput = document.getElementById('flowType') as HTMLInputElement | null;
+  // Invoice removed — handled via BaseLinker
+  const couponToggle = document.getElementById('coupon-toggle') as HTMLElement | null;
+  const couponField = document.getElementById('coupon-field') as HTMLElement | null;
+  const couponInput = document.getElementById('couponInput') as HTMLInputElement | null;
+  const applyCouponBtn = document.getElementById('apply-coupon') as HTMLElement | null;
+  const couponError = document.getElementById('coupon-error') as HTMLElement | null;
+  const couponSuccess = document.getElementById('coupon-success') as HTMLElement | null;
+
+  // Sections
+  const sectionShipping = document.getElementById('section-shipping') as HTMLElement | null;
+  const sectionInpost = document.getElementById('section-inpost') as HTMLElement | null;
+  const sectionAddress = document.getElementById('section-address') as HTMLElement | null;
+  const sectionPersonal = document.getElementById('section-personal') as HTMLElement | null;
+  const sectionPayment = document.getElementById('section-payment') as HTMLElement | null;
+  const sectionFinalize = document.getElementById('section-finalize') as HTMLElement | null;
+  const codNotice = document.getElementById('cod-notice') as HTMLElement | null;
+  const blikCodeSection = document.getElementById('blik-code-section') as HTMLElement | null;
+
+  // Geowidget
+  const openGeowidgetBtn = document.getElementById('open-geowidget') as HTMLElement | null;
+  const geowidgetModal = document.getElementById('geowidget-modal') as HTMLElement | null;
+  const closeGeowidgetBtn = document.getElementById('close-geowidget') as HTMLElement | null;
+  const geowidgetBackdrop = document.getElementById('geowidget-backdrop') as HTMLElement | null;
+  const selectedLockerDiv = document.getElementById('selected-locker') as HTMLElement | null;
+  const lockerNameEl = document.getElementById('locker-name') as HTMLElement | null;
+  const lockerAddressEl = document.getElementById('locker-address') as HTMLElement | null;
+  const lockerIdInput = document.getElementById('inpostLockerId') as HTMLInputElement | null;
+  const changeLockerBtn = document.getElementById('change-locker') as HTMLElement | null;
+
+  // Form
+  const checkoutForm = document.getElementById('checkout-form') as HTMLFormElement | null;
+  const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement | null;
+
+  // --- State ---
+  let currentShippingType: 'paczkomat' | 'kurier' | 'pobranie' = 'kurier';
+
+  // --- Helpers ---
+  function show(el: HTMLElement | null) { el?.classList.remove('hidden'); }
+  function hide(el: HTMLElement | null) { el?.classList.add('hidden'); }
+
+  function getShippingType(): 'paczkomat' | 'kurier' | 'pobranie' {
+    const selected = document.querySelector<HTMLInputElement>('input[name="shippingMethodId"]:checked');
+    if (!selected) return 'kurier';
+    const code = (selected.dataset.code || '').toLowerCase();
+    if (code.includes('pobranie')) return 'pobranie';
+    if (code.includes('paczkomat')) return 'paczkomat';
+    return 'kurier';
+  }
+
+  // Hide everything below contact
+  function hideAllBelow() {
+    hide(sectionShipping);
+    hide(sectionInpost);
+    hide(sectionAddress);
+    hide(sectionPersonal);
+    hide(sectionPayment);
+    hide(sectionFinalize);
+    hide(codNotice);
+  }
+
+  // Apply shipping type — controls which sections are visible
+  // Called on: shipping radio change, page load restore
+  function applyShippingType(type: 'paczkomat' | 'kurier' | 'pobranie') {
+    currentShippingType = type;
+
+    if (type === 'paczkomat') {
+      show(sectionInpost);
+      hide(sectionAddress);
+      show(sectionPersonal);
+      show(sectionPayment);
+      hide(codNotice);
+      show(sectionFinalize);
+    } else if (type === 'pobranie') {
+      hide(sectionInpost);
+      show(sectionAddress);
+      show(sectionPersonal);
+      hide(sectionPayment);  // NO payment for COD
+      show(codNotice);
+      show(sectionFinalize);
+    } else {
+      // kurier
+      hide(sectionInpost);
+      show(sectionAddress);
+      show(sectionPersonal);
+      show(sectionPayment);
+      hide(codNotice);
+      show(sectionFinalize);
+    }
+  }
+
+  // --- Show all sections on load (no progressive disclosure) ---
+  applyShippingType(getShippingType());
+
+  // --- Shipping radio change → toggle sections ---
+  document.querySelectorAll<HTMLInputElement>('input[name="shippingMethodId"]').forEach((radio) => {
+    radio.addEventListener('change', () => {
+      applyShippingType(getShippingType());
+    });
+  });
+
+  // --- Payment flow radio → toggle BLIK ---
+  document.querySelectorAll<HTMLInputElement>('input[name="paymentFlow"]').forEach((radio) => {
+    radio.addEventListener('change', () => {
+      // Update hidden flowType
+      if (flowTypeInput) flowTypeInput.value = radio.value;
+
+      // Toggle BLIK code section
+      if (radio.value === 'BLIK') {
+        show(blikCodeSection);
+        blikCodeInput?.focus();
+      } else {
+        hide(blikCodeSection);
+      }
+
+      show(sectionFinalize);
+    });
+  });
+
+  // --- BLIK input: digits only, max 6 ---
+  if (blikCodeInput) {
+    blikCodeInput.addEventListener('input', () => {
+      blikCodeInput.value = blikCodeInput.value.replace(/\D/g, '').slice(0, 6);
+    });
+  }
+
+  // --- Postal code auto-format: XX-XXX ---
+  if (postalInput) {
+    postalInput.addEventListener('input', () => {
+      let val = postalInput.value.replace(/[^\d]/g, '');
+      if (val.length > 2) {
+        val = val.slice(0, 2) + '-' + val.slice(2, 5);
+      }
+      postalInput.value = val;
+    });
+  }
+
+  // --- Postal code → city lookup ---
+  const cityContainer = document.getElementById('city')?.parentElement;
+  let lastLookedUpCode = '';
+
+  async function lookupCity(code: string) {
+    if (code === lastLookedUpCode) return;
+    lastLookedUpCode = code;
+
+    try {
+      const res = await fetch(`/api/postal-lookup?code=${encodeURIComponent(code)}`);
+      const data = await res.json();
+      const cities: string[] = data.cities || [];
+
+      if (!cityContainer) return;
+
+      if (cities.length === 0) {
+        restoreCityInput('');
+      } else if (cities.length === 1) {
+        restoreCityInput(cities[0]);
+      } else {
+        replaceCityWithSelect(cities);
+      }
+    } catch {
+      // Silently fail
+    }
+  }
+
+  function restoreCityInput(value: string) {
+    if (!cityContainer) return;
+    const existing = cityContainer.querySelector('#city');
+    if (existing?.tagName === 'INPUT') {
+      (existing as HTMLInputElement).value = value;
+      return;
+    }
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.id = 'city';
+    input.name = 'city';
+    input.value = value;
+    input.required = true;
+    input.autocomplete = 'address-level2';
+    input.className = 'w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent';
+    existing?.replaceWith(input);
+  }
+
+  function replaceCityWithSelect(cities: string[]) {
+    if (!cityContainer) return;
+    const existing = cityContainer.querySelector('#city');
+    const currentValue = existing?.tagName === 'INPUT' ? (existing as HTMLInputElement).value : (existing as HTMLSelectElement)?.value || '';
+
+    const select = document.createElement('select');
+    select.id = 'city';
+    select.name = 'city';
+    select.required = true;
+    select.className = 'w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent bg-white';
+
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = 'Wybierz miejscowość';
+    placeholder.disabled = true;
+    select.appendChild(placeholder);
+
+    cities.forEach((city) => {
+      const opt = document.createElement('option');
+      opt.value = city;
+      opt.textContent = city;
+      if (city === currentValue) opt.selected = true;
+      select.appendChild(opt);
+    });
+
+    if (!currentValue || !cities.includes(currentValue)) {
+      if (cities.length > 0) {
+        (select.options[1] as HTMLOptionElement).selected = true;
+      } else {
+        placeholder.selected = true;
+      }
+    }
+
+    existing?.replaceWith(select);
+  }
+
+  if (postalInput) {
+    postalInput.addEventListener('input', () => {
+      const val = postalInput.value.trim();
+      if (/^\d{2}-\d{3}$/.test(val)) {
+        lookupCity(val);
+      }
+    });
+    // Trigger on load if already filled
+    if (/^\d{2}-\d{3}$/.test(postalInput.value.trim())) {
+      lookupCity(postalInput.value.trim());
+    }
+  }
+
+  // --- Coupon code ---
+  if (couponToggle && couponField) {
+    couponToggle.addEventListener('click', () => {
+      couponField.classList.toggle('hidden');
+      if (!couponField.classList.contains('hidden')) {
+        couponInput?.focus();
+      }
+    });
+  }
+
+  async function applyCoupon() {
+    if (!couponInput?.value.trim()) return;
+
+    couponError?.classList.add('hidden');
+    couponSuccess?.classList.add('hidden');
+
+    try {
+      const res = await fetch('/api/cart/coupon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ couponCode: couponInput.value.trim() }),
+      });
+
+      const data = await res.json();
+
+      if (data.order) {
+        if (couponSuccess) {
+          couponSuccess.textContent = `Kod "${couponInput.value.trim()}" zostal zastosowany!`;
+          couponSuccess.classList.remove('hidden');
+        }
+        couponInput.value = '';
+        setTimeout(() => window.location.reload(), 500);
+      } else {
+        if (couponError) {
+          couponError.textContent = data.error || 'Nieprawidlowy kod rabatowy';
+          couponError.classList.remove('hidden');
+        }
+      }
+    } catch {
+      if (couponError) {
+        couponError.textContent = 'Wystąpił błąd. Spróbuj ponownie.';
+        couponError.classList.remove('hidden');
+      }
+    }
+  }
+
+  if (applyCouponBtn) {
+    applyCouponBtn.addEventListener('click', applyCoupon);
+  }
+
+  if (couponInput) {
+    couponInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        applyCoupon();
+      }
+    });
+  }
+
+  // Remove coupon
+  document.querySelectorAll<HTMLButtonElement>('.remove-coupon').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const code = btn.dataset.code;
+      if (!code) return;
+
+      try {
+        const res = await fetch('/api/cart/coupon', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ couponCode: code }),
+        });
+
+        const data = await res.json();
+        if (data.order) {
+          const tag = btn.closest('[data-coupon]');
+          tag?.remove();
+          setTimeout(() => window.location.reload(), 300);
+        }
+      } catch {
+        // Silently fail
+      }
+    });
+  });
+
+  // --- InPost Geowidget ---
+  function openGeoModal() {
+    show(geowidgetModal);
+    document.body.style.overflow = 'hidden';
+  }
+  function closeGeoModal() {
+    hide(geowidgetModal);
+    document.body.style.overflow = '';
+  }
+
+  openGeowidgetBtn?.addEventListener('click', openGeoModal);
+  changeLockerBtn?.addEventListener('click', openGeoModal);
+  closeGeowidgetBtn?.addEventListener('click', closeGeoModal);
+  geowidgetBackdrop?.addEventListener('click', closeGeoModal);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !geowidgetModal?.classList.contains('hidden')) {
+      closeGeoModal();
+    }
+  });
+
+  // Handle locker selection from Geowidget
+  document.addEventListener('onpointselect', ((event: CustomEvent) => {
+    const point = event.detail;
+    if (!point) return;
+
+    if (lockerIdInput) lockerIdInput.value = point.name || '';
+    if (lockerNameEl) lockerNameEl.textContent = point.name || '';
+    if (lockerAddressEl) {
+      const addr = point.address;
+      lockerAddressEl.textContent = addr
+        ? [addr.line1, addr.line2].filter(Boolean).join(', ')
+        : (point.address_details?.city || '');
+    }
+
+    show(selectedLockerDiv);
+    hide(openGeowidgetBtn);
+
+    closeGeoModal();
+    saveFormData();
+  }) as EventListener);
+
+  // --- Loading state on submit ---
+  if (checkoutForm) {
+    checkoutForm.addEventListener('submit', () => {
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Przetwarzanie...';
+      }
+    });
+  }
+
+  // --- Restore visibility on reload with errors ---
+  (function restoreVisibilityOnLoad() {
+    const selectedShipping = document.querySelector<HTMLInputElement>('input[name="shippingMethodId"]:checked');
+    if (!selectedShipping) return;
+
+    show(sectionShipping);
+    applyShippingType(getShippingType());
+
+    // Restore locker display if selected (paczkomat)
+    if (lockerIdInput?.value) {
+      show(selectedLockerDiv);
+      hide(openGeowidgetBtn);
+    }
+
+    // Restore BLIK section visibility
+    const selectedPayment = document.querySelector<HTMLInputElement>('input[name="paymentFlow"]:checked');
+    if (selectedPayment?.value === 'BLIK') {
+      show(blikCodeSection);
+    }
+  })();
+
+  // --- Save/restore form data in localStorage ---
+  const STORAGE_KEY = 'checkout-form-data';
+  const fieldsToSave = ['email', 'phone', 'street', 'postalCode', 'city', 'fullName'];
+
+  function saveFormData() {
+    const data: Record<string, string> = {};
+    fieldsToSave.forEach(id => {
+      const el = document.getElementById(id) as HTMLInputElement | null;
+      if (el?.value) data[id] = el.value;
+    });
+    // Save selected shipping method
+    const selectedShipping = document.querySelector<HTMLInputElement>('input[name="shippingMethodId"]:checked');
+    if (selectedShipping) data._shippingMethodId = selectedShipping.value;
+    // Save locker
+    if (lockerIdInput?.value) data._lockerId = lockerIdInput.value;
+    if (lockerNameEl?.textContent) data._lockerName = lockerNameEl.textContent;
+    if (lockerAddressEl?.textContent) data._lockerAddress = lockerAddressEl.textContent;
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }
+
+  function restoreFormData() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const data = JSON.parse(raw) as Record<string, string>;
+
+      fieldsToSave.forEach(id => {
+        const el = document.getElementById(id) as HTMLInputElement | null;
+        if (el && !el.value && data[id]) el.value = data[id];
+      });
+
+      // Restore shipping selection
+      if (data._shippingMethodId) {
+        const radio = document.querySelector<HTMLInputElement>(`input[name="shippingMethodId"][value="${data._shippingMethodId}"]`);
+        if (radio) { radio.checked = true; applyShippingType(getShippingType()); }
+      }
+
+      // Restore locker
+      if (data._lockerId && lockerIdInput && !lockerIdInput.value) {
+        lockerIdInput.value = data._lockerId;
+        if (lockerNameEl) lockerNameEl.textContent = data._lockerName || '';
+        if (lockerAddressEl) lockerAddressEl.textContent = data._lockerAddress || '';
+        show(selectedLockerDiv);
+        hide(openGeowidgetBtn);
+      }
+    } catch {}
+  }
+
+  // Restore on page load
+  restoreFormData();
+
+  // Save on input change (debounced)
+  let saveTimer: ReturnType<typeof setTimeout>;
+  document.querySelectorAll<HTMLInputElement | HTMLSelectElement>('#checkout-form input, #checkout-form select').forEach(el => {
+    el.addEventListener('change', () => { clearTimeout(saveTimer); saveTimer = setTimeout(saveFormData, 300); });
+    el.addEventListener('input', () => { clearTimeout(saveTimer); saveTimer = setTimeout(saveFormData, 500); });
+  });
+
+  // Clear saved data on successful submit (form action = POST, page reloads/redirects)
+  checkoutForm?.addEventListener('submit', () => {
+    localStorage.removeItem(STORAGE_KEY);
+  });
+
+  // --- Scroll to first error on page load ---
+  const firstError = document.querySelector('.text-red-600, .text-red-700');
+  if (firstError) {
+    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+</script>

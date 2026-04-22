@@ -1,0 +1,46 @@
+---
+interface Props {
+  storeName?: string;
+  storeTagline?: string;
+  contactEmail?: string;
+}
+const { storeName = 'Store', storeTagline = 'Sklep internetowy', contactEmail = 'kontakt@sklep.pl' } = Astro.props;
+const year = new Date().getFullYear();
+---
+
+<footer class="border-t border-gray-200 bg-gray-50 mt-auto">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
+      <!-- Brand -->
+      <div>
+        <p class="text-lg font-bold text-gray-900">{storeName}</p>
+        <p class="mt-2 text-sm text-gray-500">{storeTagline}</p>
+      </div>
+
+      <!-- Links -->
+      <div>
+        <p class="text-sm font-medium text-gray-900 mb-3">Sklep</p>
+        <ul class="space-y-2">
+          <li><a href="/" class="text-sm text-gray-500 hover:text-gray-900 transition-colors no-underline">Strona główna</a></li>
+          <li><a href="/koszyk" class="text-sm text-gray-500 hover:text-gray-900 transition-colors no-underline">Koszyk</a></li>
+        </ul>
+      </div>
+
+      <!-- Info -->
+      <div>
+        <p class="text-sm font-medium text-gray-900 mb-3">Informacje</p>
+        <ul class="space-y-2">
+          <li><a href="/regulamin" class="text-sm text-gray-500 hover:text-gray-900 transition-colors no-underline">Regulamin</a></li>
+          <li><a href="/polityka-prywatnosci" class="text-sm text-gray-500 hover:text-gray-900 transition-colors no-underline">Polityka prywatności</a></li>
+          <li><span class="text-sm text-gray-500">Kontakt: {contactEmail}</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="mt-8 pt-6 border-t border-gray-200">
+      <p class="text-xs text-gray-400 text-center">
+        &copy; {year} {storeName}. Wszystkie prawa zastrzeżone.
+      </p>
+    </div>
+  </div>
+</footer>

@@ -1,0 +1,447 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Breadcrumbs from '@/components/Breadcrumbs.astro';
+import OrderSummary from '@/components/OrderSummary.astro';
+import ProductCard from '@/components/ProductCard.astro';
+import Button from '@/components/Button.astro';
+import { shopApi } from '@/lib/vendure';
+import { GET_ORDER_BY_CODE, SEARCH_PRODUCTS } from '@/lib/queries';
+// Security note: orderByCode in Vendure Shop API requires active session —
+// it only returns orders belonging to the current customer/session, preventing IDOR.
+// Combined with 16-char alphanumeric codes, brute force is impractical.
+// No additional token/hash is needed for this endpoint.
+
+// Get order code from query params
+const code = Astro.url.searchParams.get('code');
+
+if (!code) {
+  return Astro.redirect('/');
+}
+
+let order: any = null;
+try {
+  // orderByCode requires the request's auth session — Vendure only returns
+  // orders belonging to the current customer/session, preventing IDOR.
+  const data = await shopApi<any>(GET_ORDER_BY_CODE, { code }, Astro.request);
+  order = data.orderByCode;
+} catch {
+  // Silently fail — redirect below
+}
+
+if (!order) {
+  return Astro.redirect('/');
+}
+
+const customer = order.customer;
+const address = order.shippingAddress;
+const shippingMethod = order.shippingLines?.[0]?.shippingMethod?.name;
+
+// Upsell: pobierz produkty, pominac te z zamowienia
+const orderedProductIds = new Set(
+  order.lines?.map((l: any) => l.productVariant?.productId || l.productVariant?.product?.id).filter(Boolean) || []
+);
+
+let upsellProducts: any[] = [];
+try {
+  const searchData = await shopApi<any>(SEARCH_PRODUCTS, {
+    input: { take: 8, groupByProduct: true },
+  }, Astro.request);
+  // Filtruj produkty z zamowienia, potem losowo wybierz 4
+  const filtered = (searchData.search?.items || []).filter(
+    (item: any) => !orderedProductIds.has(item.productId)
+  );
+  // Losowe tasowanie i wybranie max 4
+  upsellProducts = filtered.sort(() => Math.random() - 0.5).slice(0, 4);
+} catch {
+  // Silently fail — upsell jest opcjonalny
+}
+---
+
+<BaseLayout title="Potwierdzenie zamowienia" noindex>
+  <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-6">
+    <Breadcrumbs items={[
+      { label: 'Strona glowna', href: '/' },
+      { label: 'Potwierdzenie zamowienia' },
+    ]} />
+
+    {/* A) Reassurance — animowany checkmark */}
+    <div class="text-center mt-6 mb-8">
+      <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-100 mb-4 checkmark-circle">
+        <svg
+          class="checkmark-svg"
+          xmlns="http://www.w3.org/2000/svg"
+          width="40"
+          height="40"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path class="checkmark-path" d="M5 13l4 4L19 7" />
+        </svg>
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Zamowienie potwierdzone!</h1>
+      <p class="mt-2 text-gray-600">
+        Zamowienie nr <span class="font-semibold">{order.code}</span>
+      </p>
+      {customer?.emailAddress && (
+        <p class="mt-1 text-sm text-gray-500">
+          Potwierdzenie wyslemy na <span class="font-medium">{customer.emailAddress}</span>
+        </p>
+      )}
+    </div>
+
+    {/* B) Order tracking bar */}
+    <div class="mb-8">
+      <div class="flex items-center justify-between">
+        {/* Step 1 — active */}
+        <div class="flex flex-col items-center flex-1">
+          <div class="flex h-8 w-8 items-center justify-center rounded-full bg-green-500 text-white text-sm font-semibold">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <span class="mt-1.5 text-xs font-medium text-green-700">Potwierdzone</span>
+        </div>
+        {/* Divider */}
+        <div class="flex-1 h-0.5 bg-gray-200 -mt-5 mx-1"></div>
+        {/* Step 2 */}
+        <div class="flex flex-col items-center flex-1">
+          <div class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 text-gray-400 text-sm font-semibold">2</div>
+          <span class="mt-1.5 text-xs text-gray-400">Pakowanie</span>
+        </div>
+        {/* Divider */}
+        <div class="flex-1 h-0.5 bg-gray-200 -mt-5 mx-1"></div>
+        {/* Step 3 */}
+        <div class="flex flex-col items-center flex-1">
+          <div class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 text-gray-400 text-sm font-semibold">3</div>
+          <span class="mt-1.5 text-xs text-gray-400">Wysylka</span>
+        </div>
+        {/* Divider */}
+        <div class="flex-1 h-0.5 bg-gray-200 -mt-5 mx-1"></div>
+        {/* Step 4 */}
+        <div class="flex flex-col items-center flex-1">
+          <div class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 text-gray-400 text-sm font-semibold">4</div>
+          <span class="mt-1.5 text-xs text-gray-400">Dostarczone</span>
+        </div>
+      </div>
+    </div>
+
+    {/* C) 24h Discount code — PLACEHOLDER: kupon i countdown hardcoded.
+         TODO: Generować kod per zamówienie z backendu (Channel custom field lub dedykowana logika). */}
+    <div class="mb-8 rounded-xl bg-amber-50 border border-amber-200 p-6">
+      <h2 class="text-lg font-bold text-gray-900 mb-1">Twoj ekskluzywny kod rabatowy -10%</h2>
+      <p class="text-sm text-amber-700 mb-4">Wazny tylko przez 24 godziny</p>
+      <div class="flex items-center gap-3 mb-4">
+        <!-- TODO: Generate unique per-order discount codes via Vendure Promotion API -->
+        <code id="discount-code" class="flex-1 text-center text-2xl font-bold font-mono tracking-wider bg-white border border-amber-300 rounded-lg py-3 px-4 text-gray-900 select-all">
+          DZIEKUJE10
+        </code>
+        <button
+          id="copy-code-btn"
+          type="button"
+          class="shrink-0 rounded-lg bg-gray-900 px-5 py-3 text-sm font-semibold text-white hover:bg-gray-800 transition-colors min-h-[44px]"
+        >
+          Skopiuj kod
+        </button>
+      </div>
+      <div class="text-center">
+        <p class="text-sm text-amber-800 font-medium">
+          Kod wygasa za: <span id="countdown-timer" class="font-mono font-bold">23:59:59</span>
+        </p>
+      </div>
+    </div>
+
+    {/* TODO [L6]: Upsell placeholder — docelowo: dedykowane rekomendacje per produkt
+        (np. "kupili też", "pasuje do"), a nie losowe produkty z katalogu. */}
+    {upsellProducts.length > 0 && (
+      <div class="mb-8">
+        <h2 class="text-lg font-semibold text-gray-900 mb-1">Moze Ci sie spodobac</h2>
+        <p class="text-sm text-gray-500 mb-4">Zobacz inne produkty</p>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {upsellProducts.map((item: any) => (
+            <ProductCard
+              name={item.productName}
+              slug={item.slug}
+              imageUrl={item.productAsset?.preview}
+              priceWithTax={item.priceWithTax}
+              currencyCode={item.currencyCode}
+            />
+          ))}
+        </div>
+      </div>
+    )}
+
+    {/* D) SMS opt-in slot
+         NOTE: This is a UI placeholder. The submit handler below saves to DOM only (hides form, shows success).
+         No data is sent to any backend. Connect to ESP (Omnisend/Klaviyo) API route before production launch. */}
+    <div class="mb-8 rounded-xl border border-gray-200 p-6 bg-white">
+      <h2 class="text-lg font-semibold text-gray-900 mb-1">Otrzymuj powiadomienia o statusie zamowienia</h2>
+      <p class="text-sm text-gray-500 mb-4">Oraz 15% rabatu na nastepne zakupy</p>
+      <div id="sms-form" class="flex gap-3">
+        <label for="sms-phone-input" class="sr-only">Numer telefonu</label>
+        <input
+          type="tel"
+          id="sms-phone-input"
+          placeholder="+48 ___ ___ ___"
+          class="flex-1 rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none min-h-[44px]"
+        />
+        <button
+          id="sms-submit-btn"
+          type="button"
+          class="shrink-0 rounded-lg bg-gray-900 px-5 py-3 text-sm font-semibold text-white hover:bg-gray-800 transition-colors min-h-[44px]"
+        >
+          Zapisz sie
+        </button>
+      </div>
+      <div id="sms-success" class="hidden text-center py-3">
+        <p class="text-sm font-medium text-green-700">Dziekujemy! Otrzymasz SMS wkrotce.</p>
+      </div>
+      <p class="mt-3 text-xs text-gray-400">
+        Mozesz zrezygnowac w kazdej chwili.
+        <a href="/polityka-prywatnosci" class="underline hover:text-gray-600">Polityka prywatnosci</a>
+      </p>
+    </div>
+
+    {/* E) Reinforcement — Co dalej? */}
+    <div class="mb-8">
+      <h2 class="text-lg font-semibold text-gray-900 mb-4">Co dalej?</h2>
+      <div class="space-y-4">
+        <div class="flex items-start gap-3">
+          <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-semibold text-gray-600">1</div>
+          <div>
+            <p class="text-sm font-medium text-gray-900">Przygotowujemy Twoje zamowienie</p>
+            <p class="text-xs text-gray-500 mt-0.5">Nasz zespol juz pracuje nad Twoja paczka</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-3">
+          <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-semibold text-gray-600">2</div>
+          <div>
+            <p class="text-sm font-medium text-gray-900">Otrzymasz SMS/email z numerem sledzenia</p>
+            <p class="text-xs text-gray-500 mt-0.5">Powiadomimy Cie gdy przesylka wyruszy w droge</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-3">
+          <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-semibold text-gray-600">3</div>
+          <div>
+            <p class="text-sm font-medium text-gray-900">Przesylka dotrze w 1-2 dni robocze</p>
+            <p class="text-xs text-gray-500 mt-0.5">Standardowy czas dostawy na terenie Polski</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* F) Receipt/summary — accordion na dole */}
+    <div class="mb-8">
+      <details class="rounded-xl border border-gray-200 overflow-hidden">
+        <summary class="flex cursor-pointer items-center justify-between px-5 py-4 bg-gray-50 hover:bg-gray-100 transition-colors font-medium text-gray-900">
+          <span>Szczegoly zamowienia</span>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 transition-transform duration-200 details-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </summary>
+        <div class="p-5 border-t border-gray-200">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            {/* Customer data */}
+            {customer && (
+              <div>
+                <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">Dane klienta</h3>
+                <dl class="text-sm space-y-1.5">
+                  <div>
+                    <dt class="sr-only">Imie i nazwisko</dt>
+                    <dd class="text-gray-700">{customer.firstName} {customer.lastName}</dd>
+                  </div>
+                  <div>
+                    <dt class="sr-only">Email</dt>
+                    <dd class="text-gray-700">{customer.emailAddress}</dd>
+                  </div>
+                  {customer.phoneNumber && (
+                    <div>
+                      <dt class="sr-only">Telefon</dt>
+                      <dd class="text-gray-700">{customer.phoneNumber}</dd>
+                    </div>
+                  )}
+                </dl>
+              </div>
+            )}
+
+            {/* Shipping address */}
+            {address && (
+              <div>
+                <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">Adres dostawy</h3>
+                <dl class="text-sm space-y-1.5">
+                  {address.fullName && (
+                    <div>
+                      <dt class="sr-only">Odbiorca</dt>
+                      <dd class="text-gray-700">{address.fullName}</dd>
+                    </div>
+                  )}
+                  <div>
+                    <dt class="sr-only">Ulica</dt>
+                    <dd class="text-gray-700">{address.streetLine1}</dd>
+                  </div>
+                  <div>
+                    <dt class="sr-only">Miasto</dt>
+                    <dd class="text-gray-700">{address.postalCode} {address.city}</dd>
+                  </div>
+                  {address.phoneNumber && (
+                    <div>
+                      <dt class="sr-only">Telefon</dt>
+                      <dd class="text-gray-700">tel. {address.phoneNumber}</dd>
+                    </div>
+                  )}
+                  {shippingMethod && (
+                    <div class="pt-1.5 border-t border-gray-100">
+                      <dt class="text-gray-500 text-xs">Dostawa</dt>
+                      <dd class="text-gray-700">{shippingMethod}</dd>
+                    </div>
+                  )}
+                </dl>
+              </div>
+            )}
+          </div>
+
+          {/* Order items */}
+          <OrderSummary order={order} />
+        </div>
+      </details>
+    </div>
+
+    {/* CTA */}
+    <div class="text-center mb-8">
+      <Button href="/" variant="primary" size="lg">
+        Wroc do sklepu
+      </Button>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  /* Animated checkmark */
+  .checkmark-circle {
+    animation: scaleIn 0.4s ease-out;
+  }
+
+  .checkmark-svg {
+    color: #16a34a;
+  }
+
+  .checkmark-path {
+    stroke-dasharray: 24;
+    stroke-dashoffset: 24;
+    animation: drawCheck 0.5s ease-out 0.3s forwards;
+  }
+
+  @keyframes scaleIn {
+    0% {
+      transform: scale(0);
+      opacity: 0;
+    }
+    50% {
+      transform: scale(1.15);
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  @keyframes drawCheck {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  /* Details chevron rotation */
+  details[open] .details-chevron {
+    transform: rotate(180deg);
+  }
+
+  details summary::-webkit-details-marker {
+    display: none;
+  }
+  details summary {
+    list-style: none;
+  }
+</style>
+
+<script is:inline>
+  // Copy discount code
+  (function() {
+    var copyBtn = document.getElementById('copy-code-btn');
+    var codeEl = document.getElementById('discount-code');
+    if (copyBtn && codeEl) {
+      copyBtn.addEventListener('click', function() {
+        var code = codeEl.textContent.trim();
+        navigator.clipboard.writeText(code).then(function() {
+          copyBtn.textContent = 'Skopiowano!';
+          setTimeout(function() {
+            copyBtn.textContent = 'Skopiuj kod';
+          }, 2000);
+        }).catch(function() {
+          // Fallback: select text
+          var range = document.createRange();
+          range.selectNodeContents(codeEl);
+          var sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+        });
+      });
+    }
+  })();
+
+  // 24h Countdown timer
+  (function() {
+    var STORAGE_KEY = 'thankyou-countdown-start';
+    var timerEl = document.getElementById('countdown-timer');
+    if (!timerEl) return;
+
+    var startTime = localStorage.getItem(STORAGE_KEY);
+    if (!startTime) {
+      startTime = Date.now().toString();
+      localStorage.setItem(STORAGE_KEY, startTime);
+    }
+    var endTime = parseInt(startTime) + 24 * 60 * 60 * 1000;
+
+    function update() {
+      var remaining = endTime - Date.now();
+      if (remaining <= 0) {
+        timerEl.textContent = '00:00:00';
+        return;
+      }
+      var h = Math.floor(remaining / 3600000);
+      var m = Math.floor((remaining % 3600000) / 60000);
+      var s = Math.floor((remaining % 60000) / 1000);
+      timerEl.textContent =
+        String(h).padStart(2, '0') + ':' +
+        String(m).padStart(2, '0') + ':' +
+        String(s).padStart(2, '0');
+    }
+    update();
+    const timerId = setInterval(update, 1000);
+    // Cleanup on Astro View Transition navigation
+    document.addEventListener('astro:before-swap', () => clearInterval(timerId), { once: true });
+  })();
+
+  // SMS opt-in (frontend only — UI placeholder, no backend call)
+  // TODO: Connect to ESP (Omnisend/Klaviyo) API route before production launch.
+  (function() {
+    var submitBtn = document.getElementById('sms-submit-btn');
+    var phoneInput = document.getElementById('sms-phone-input');
+    var form = document.getElementById('sms-form');
+    var success = document.getElementById('sms-success');
+    if (submitBtn && phoneInput && form && success) {
+      submitBtn.addEventListener('click', function() {
+        var phone = phoneInput.value.trim();
+        if (phone.length < 9) {
+          phoneInput.focus();
+          return;
+        }
+        form.classList.add('hidden');
+        success.classList.remove('hidden');
+      });
+    }
+  })();
+</script>

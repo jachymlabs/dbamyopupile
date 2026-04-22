@@ -1,0 +1,90 @@
+---
+import type { TestimonialQuoteProps } from '../../types/sections';
+
+interface Props extends TestimonialQuoteProps {}
+
+const {
+  id,
+  theme = 'light',
+  paddingY = 'md',
+  quote,
+  authorName,
+  authorTitle,
+  rating,
+  avatarUrl,
+} = Astro.props;
+
+const bgClasses: Record<string, string> = {
+  light: 'bg-white text-gray-900',
+  dark: 'bg-gray-900 text-white',
+  brand: 'bg-blue-600 text-white',
+  accent: 'bg-amber-50 text-gray-900',
+};
+
+const paddingClasses: Record<string, string> = {
+  none: '',
+  sm: 'py-8',
+  md: 'py-12',
+  lg: 'py-16',
+  xl: 'py-24',
+};
+
+const stars = rating ? Array.from({ length: 5 }, (_, i) => i < Math.round(rating)) : [];
+const initials = authorName.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
+---
+
+<section
+  id={id}
+  class:list={[bgClasses[theme], paddingClasses[paddingY]]}
+>
+  <div class="mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-8">
+    <blockquote>
+      <p class="text-xl italic leading-relaxed sm:text-2xl">
+        &ldquo;{quote}&rdquo;
+      </p>
+    </blockquote>
+
+    {rating && (
+      <div class="mt-4 flex justify-center gap-0.5">
+        {stars.map((filled) => (
+          <span class:list={['text-lg', filled ? 'text-amber-400' : 'text-gray-300']}>
+            &#9733;
+          </span>
+        ))}
+      </div>
+    )}
+
+    <div class="mt-6 flex items-center justify-center gap-3">
+      {avatarUrl ? (
+        <img
+          src={avatarUrl}
+          alt={authorName}
+          width="40"
+          height="40"
+          class="h-10 w-10 rounded-full object-cover"
+          loading="lazy"
+        />
+      ) : (
+        <div class:list={[
+          'flex h-10 w-10 items-center justify-center rounded-full text-xs font-semibold',
+          theme === 'light' || theme === 'accent'
+            ? 'bg-gray-200 text-gray-700'
+            : 'bg-white/20 text-white',
+        ]}>
+          {initials}
+        </div>
+      )}
+      <div class="text-left">
+        <p class="text-sm font-semibold">{authorName}</p>
+        {authorTitle && (
+          <p class:list={[
+            'text-xs',
+            theme === 'light' || theme === 'accent' ? 'text-gray-500' : 'text-white/60',
+          ]}>
+            {authorTitle}
+          </p>
+        )}
+      </div>
+    </div>
+  </div>
+</section>

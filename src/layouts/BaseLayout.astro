@@ -1,0 +1,133 @@
+---
+import PromoBar from '@/components/PromoBar.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+import MetaPixel from '@/components/MetaPixel.astro';
+import CookieConsent from '@/components/CookieConsent.astro';
+import CartDrawer from '@/components/CartDrawer';
+import ExitIntentOverlay from '@/components/ExitIntentOverlay';
+import SMSCaptureOverlay from '@/components/SMSCaptureOverlay';
+import { getStoreConfig } from '@/lib/store-config';
+import { sendCAPIEvent, buildUserData, generateEventId } from '@/lib/meta-capi';
+import '@/styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  ogImage?: string;
+  ogType?: string;
+  canonical?: string;
+  noindex?: boolean;
+  hideCart?: boolean;
+  hideFooter?: boolean;
+}
+
+const config = await getStoreConfig(Astro.request);
+
+const {
+  title,
+  description = `${config.storeName} — sklep internetowy`,
+  ogImage,
+  ogType = 'website',
+  canonical,
+  noindex = false,
+  hideCart = false,
+  hideFooter = false,
+} = Astro.props;
+
+const siteName = config.storeName;
+const fullTitle = title ? `${title} | ${siteName}` : `${siteName} — Sklep internetowy`;
+const canonicalUrl = canonical || Astro.url.href;
+const siteUrl = (import.meta.env.PUBLIC_SITE_URL || 'http://localhost:4321').trim();
+const ogImageUrl = ogImage ? (ogImage.startsWith('http') ? ogImage : `${siteUrl}${ogImage}`) : undefined;
+const freeShippingThreshold = config.freeShippingThreshold;
+
+// CAPI: PageView (server-side) — consent-gated
+// eventId shared with browser pixel for deduplication
+const pageViewEventId = generateEventId();
+const cookies = Astro.request.headers.get('cookie') || '';
+const hasConsent = cookies.includes('cookie_consent=accepted');
+if (hasConsent && config.metaPixelId) {
+  const userData = await buildUserData(Astro.request);
+  sendCAPIEvent({
+    event_name: 'PageView',
+    event_time: Math.floor(Date.now() / 1000),
+    event_id: pageViewEventId,
+    event_source_url: Astro.url.href,
+    action_source: 'website',
+    user_data: userData,
+  }, config.metaDatasetId);
+}
+---
+
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content={ogType} />
+    <meta property="og:title" content={title || siteName} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:site_name" content={siteName} />
+    {ogImageUrl && <meta property="og:image" content={ogImageUrl} />}
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content={ogImageUrl ? 'summary_large_image' : 'summary'} />
+    <meta name="twitter:title" content={title || siteName} />
+    <meta name="twitter:description" content={description} />
+    {ogImageUrl && <meta name="twitter:image" content={ogImageUrl} />}
+
+    <!-- Preconnect to Vendure asset server -->
+    <link rel="preconnect" href={import.meta.env.VENDURE_API_URL?.replace('/shop-api', '') || 'http://localhost:3001'} />
+
+    <!-- Inter font (non-blocking: preload + onload swap) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      onload="this.onload=null;this.rel='stylesheet'"
+    />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" /></noscript>
+
+    <!-- Meta Pixel (consent-gated, ID from Channel config) -->
+    <MetaPixel pixelId={config.metaPixelId} pageViewEventId={pageViewEventId} />
+
+    <!-- Extra head content -->
+    <slot name="head" />
+  </head>
+  <body data-free-shipping={freeShippingThreshold}>
+    {!hideCart && config.promoBarText && <PromoBar text={config.promoBarText} href={config.promoBarLink || '/#produkty'} linkText="Kup teraz" />}
+    <Header storeName={config.storeName} hideCart={hideCart} />
+    <main>
+      <slot />
+    </main>
+    {!hideFooter && <Footer storeName={config.storeName} storeTagline={config.storeTagline} contactEmail={config.contactEmail} />}
+    {!hideCart && <CartDrawer client:only="react" />}
+    <ExitIntentOverlay client:idle />
+    <SMSCaptureOverlay client:idle />
+    <CookieConsent />
+    <script is:inline>
+    (function() {
+      var orig = document.title;
+      document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+          orig = document.title;
+          document.title = '\uD83D\uDED2 Wracaj do nas!';
+        } else {
+          document.title = orig;
+        }
+      });
+    })();
+    </script>
+  </body>
+</html>
