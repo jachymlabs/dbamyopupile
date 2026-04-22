@@ -810,4 +810,25 @@ const jsonLd = {
       });
     })();
   </script>
+
+  {/* Scroll reveal for handoff sections */}
+  <script>
+    (function() {
+      const items = document.querySelectorAll('.wm-pdp .reveal');
+      if (!items.length) return;
+      if (!('IntersectionObserver' in window)) {
+        items.forEach((el) => el.classList.add('in'));
+        return;
+      }
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('in');
+            io.unobserve(entry.target);
+          }
+        });
+      }, { rootMargin: '0px 0px -10% 0px', threshold: 0.05 });
+      items.forEach((el) => io.observe(el));
+    })();
+  </script>
 </BaseLayout>
