@@ -408,6 +408,66 @@ const jsonLd = {
         </div>
       </section>
 
+      <!-- 07a BUNDLE -->
+      <section class="section bundle-section">
+        <div class="wrap">
+          <h2 class="h2 reveal">Wybierz zestaw</h2>
+          <p class="bundle-lede reveal d1">Najczęściej klienci zamawiają od razu dwie — jedną do kuchni, jedną do mokrej karmy. Trzy sztuki = darmowa dostawa.</p>
+
+          <div class="bundle-grid">
+            <article class="bundle-card reveal">
+              <div class="bc-qty">1 szt.</div>
+              <div class="bc-price">59,99 zł</div>
+              <div class="bc-each">59,99 zł / sztuka</div>
+              <ul class="bc-feat">
+                <li>Wysyłka 14-21 dni</li>
+                <li>30 dni na zwrot</li>
+                <li>Faktura VAT</li>
+              </ul>
+              <form method="POST" class="bc-form">
+                <input type="hidden" name="variantId" value={firstVariant?.id} />
+                <input type="hidden" name="quantity" value="1" />
+                <button type="submit" class="bc-btn">Zamawiam 1 sztukę</button>
+              </form>
+            </article>
+
+            <article class="bundle-card popular reveal d1">
+              <div class="bc-badge">Najczęściej wybierane</div>
+              <div class="bc-qty">2 szt.</div>
+              <div class="bc-price">119,98 zł</div>
+              <div class="bc-each">59,99 zł / sztuka</div>
+              <ul class="bc-feat">
+                <li>Jedna do kuchni, jedna do salonu</li>
+                <li>Wysyłka 14-21 dni</li>
+                <li>30 dni na zwrot</li>
+              </ul>
+              <form method="POST" class="bc-form">
+                <input type="hidden" name="variantId" value={firstVariant?.id} />
+                <input type="hidden" name="quantity" value="2" />
+                <button type="submit" class="bc-btn bc-btn-primary">Zamawiam 2 sztuki</button>
+              </form>
+            </article>
+
+            <article class="bundle-card reveal d2">
+              <div class="bc-badge bc-badge-free">+ Darmowa dostawa</div>
+              <div class="bc-qty">3 szt.</div>
+              <div class="bc-price">179,97 zł</div>
+              <div class="bc-each">59,99 zł / sztuka</div>
+              <ul class="bc-feat">
+                <li>Darmowa dostawa InPost</li>
+                <li>Idealne na prezent</li>
+                <li>30 dni na zwrot</li>
+              </ul>
+              <form method="POST" class="bc-form">
+                <input type="hidden" name="variantId" value={firstVariant?.id} />
+                <input type="hidden" name="quantity" value="3" />
+                <button type="submit" class="bc-btn">Zamawiam 3 sztuki</button>
+              </form>
+            </article>
+          </div>
+        </div>
+      </section>
+
       <!-- 07b REVIEWS -->
       <section class="section reviews-section">
         <div class="wrap">
@@ -504,62 +564,20 @@ const jsonLd = {
         </div>
       </section>
 
-      <!-- 08b BUNDLE -->
-      <section class="section bundle-section">
+      <!-- 08c PHONE / KONTAKT -->
+      <section class="section phone-section">
         <div class="wrap">
-          <h2 class="h2 reveal">Wybierz zestaw</h2>
-          <p class="bundle-lede reveal d1">Najczęściej klienci zamawiają od razu dwie — jedną do kuchni, jedną do mokrej karmy. Trzy sztuki = darmowa dostawa.</p>
-
-          <div class="bundle-grid">
-            <article class="bundle-card reveal">
-              <div class="bc-qty">1 szt.</div>
-              <div class="bc-price">59,99 zł</div>
-              <div class="bc-each">59,99 zł / sztuka</div>
-              <ul class="bc-feat">
-                <li>Wysyłka 14-21 dni</li>
-                <li>30 dni na zwrot</li>
-                <li>Faktura VAT</li>
-              </ul>
-              <form method="POST" class="bc-form">
-                <input type="hidden" name="variantId" value={firstVariant?.id} />
-                <input type="hidden" name="quantity" value="1" />
-                <button type="submit" class="bc-btn">Zamawiam 1 sztukę</button>
-              </form>
-            </article>
-
-            <article class="bundle-card popular reveal d1">
-              <div class="bc-badge">Najczęściej wybierane</div>
-              <div class="bc-qty">2 szt.</div>
-              <div class="bc-price">119,98 zł</div>
-              <div class="bc-each">59,99 zł / sztuka</div>
-              <ul class="bc-feat">
-                <li>Jedna do kuchni, jedna do salonu</li>
-                <li>Wysyłka 14-21 dni</li>
-                <li>30 dni na zwrot</li>
-              </ul>
-              <form method="POST" class="bc-form">
-                <input type="hidden" name="variantId" value={firstVariant?.id} />
-                <input type="hidden" name="quantity" value="2" />
-                <button type="submit" class="bc-btn bc-btn-primary">Zamawiam 2 sztuki</button>
-              </form>
-            </article>
-
-            <article class="bundle-card reveal d2">
-              <div class="bc-badge bc-badge-free">+ Darmowa dostawa</div>
-              <div class="bc-qty">3 szt.</div>
-              <div class="bc-price">179,97 zł</div>
-              <div class="bc-each">59,99 zł / sztuka</div>
-              <ul class="bc-feat">
-                <li>Darmowa dostawa InPost</li>
-                <li>Idealne na prezent</li>
-                <li>30 dni na zwrot</li>
-              </ul>
-              <form method="POST" class="bc-form">
-                <input type="hidden" name="variantId" value={firstVariant?.id} />
-                <input type="hidden" name="quantity" value="3" />
-                <button type="submit" class="bc-btn">Zamawiam 3 sztuki</button>
-              </form>
-            </article>
+          <div class="phone-grid">
+            <div class="phone-text reveal">
+              <h2 class="h2">Wolisz zadzwonić?</h2>
+              <p class="phone-lede">Przyjmujemy zamówienia telefonicznie. Masz pytania o produkt, dostawę albo czy pasuje dla Twojego psa? Zadzwoń — pomożemy bez pośpiechu.</p>
+              <p class="phone-hours">Poniedziałek-piątek · 9:00 - 17:00</p>
+            </div>
+            <div class="phone-cta reveal d1">
+              <div class="phone-label">Zamówienia i pytania</div>
+              <a href="tel:+48000000000" class="phone-number">+48 000 000 000</a>
+              <div class="phone-or">albo napisz: <a href="mailto:kontakt@dbamyopupile.pl">kontakt@dbamyopupile.pl</a></div>
+            </div>
           </div>
         </div>
       </section>
@@ -763,6 +781,21 @@ const jsonLd = {
       .wm-pdp .faq-q:hover .q-text{color:var(--wm-navy)}
       .wm-pdp .faq-a-inner{padding:0 0 28px 56px;font-size:15px;line-height:1.65;color:var(--wm-ink-2);max-width:640px}
       .wm-pdp .faq-a-inner strong{color:var(--wm-ink);font-weight:600}
+
+      /* Phone section */
+      .wm-pdp .phone-section{background:var(--wm-canvas);border-top:1px solid var(--wm-rule)}
+      .wm-pdp .phone-grid{display:grid;grid-template-columns:1fr;gap:clamp(28px, 3.5vw, 48px);align-items:center}
+      @media(min-width:860px){.wm-pdp .phone-grid{grid-template-columns:1.1fr 0.9fr}}
+      .wm-pdp .phone-text .h2{margin:0 0 18px}
+      .wm-pdp .phone-lede{font-family:var(--wm-f-body);font-weight:400;font-size:clamp(15px, 1.3vw, 17px);line-height:1.6;color:var(--wm-ink-2);max-width:480px;margin:0 0 18px}
+      .wm-pdp .phone-hours{font-family:var(--wm-f-body);font-weight:600;font-size:13px;letter-spacing:0.04em;text-transform:uppercase;color:var(--wm-navy);margin:0}
+      .wm-pdp .phone-cta{background:var(--wm-white);border:1px solid var(--wm-rule);padding:32px 28px;display:flex;flex-direction:column;gap:12px;align-items:flex-start}
+      .wm-pdp .phone-label{font-family:var(--wm-f-body);font-weight:600;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:var(--wm-ink-2)}
+      .wm-pdp .phone-number{font-family:var(--wm-f-display);font-weight:700;font-size:clamp(28px, 3.2vw, 40px);letter-spacing:-0.02em;line-height:1;color:var(--wm-navy);text-decoration:none;transition:color 200ms var(--wm-ease)}
+      .wm-pdp .phone-number:hover{color:var(--wm-ink)}
+      .wm-pdp .phone-or{font-family:var(--wm-f-body);font-size:14px;color:var(--wm-ink-2);margin-top:6px}
+      .wm-pdp .phone-or a{color:var(--wm-navy);text-decoration:underline;text-underline-offset:3px}
+      .wm-pdp .phone-or a:hover{color:var(--wm-ink)}
 
       /* Final CTA */
       .wm-pdp .final{background:var(--wm-ivory-2);color:var(--wm-ink);padding:clamp(48px, 6vw, 88px) 0;border-top:1px solid var(--wm-rule)}
