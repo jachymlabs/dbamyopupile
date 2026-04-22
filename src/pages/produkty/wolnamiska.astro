@@ -135,72 +135,192 @@ const jsonLd = {
   <div class="bg-brand-canvas text-brand-text">
 
     <!-- ============================================ -->
-    <!-- HERO + ATC (nie ruszaj logiki, mozesz ruszac styling) -->
+    <!-- HERO + ATC — Conversion-Optimized (research-pdp-hero.md) -->
     <!-- ============================================ -->
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
-      <Breadcrumbs items={[
-        { label: 'Strona główna', href: '/' },
-        { label: product.name },
-      ]} />
+    <section class="wm-hero">
+      <div class="wm-hero-wrap">
+        <nav class="wm-breadcrumbs" aria-label="Breadcrumb">
+          <a href="/">Strona główna</a>
+          <span aria-hidden="true">/</span>
+          <span>{product.name}</span>
+        </nav>
 
-      <div class="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-        <div class="aspect-square overflow-hidden rounded-lg bg-white">
-          {mainImage && (
-            <img
-              src={buildAssetUrl(mainImage.preview, 'large')}
-              alt={product.name}
-              width="800"
-              height="800"
-              class="h-full w-full object-cover"
-              fetchpriority="high"
-              loading="eager"
-            />
-          )}
-        </div>
+        <div class="wm-hero-grid">
+          <!-- LEFT: Sticky Gallery -->
+          <div class="wm-gallery-col">
+            <div class="wm-gallery">
+              <div class="wm-gallery-main" id="wm-gallery-main">
+                {mainImage && (
+                  <img
+                    src={buildAssetUrl(mainImage.preview, 'large')}
+                    alt={product.name}
+                    width="900"
+                    height="900"
+                    class="wm-gallery-img active"
+                    data-idx="0"
+                    fetchpriority="high"
+                    loading="eager"
+                  />
+                )}
+                <img src="/produkty/wolnamiska/frenchie-licking.png" alt="WolnaMiska w użyciu — buldog francuski" class="wm-gallery-img" data-idx="1" loading="lazy" />
+                <img src="/produkty/wolnamiska/product-linen-v2.png" alt="WolnaMiska — skala produktu" class="wm-gallery-img" data-idx="2" loading="lazy" />
+                <img src="/produkty/wolnamiska/broth-pour.png" alt="Wlewanie do WolnaMiska — detal" class="wm-gallery-img" data-idx="3" loading="lazy" />
+                <img src="/produkty/wolnamiska/flatlay.png" alt="WolnaMiska — gotowa do mycia" class="wm-gallery-img" data-idx="4" loading="lazy" />
+                <span class="wm-gallery-badge">5 zdjęć</span>
+              </div>
 
-        <div>
-          <h1 class="text-2xl sm:text-3xl font-bold text-brand-text">{product.name}</h1>
-          <Price price={lowestPrice} class="mt-3 text-xl" />
+              <div class="wm-gallery-thumbs" role="tablist" aria-label="Galeria produktu">
+                <button class="wm-thumb active" data-target="0" aria-label="Zdjęcie 1">
+                  {mainImage && <img src={buildAssetUrl(mainImage.preview, 'medium')} alt="" />}
+                </button>
+                <button class="wm-thumb" data-target="1" aria-label="Zdjęcie 2"><img src="/produkty/wolnamiska/frenchie-licking.png" alt="" loading="lazy" /></button>
+                <button class="wm-thumb" data-target="2" aria-label="Zdjęcie 3"><img src="/produkty/wolnamiska/product-linen-v2.png" alt="" loading="lazy" /></button>
+                <button class="wm-thumb" data-target="3" aria-label="Zdjęcie 4"><img src="/produkty/wolnamiska/broth-pour.png" alt="" loading="lazy" /></button>
+                <button class="wm-thumb" data-target="4" aria-label="Zdjęcie 5"><img src="/produkty/wolnamiska/flatlay.png" alt="" loading="lazy" /></button>
+              </div>
 
-          <form method="POST" class="mt-6 space-y-4">
-            <input type="hidden" name="variantId" value={firstVariant?.id} />
-            <div>
-              <label for="quantity" class="block text-sm font-medium text-brand-text mb-1.5">Ilosc</label>
-              <input
-                type="number"
-                name="quantity"
-                id="quantity"
-                value="1"
-                min="1"
-                max="99"
-                required
-                class="w-20 rounded-lg border border-gray-300 px-3 py-2 text-sm text-center focus:border-brand-secondary focus:ring-1 focus:ring-brand-secondary focus:outline-none"
-              />
+              <div class="wm-gallery-dots" aria-hidden="true">
+                <span class="wm-dot active" data-dot="0"></span>
+                <span class="wm-dot" data-dot="1"></span>
+                <span class="wm-dot" data-dot="2"></span>
+                <span class="wm-dot" data-dot="3"></span>
+                <span class="wm-dot" data-dot="4"></span>
+              </div>
             </div>
-            {allOutOfStock ? (
-              <button type="button" disabled class="w-full sm:w-auto rounded-lg bg-gray-300 px-6 py-3 text-sm font-semibold text-gray-500 cursor-not-allowed">
-                Niedostepny
-              </button>
-            ) : (
-              <Button type="submit" variant="primary" size="lg" class="w-full sm:w-auto" id="primary-atc-btn">
-                Dodaj do koszyka
-              </Button>
+          </div>
+
+          <!-- RIGHT: Conversion Engine -->
+          <div class="wm-conv-col">
+            <div class="wm-rating">
+              <div class="wm-stars" aria-label="Ocena 4.9 na 5">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
+              </div>
+              <span class="wm-rating-text"><strong>4,9/5</strong> · 240 opinii klientów</span>
+            </div>
+
+            <h1 class="wm-title">WolnaMiska™ — Koniec z łapczywym jedzeniem i wzdęciami</h1>
+            <p class="wm-subtitle">Innowacyjna miska z ruchomą piłką w środku. Zmienia każdy posiłek w 15 minut zdrowej zabawy zamiast 30 sekund łapczywego jedzenia.</p>
+
+            <div class="wm-price-block">
+              <div class="wm-price-row">
+                <span class="wm-price" id="wm-price">59,99 zł</span>
+                <span class="wm-price-old">89,99 zł</span>
+                <span class="wm-price-save">Oszczędzasz 30 zł</span>
+              </div>
+              <div class="wm-omnibus">Najniższa cena z 30 dni przed obniżką: 59,99 zł</div>
+            </div>
+
+            <ul class="wm-usps">
+              <li>
+                <svg class="wm-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                <span><strong>Zdrowe trawienie</strong> — koniec ze wzdęciami i wymiotami</span>
+              </li>
+              <li>
+                <svg class="wm-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                <span><strong>Uspokaja pupila</strong> — lizanie uwalnia endorfiny</span>
+              </li>
+              <li>
+                <svg class="wm-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                <span><strong>Zmywarka 70°C</strong> — bezpieczne tworzywo, łatwe czyszczenie</span>
+              </li>
+            </ul>
+
+            <form method="POST" class="wm-form" id="wm-atc-form">
+              <input type="hidden" name="variantId" value={firstVariant?.id} />
+              <input type="hidden" name="quantity" id="wm-qty" value="1" />
+
+              <div class="wm-bundle-label">Wybierz zestaw</div>
+              <div class="wm-bundles" role="radiogroup" aria-label="Wybierz zestaw">
+                <label class="wm-bundle-card active" data-qty="1" data-price="59,99 zł">
+                  <input type="radio" name="bundle" value="1" checked />
+                  <div class="wm-bundle-radio"></div>
+                  <div class="wm-bundle-body">
+                    <div class="wm-bundle-top">
+                      <span class="wm-bundle-name">1 sztuka</span>
+                      <span class="wm-bundle-price">59,99 zł</span>
+                    </div>
+                    <div class="wm-bundle-sub">Na spróbowanie</div>
+                  </div>
+                </label>
+
+                <label class="wm-bundle-card popular" data-qty="2" data-price="104,99 zł">
+                  <span class="wm-bundle-badge">Bestseller · −15 zł</span>
+                  <input type="radio" name="bundle" value="2" />
+                  <div class="wm-bundle-radio"></div>
+                  <div class="wm-bundle-body">
+                    <div class="wm-bundle-top">
+                      <span class="wm-bundle-name">Zestaw 2 szt</span>
+                      <span class="wm-bundle-price">104,99 zł</span>
+                    </div>
+                    <div class="wm-bundle-sub">Wybór 70% klientów · 52,49 zł / szt</div>
+                  </div>
+                </label>
+
+                <label class="wm-bundle-card" data-qty="3" data-price="149,99 zł">
+                  <span class="wm-bundle-badge gold">−30 zł + Darmowa dostawa</span>
+                  <input type="radio" name="bundle" value="3" />
+                  <div class="wm-bundle-radio"></div>
+                  <div class="wm-bundle-body">
+                    <div class="wm-bundle-top">
+                      <span class="wm-bundle-name">Zestaw 3 szt</span>
+                      <span class="wm-bundle-price">149,99 zł</span>
+                    </div>
+                    <div class="wm-bundle-sub">49,99 zł / szt · maksymalna oszczędność</div>
+                  </div>
+                </label>
+              </div>
+
+              {allOutOfStock ? (
+                <button type="button" disabled class="wm-atc disabled">Chwilowo niedostępna</button>
+              ) : (
+                <button type="submit" class="wm-atc" id="primary-atc-btn">
+                  <span class="wm-atc-text">Kup Teraz</span>
+                  <span class="wm-atc-price" id="wm-atc-price">59,99 zł</span>
+                  <svg class="wm-atc-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </button>
+              )}
+
+              <div class="wm-delivery-promise">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                <span>Zamów do <strong>14:00</strong>, paczka wyruszy <strong>jeszcze dzisiaj</strong> · Dostawa jutro do Paczkomatu</span>
+              </div>
+            </form>
+
+            <div class="wm-trust-row">
+              <div class="wm-trust">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                <span><strong>BLIK + PayU</strong><small>Bezpieczne płatności</small></span>
+              </div>
+              <div class="wm-trust">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="1"/><line x1="9" y1="4" x2="9" y2="20"/><line x1="15" y1="4" x2="15" y2="20"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/></svg>
+                <span><strong>InPost Paczkomat</strong><small>Wysyłka 24h</small></span>
+              </div>
+              <div class="wm-trust">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+                <span><strong>30 dni zwrotu</strong><small>Bez tłumaczenia się</small></span>
+              </div>
+              <div class="wm-trust">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v6c0 4.5-3.5 7-8 8-4.5-1-8-3.5-8-8V7l8-4z"/></svg>
+                <span><strong>Polski sklep</strong><small>Wysyłka z PL</small></span>
+              </div>
+            </div>
+
+            {!allOutOfStock && firstVariant && (
+              <StickyATCBar
+                client:idle
+                productName={product.name}
+                price={lowestPrice}
+                variantId={firstVariant.id}
+              />
             )}
-          </form>
-
-          <TrustBadges />
-
-          {!allOutOfStock && firstVariant && (
-            <StickyATCBar
-              client:idle
-              productName={product.name}
-              price={lowestPrice}
-              variantId={firstVariant.id}
-            />
-          )}
+          </div>
         </div>
       </div>
-    </div>
+    </section>
 
     <!-- ============================================ -->
     <!-- CUSTOM SECTIONS — handoff Claude Design (WolnaMiska PDP) -->
@@ -611,6 +731,160 @@ const jsonLd = {
     </div>
 
     <style is:inline>
+      /* ================================================================ */
+      /* HERO — Conversion-Optimized PDP Card                             */
+      /* ================================================================ */
+      .wm-hero{
+        --h-canvas: oklch(0.972 0.012 85);
+        --h-ivory: oklch(0.955 0.015 82);
+        --h-navy: oklch(0.30 0.06 255);
+        --h-navy-2: oklch(0.22 0.05 255);
+        --h-blue: oklch(0.85 0.055 235);
+        --h-blue-soft: oklch(0.93 0.025 235);
+        --h-orange: oklch(0.72 0.18 45);
+        --h-orange-2: oklch(0.66 0.20 42);
+        --h-ink: oklch(0.18 0.004 265);
+        --h-ink-2: oklch(0.42 0.01 265);
+        --h-ink-3: oklch(0.58 0.008 265);
+        --h-rule: oklch(0.88 0.01 85);
+        --h-rule-soft: oklch(0.92 0.008 85);
+        --h-white: #ffffff;
+        --h-gold: oklch(0.78 0.13 75);
+        --h-shadow-card: 0 1px 3px oklch(0.30 0.06 255 / 0.04), 0 8px 24px oklch(0.30 0.06 255 / 0.06);
+        --h-shadow-cta: 0 4px 14px oklch(0.66 0.20 42 / 0.35), 0 1px 3px oklch(0.66 0.20 42 / 0.20);
+        --h-shadow-cta-hover: 0 8px 24px oklch(0.66 0.20 42 / 0.45), 0 2px 6px oklch(0.66 0.20 42 / 0.30);
+        --h-f-display: "Fraunces", "Iowan Old Style", Georgia, serif;
+        --h-f-body: "Inter", -apple-system, system-ui, sans-serif;
+        --h-ease: cubic-bezier(0.16, 1, 0.3, 1);
+        background: var(--h-canvas);
+        font-family: var(--h-body);
+        color: var(--h-ink);
+        padding: clamp(16px, 2.5vw, 32px) 0 clamp(40px, 5vw, 72px);
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+      }
+      .wm-hero *,.wm-hero *::before,.wm-hero *::after{box-sizing:border-box}
+      .wm-hero img{display:block;max-width:100%;height:auto}
+      .wm-hero button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;padding:0}
+      .wm-hero a{color:inherit;text-decoration:none}
+      .wm-hero-wrap{max-width:1240px;margin:0 auto;padding:0 clamp(16px, 4vw, 56px)}
+
+      /* Breadcrumbs */
+      .wm-breadcrumbs{display:flex;align-items:center;gap:8px;font-family:var(--h-f-body);font-size:13px;color:var(--h-ink-3);margin-bottom:clamp(16px, 2.5vw, 28px)}
+      .wm-breadcrumbs a{color:var(--h-ink-3);transition:color 200ms var(--h-ease)}
+      .wm-breadcrumbs a:hover{color:var(--h-navy)}
+      .wm-breadcrumbs span[aria-hidden]{color:var(--h-ink-3);opacity:0.5}
+
+      /* Grid layout */
+      .wm-hero-grid{display:grid;grid-template-columns:1fr;gap:clamp(28px, 4vw, 56px);align-items:start}
+      @media(min-width:980px){.wm-hero-grid{grid-template-columns:1.05fr 0.95fr;gap:clamp(40px, 5vw, 72px)}}
+
+      /* Gallery */
+      .wm-gallery-col{position:relative}
+      @media(min-width:980px){.wm-gallery-col{position:sticky;top:24px}}
+      .wm-gallery{display:flex;flex-direction:column;gap:14px}
+      .wm-gallery-main{position:relative;aspect-ratio:4/5;background:var(--h-white);overflow:hidden;border:1px solid var(--h-rule-soft);border-radius:14px;box-shadow:var(--h-shadow-card)}
+      @media(min-width:980px){.wm-gallery-main{aspect-ratio:1/1;border-radius:18px}}
+      .wm-gallery-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 400ms var(--h-ease)}
+      .wm-gallery-img.active{opacity:1}
+      .wm-gallery-badge{position:absolute;bottom:14px;right:14px;background:oklch(0.18 0.004 265 / 0.78);color:var(--h-white);font-family:var(--h-f-body);font-size:11px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;padding:6px 12px;border-radius:999px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+      .wm-gallery-thumbs{display:none;gap:10px}
+      @media(min-width:980px){.wm-gallery-thumbs{display:grid;grid-template-columns:repeat(5,1fr)}}
+      .wm-thumb{aspect-ratio:1/1;background:var(--h-white);border:2px solid var(--h-rule-soft);border-radius:10px;overflow:hidden;transition:border-color 200ms var(--h-ease), transform 200ms var(--h-ease);padding:0}
+      .wm-thumb img{width:100%;height:100%;object-fit:cover}
+      .wm-thumb:hover{border-color:var(--h-navy);transform:translateY(-2px)}
+      .wm-thumb.active{border-color:var(--h-navy);box-shadow:0 0 0 1px var(--h-navy)}
+      .wm-gallery-dots{display:flex;justify-content:center;gap:8px;padding-top:4px}
+      @media(min-width:980px){.wm-gallery-dots{display:none}}
+      .wm-dot{width:7px;height:7px;border-radius:50%;background:var(--h-rule);transition:background 200ms var(--h-ease), transform 200ms var(--h-ease)}
+      .wm-dot.active{background:var(--h-navy);transform:scale(1.3)}
+
+      /* Conversion column */
+      .wm-conv-col{display:flex;flex-direction:column;gap:0}
+
+      /* Rating row */
+      .wm-rating{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+      .wm-stars{display:flex;gap:2px;color:var(--h-gold)}
+      .wm-stars svg{width:16px;height:16px}
+      .wm-rating-text{font-family:var(--h-f-body);font-size:13px;color:var(--h-ink-2)}
+      .wm-rating-text strong{color:var(--h-ink);font-weight:600}
+
+      /* Title + subtitle */
+      .wm-title{font-family:var(--h-f-display);font-weight:700;font-size:clamp(28px, 3.6vw, 44px);line-height:1.05;letter-spacing:-0.025em;color:var(--h-ink);margin:0 0 14px;max-width:580px}
+      .wm-subtitle{font-family:var(--h-f-body);font-weight:400;font-size:clamp(15px, 1.3vw, 17px);line-height:1.55;color:var(--h-ink-2);margin:0 0 24px;max-width:540px}
+
+      /* Price block */
+      .wm-price-block{padding:18px 0;border-top:1px solid var(--h-rule-soft);border-bottom:1px solid var(--h-rule-soft);margin-bottom:24px}
+      .wm-price-row{display:flex;align-items:baseline;flex-wrap:wrap;gap:14px}
+      .wm-price{font-family:var(--h-f-display);font-weight:700;font-size:clamp(30px, 3.5vw, 40px);line-height:1;letter-spacing:-0.025em;color:var(--h-navy)}
+      .wm-price-old{font-family:var(--h-f-body);font-weight:500;font-size:18px;color:var(--h-ink-3);text-decoration:line-through}
+      .wm-price-save{font-family:var(--h-f-body);font-weight:600;font-size:12px;letter-spacing:0.04em;text-transform:uppercase;color:var(--h-orange-2);background:oklch(0.66 0.20 42 / 0.10);padding:5px 10px;border-radius:6px}
+      .wm-omnibus{font-family:var(--h-f-body);font-weight:400;font-size:11px;color:var(--h-ink-3);margin-top:8px;line-height:1.4}
+
+      /* USP bullets */
+      .wm-usps{list-style:none;padding:0;margin:0 0 28px;display:flex;flex-direction:column;gap:11px}
+      .wm-usps li{display:flex;align-items:flex-start;gap:11px;font-family:var(--h-f-body);font-size:15px;line-height:1.45;color:var(--h-ink-2)}
+      .wm-usps li strong{color:var(--h-ink);font-weight:600}
+      .wm-check{flex-shrink:0;width:20px;height:20px;color:var(--h-navy);margin-top:1px}
+
+      /* Form */
+      .wm-form{display:flex;flex-direction:column;gap:18px;margin-bottom:24px}
+      .wm-bundle-label{font-family:var(--h-f-body);font-weight:600;font-size:13px;letter-spacing:0.03em;text-transform:uppercase;color:var(--h-ink);margin-bottom:-6px}
+
+      /* Bundle cards */
+      .wm-bundles{display:flex;flex-direction:column;gap:10px}
+      .wm-bundle-card{position:relative;display:flex;align-items:center;gap:14px;padding:16px 18px;background:var(--h-white);border:1.5px solid var(--h-rule);border-radius:12px;cursor:pointer;transition:all 250ms var(--h-ease)}
+      .wm-bundle-card:hover{border-color:var(--h-navy);transform:translateY(-1px);box-shadow:var(--h-shadow-card)}
+      .wm-bundle-card.active{border-color:var(--h-navy);background:oklch(0.93 0.025 235 / 0.35);box-shadow:0 0 0 1px var(--h-navy), var(--h-shadow-card)}
+      .wm-bundle-card.popular{border-color:var(--h-orange-2)}
+      .wm-bundle-card.popular.active{border-color:var(--h-navy);background:oklch(0.93 0.025 235 / 0.35);box-shadow:0 0 0 1px var(--h-navy), var(--h-shadow-card)}
+      .wm-bundle-card input[type="radio"]{position:absolute;opacity:0;pointer-events:none}
+      .wm-bundle-radio{flex-shrink:0;width:20px;height:20px;border-radius:50%;border:2px solid var(--h-rule);background:var(--h-white);position:relative;transition:border-color 200ms var(--h-ease)}
+      .wm-bundle-card.active .wm-bundle-radio{border-color:var(--h-navy)}
+      .wm-bundle-card.active .wm-bundle-radio::after{content:"";position:absolute;inset:3px;background:var(--h-navy);border-radius:50%}
+      .wm-bundle-body{flex:1;display:flex;flex-direction:column;gap:3px;min-width:0}
+      .wm-bundle-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+      .wm-bundle-name{font-family:var(--h-f-body);font-weight:600;font-size:15px;color:var(--h-ink)}
+      .wm-bundle-price{font-family:var(--h-f-display);font-weight:700;font-size:17px;color:var(--h-navy);letter-spacing:-0.01em;white-space:nowrap}
+      .wm-bundle-sub{font-family:var(--h-f-body);font-weight:400;font-size:12.5px;color:var(--h-ink-3)}
+      .wm-bundle-badge{position:absolute;top:-9px;left:14px;background:var(--h-orange-2);color:var(--h-white);font-family:var(--h-f-body);font-weight:700;font-size:10px;letter-spacing:0.06em;text-transform:uppercase;padding:4px 10px;border-radius:6px;line-height:1.3;white-space:nowrap}
+      .wm-bundle-badge.gold{background:var(--h-navy)}
+
+      /* ATC button */
+      .wm-atc{position:relative;display:flex;align-items:center;justify-content:center;gap:14px;width:100%;min-height:60px;padding:18px 28px;background:var(--h-orange);color:var(--h-white);border-radius:14px;font-family:var(--h-f-body);font-weight:700;font-size:16px;letter-spacing:0.01em;box-shadow:var(--h-shadow-cta);transition:all 250ms var(--h-ease);overflow:hidden}
+      .wm-atc::before{content:"";position:absolute;inset:0;background:linear-gradient(135deg, oklch(1 0 0 / 0.18) 0%, transparent 50%);pointer-events:none}
+      .wm-atc:hover{background:var(--h-orange-2);transform:translateY(-2px);box-shadow:var(--h-shadow-cta-hover)}
+      .wm-atc:active{transform:translateY(0);transition-duration:80ms}
+      .wm-atc.disabled{background:var(--h-rule);color:var(--h-ink-3);box-shadow:none;cursor:not-allowed}
+      .wm-atc.disabled:hover{transform:none;background:var(--h-rule)}
+      .wm-atc-text{font-weight:700}
+      .wm-atc-price{font-family:var(--h-f-display);font-weight:700;font-size:19px;letter-spacing:-0.01em}
+      .wm-atc-price::before{content:"·";margin-right:14px;opacity:0.5}
+      .wm-atc-arrow{width:20px;height:20px;transition:transform 250ms var(--h-ease)}
+      .wm-atc:hover .wm-atc-arrow{transform:translateX(4px)}
+
+      /* Delivery promise */
+      .wm-delivery-promise{display:flex;align-items:center;gap:10px;padding:12px 16px;background:oklch(0.85 0.055 235 / 0.18);border-radius:10px;font-family:var(--h-f-body);font-size:13px;line-height:1.45;color:var(--h-navy-2)}
+      .wm-delivery-promise svg{width:20px;height:20px;flex-shrink:0;color:var(--h-navy)}
+      .wm-delivery-promise strong{font-weight:700}
+
+      /* Trust row */
+      .wm-trust-row{display:grid;grid-template-columns:repeat(2,1fr);gap:14px 18px;padding-top:24px;border-top:1px solid var(--h-rule-soft)}
+      @media(min-width:540px){.wm-trust-row{grid-template-columns:repeat(4,1fr)}}
+      .wm-trust{display:flex;align-items:center;gap:10px;color:var(--h-ink-2)}
+      .wm-trust svg{width:24px;height:24px;flex-shrink:0;color:var(--h-navy)}
+      .wm-trust span{display:flex;flex-direction:column;gap:1px;line-height:1.2;min-width:0}
+      .wm-trust strong{font-family:var(--h-f-body);font-weight:600;font-size:12.5px;color:var(--h-ink);letter-spacing:-0.005em}
+      .wm-trust small{font-family:var(--h-f-body);font-weight:400;font-size:11px;color:var(--h-ink-3)}
+
+      /* Mobile tweaks */
+      @media(max-width:520px){
+        .wm-title{font-size:24px}
+        .wm-price{font-size:30px}
+        .wm-atc{font-size:15px;padding:16px 22px}
+        .wm-atc-price{font-size:17px}
+      }
+
       .wm-pdp{
         --wm-canvas: oklch(0.972 0.012 85);
         --wm-ivory-2: oklch(0.955 0.015 82);
@@ -928,6 +1202,78 @@ const jsonLd = {
         });
       }, { rootMargin: '0px 0px -10% 0px', threshold: 0.05 });
       items.forEach((el) => io.observe(el));
+    })();
+  </script>
+
+  {/* Hero interactivity: bundle selection + gallery thumbs/dots */}
+  <script>
+    (function() {
+      // ---- Bundle cards ----
+      const cards = document.querySelectorAll('.wm-bundle-card');
+      const qtyInput = document.getElementById('wm-qty');
+      const atcPrice = document.getElementById('wm-atc-price');
+
+      cards.forEach((card) => {
+        card.addEventListener('click', (e) => {
+          e.preventDefault();
+          cards.forEach((c) => c.classList.remove('active'));
+          card.classList.add('active');
+
+          const radio = card.querySelector('input[type="radio"]');
+          if (radio) radio.checked = true;
+
+          const qty = card.getAttribute('data-qty');
+          const price = card.getAttribute('data-price');
+          if (qtyInput && qty) qtyInput.value = qty;
+          if (atcPrice && price) atcPrice.textContent = price;
+        });
+      });
+
+      // ---- Gallery thumbs (desktop) ----
+      const thumbs = document.querySelectorAll('.wm-thumb');
+      const images = document.querySelectorAll('.wm-gallery-img');
+      const dots = document.querySelectorAll('.wm-dot');
+
+      function activate(idx) {
+        thumbs.forEach((t) => t.classList.toggle('active', t.getAttribute('data-target') === String(idx)));
+        images.forEach((img) => img.classList.toggle('active', img.getAttribute('data-idx') === String(idx)));
+        dots.forEach((d) => d.classList.toggle('active', d.getAttribute('data-dot') === String(idx)));
+      }
+
+      thumbs.forEach((thumb) => {
+        thumb.addEventListener('click', () => {
+          const idx = parseInt(thumb.getAttribute('data-target') || '0', 10);
+          activate(idx);
+        });
+      });
+
+      // ---- Gallery swipe (mobile) ----
+      const main = document.getElementById('wm-gallery-main');
+      if (main) {
+        let touchStartX = 0;
+        let touchEndX = 0;
+        let currentIdx = 0;
+
+        main.addEventListener('touchstart', (e) => {
+          touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        main.addEventListener('touchend', (e) => {
+          touchEndX = e.changedTouches[0].screenX;
+          const diff = touchStartX - touchEndX;
+          if (Math.abs(diff) < 40) return;
+          if (diff > 0 && currentIdx < images.length - 1) currentIdx++;
+          else if (diff < 0 && currentIdx > 0) currentIdx--;
+          activate(currentIdx);
+        }, { passive: true });
+
+        // Sync currentIdx when thumbs clicked
+        thumbs.forEach((thumb) => {
+          thumb.addEventListener('click', () => {
+            currentIdx = parseInt(thumb.getAttribute('data-target') || '0', 10);
+          });
+        });
+      }
     })();
   </script>
 </BaseLayout>
