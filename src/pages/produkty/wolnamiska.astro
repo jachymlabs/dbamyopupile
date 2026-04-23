@@ -403,9 +403,11 @@ const jsonLd = {
               <StickyATCBar
                 client:idle
                 productName={product.name}
+                compactName="WolnaMiska"
                 price={lowestPrice}
                 variantId={firstVariant.id}
                 scrollThreshold={30}
+                imageUrl={mainImage ? buildAssetUrl(mainImage.preview, 'medium') : undefined}
               />
             )}
           </div>

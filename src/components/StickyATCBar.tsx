@@ -8,6 +8,8 @@ interface Props {
   currencyCode?: string;
   observeSelector?: string;
   scrollThreshold?: number;
+  imageUrl?: string;
+  compactName?: string;
 }
 
 export default function StickyATCBar({
@@ -17,13 +19,15 @@ export default function StickyATCBar({
   currencyCode = 'PLN',
   observeSelector = '#primary-atc-btn',
   scrollThreshold,
+  imageUrl,
+  compactName,
 }: Props) {
   const [visible, setVisible] = useState(false);
   const [adding, setAdding] = useState(false);
+  const [success, setSuccess] = useState(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {
-    // Mode 1: scroll percentage threshold (e.g. show after 30% page scroll)
     if (typeof scrollThreshold === 'number') {
       let ticking = false;
       const onScroll = () => {
@@ -42,7 +46,6 @@ export default function StickyATCBar({
       return () => window.removeEventListener('scroll', onScroll);
     }
 
-    // Mode 2 (default): intersection observer on primary ATC element
     const timer = setTimeout(() => {
       const target = document.querySelector(observeSelector);
       if (!target) return;
@@ -65,6 +68,8 @@ export default function StickyATCBar({
     setAdding(true);
     await addToCart(variantId, 1);
     setAdding(false);
+    setSuccess(true);
+    setTimeout(() => setSuccess(false), 1800);
   };
 
   const formattedPrice = new Intl.NumberFormat('pl-PL', {
@@ -72,23 +77,97 @@ export default function StickyATCBar({
     currency: currencyCode,
   }).format(price / 100);
 
+  const displayName = compactName || productName;
+
   return (
     <div
-      className={`fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] transition-transform duration-300 ${visible ? 'translate-y-0' : 'translate-y-full'}`}
-      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      className={`fixed bottom-0 left-0 right-0 z-40 transition-transform duration-300 ease-out ${visible ? 'translate-y-0' : 'translate-y-full'}`}
+      style={{
+        paddingBottom: 'env(safe-area-inset-bottom)',
+        background: 'rgba(255, 255, 255, 0.94)',
+        backdropFilter: 'blur(14px)',
+        WebkitBackdropFilter: 'blur(14px)',
+        borderTop: '1px solid #B8D8E8',
+        boxShadow: '0 -8px 24px rgba(30, 58, 95, 0.10), 0 -1px 4px rgba(30, 58, 95, 0.05)',
+      }}
     >
-      <div className="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-gray-900 truncate">{productName}</p>
-          <p className="text-sm text-gray-600">{formattedPrice}</p>
+      <div className="mx-auto max-w-7xl px-3 sm:px-4 py-2.5 sm:py-3 flex items-center gap-3 sm:gap-4">
+        {imageUrl && (
+          <div
+            className="shrink-0 rounded-xl overflow-hidden bg-white"
+            style={{ width: '52px', height: '52px', border: '1px solid #E5E7EB' }}
+          >
+            <img
+              src={imageUrl}
+              alt=""
+              className="w-full h-full object-cover"
+              style={{ objectPosition: 'center 40%' }}
+            />
+          </div>
+        )}
+
+        <div className="flex-1 min-w-0">
+          <p
+            className="truncate text-[11px] sm:text-xs uppercase tracking-wider"
+            style={{ color: '#9CA3AF', fontWeight: 500, letterSpacing: '0.06em', lineHeight: 1.2 }}
+          >
+            {displayName}
+          </p>
+          <p
+            className="leading-none mt-0.5 sm:mt-1"
+            style={{
+              color: '#1E3A5F',
+              fontFamily: 'Fraunces, "Iowan Old Style", Georgia, serif',
+              fontWeight: 700,
+              fontSize: 'clamp(18px, 4.5vw, 22px)',
+              letterSpacing: '-0.015em',
+            }}
+          >
+            {formattedPrice}
+          </p>
         </div>
+
         <button
           type="button"
           onClick={handleAdd}
-          disabled={adding}
-          className="shrink-0 rounded-lg bg-gray-900 px-6 py-3 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50 transition-colors min-h-[44px]"
+          disabled={adding || success}
+          className="shrink-0 inline-flex items-center justify-center gap-2 transition-all"
+          style={{
+            background: success ? '#16A34A' : '#1E3A5F',
+            color: '#ffffff',
+            fontFamily: 'Inter, system-ui, sans-serif',
+            fontWeight: 700,
+            fontSize: 'clamp(13px, 3.5vw, 15px)',
+            letterSpacing: '0.03em',
+            padding: '14px 18px',
+            borderRadius: '12px',
+            minHeight: '52px',
+            minWidth: 'clamp(120px, 38vw, 160px)',
+            boxShadow: '0 4px 14px rgba(30, 58, 95, 0.28), 0 1px 3px rgba(30, 58, 95, 0.12)',
+            cursor: adding ? 'wait' : 'pointer',
+            border: 'none',
+          }}
+          onMouseEnter={(e) => { if (!adding && !success) (e.currentTarget as HTMLButtonElement).style.background = '#152C48'; }}
+          onMouseLeave={(e) => { if (!adding && !success) (e.currentTarget as HTMLButtonElement).style.background = '#1E3A5F'; }}
         >
-          {adding ? 'Dodawanie...' : 'Dodaj do koszyka'}
+          {success ? (
+            <>
+              <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              <span>Dodano</span>
+            </>
+          ) : adding ? (
+            <span>Dodaję…</span>
+          ) : (
+            <>
+              <span>Kup teraz</span>
+              <svg style={{ width: '16px', height: '16px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+            </>
+          )}
         </button>
       </div>
     </div>
