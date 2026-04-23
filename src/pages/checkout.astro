@@ -416,10 +416,10 @@ const hasErrors = Object.keys(errors).length > 0 || !!globalError;
     )}
 
     <form method="POST" id="checkout-form" novalidate>
-      <div class="md:grid md:grid-cols-5 md:gap-8">
+      <div class="flex flex-col md:grid md:grid-cols-5 md:gap-8">
 
         {/* LEFT: Form (3fr) */}
-        <div class="md:col-span-3 space-y-6 sm:space-y-8">
+        <div class="order-2 md:order-1 md:col-span-3 space-y-6 sm:space-y-8">
 
           {/* SECTION 1: Kontakt */}
           <section id="section-contact">
@@ -733,9 +733,9 @@ const hasErrors = Object.keys(errors).length > 0 || !!globalError;
           </section>
         </div>
 
-        {/* RIGHT: Order summary (2fr) */}
-        <div class="md:col-span-2 mt-8 md:mt-0">
-          <div class="rounded-lg bg-gray-50 p-6 sticky top-20">
+        {/* RIGHT: Order summary (2fr) — na mobile na gorze */}
+        <div class="order-1 md:order-2 md:col-span-2 mb-6 md:mb-0 md:mt-0">
+          <div class="rounded-lg bg-gray-50 p-6 md:sticky md:top-20">
             <h2 class="text-lg font-semibold text-gray-900 mb-4">Twoje zamówienie</h2>
             <OrderSummary order={order} />
 
