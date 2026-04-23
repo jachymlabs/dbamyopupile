@@ -444,7 +444,7 @@ const jsonLd = {
         <div class="wrap">
           <h2 class="h2 reveal">Cztery kroki. Piętnaście minut spokoju.</h2>
 
-          <div class="how-grid">
+          <div class="how-grid wm-carousel-mobile" data-carousel>
             <article class="how-card reveal">
               <div class="how-media">
                 <img src="/produkty/wolnamiska/broth-pour.png" alt="Wlewanie bulionu do miski WolnaMiska" loading="lazy" />
@@ -616,7 +616,7 @@ const jsonLd = {
         <div class="wrap">
           <h2 class="h2 reveal">Co dostajesz</h2>
 
-          <div class="features-grid">
+          <div class="features-grid wm-carousel-mobile" data-carousel>
             <article class="feat reveal">
               <div class="feat-img"><img src="/produkty/wolnamiska/product-linen-v2.png" alt="WolnaMiska z profilu" loading="lazy"></div>
               <h3>Koniec z dławieniem</h3>
@@ -1199,6 +1199,38 @@ const jsonLd = {
         if (rect.bottom < 0 || rect.top > window.innerHeight) return;
         if (e.key === 'ArrowLeft') activate(currentIdx - 1);
         else if (e.key === 'ArrowRight') activate(currentIdx + 1);
+      });
+    })();
+  </script>
+
+  {/* Mobile carousel dots — auto-attach to .wm-carousel-mobile */}
+  <script>
+    (function() {
+      if (window.matchMedia('(min-width: 681px)').matches) return;
+
+      const carousels = document.querySelectorAll('[data-carousel]');
+      carousels.forEach((carousel) => {
+        const items = carousel.children;
+        const total = items.length;
+        if (total < 2) return;
+
+        const dots = document.createElement('div');
+        dots.className = 'wm-carousel-dots';
+        for (let i = 0; i < total; i++) {
+          const dot = document.createElement('span');
+          if (i === 0) dot.classList.add('active');
+          dots.appendChild(dot);
+        }
+        carousel.parentNode?.insertBefore(dots, carousel.nextSibling);
+
+        carousel.addEventListener('scroll', () => {
+          const scrollLeft = carousel.scrollLeft;
+          const itemWidth = items[0]?.getBoundingClientRect().width || 1;
+          const idx = Math.round(scrollLeft / (itemWidth + 14));
+          dots.querySelectorAll('span').forEach((d, i) => {
+            d.classList.toggle('active', i === idx);
+          });
+        }, { passive: true });
       });
     })();
   </script>

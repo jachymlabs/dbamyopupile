@@ -406,8 +406,8 @@ const hasErrors = Object.keys(errors).length > 0 || !!globalError;
 ---
 
 <BaseLayout title="Zamówienie" noindex hideCart hideFooter>
-  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
-    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-8">Zamówienie</h1>
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+    <h1 class="text-xl sm:text-3xl font-bold text-gray-900 mb-5 sm:mb-8">Zamówienie</h1>
 
     {globalError && (
       <div class="mb-6 rounded-lg bg-red-50 border border-red-200 p-4">
@@ -419,7 +419,7 @@ const hasErrors = Object.keys(errors).length > 0 || !!globalError;
       <div class="md:grid md:grid-cols-5 md:gap-8">
 
         {/* LEFT: Form (3fr) */}
-        <div class="md:col-span-3 space-y-8">
+        <div class="md:col-span-3 space-y-6 sm:space-y-8">
 
           {/* SECTION 1: Kontakt */}
           <section id="section-contact">
@@ -515,9 +515,13 @@ const hasErrors = Object.keys(errors).length > 0 || !!globalError;
             <button
               type="button"
               id="open-geowidget"
-              class="w-full rounded-lg border-2 border-dashed border-gray-300 p-6 text-center text-sm text-gray-600 hover:border-gray-400 hover:text-gray-800 transition-colors min-h-[44px] cursor-pointer"
+              class="w-full rounded-xl bg-[#1E3A5F] hover:bg-[#152C48] text-white font-semibold py-4 px-6 flex items-center justify-center gap-3 min-h-[56px] cursor-pointer transition-colors shadow-md"
             >
-              Wybierz paczkomat
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              Wybierz Paczkomat na mapie
             </button>
 
             <div id="selected-locker" class="hidden mt-3 rounded-lg border border-green-200 bg-green-50 p-3 flex items-center justify-between gap-3">
@@ -717,9 +721,9 @@ const hasErrors = Object.keys(errors).length > 0 || !!globalError;
               >{formValues.notes || ''}</textarea>
             </div>
 
-            {/* Submit + legal notice */}
-            <div class="space-y-3">
-              <Button type="submit" id="submit-btn" variant="primary" size="lg" class="w-full md:w-auto md:px-12 min-h-[44px]">
+            {/* Submit + legal notice — MOBILE only (pod formularzem) */}
+            <div class="md:hidden space-y-3">
+              <Button type="submit" id="submit-btn-mobile" variant="primary" size="lg" class="w-full min-h-[52px]">
                 Zamawiam z obowiązkiem zapłaty
               </Button>
               <p class="text-xs text-gray-500">
@@ -734,6 +738,16 @@ const hasErrors = Object.keys(errors).length > 0 || !!globalError;
           <div class="rounded-lg bg-gray-50 p-6 sticky top-20">
             <h2 class="text-lg font-semibold text-gray-900 mb-4">Twoje zamówienie</h2>
             <OrderSummary order={order} />
+
+            {/* Submit + legal — DESKTOP only (w prawej kolumnie pod summary) */}
+            <div class="hidden md:block mt-5 pt-5 border-t border-gray-200 space-y-3">
+              <Button type="submit" id="submit-btn" variant="primary" size="lg" class="w-full min-h-[52px]">
+                Zamawiam z obowiązkiem zapłaty
+              </Button>
+              <p class="text-xs text-gray-500 leading-snug">
+                Klikając przycisk, akceptujesz <a href="/regulamin" target="_blank" class="underline hover:text-gray-700">Regulamin</a> i <a href="/polityka-prywatnosci" target="_blank" class="underline hover:text-gray-700">Politykę prywatności</a>.
+              </p>
+            </div>
 
             <div class="mt-4">
               <Button href="/koszyk" variant="outline" size="sm" class="w-full">
@@ -832,7 +846,8 @@ const hasErrors = Object.keys(errors).length > 0 || !!globalError;
 
   // Form
   const checkoutForm = document.getElementById('checkout-form') as HTMLFormElement | null;
-  const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement | null;
+  const submitBtns = Array.from(document.querySelectorAll<HTMLButtonElement>('#submit-btn, #submit-btn-mobile'));
+  const submitBtn = submitBtns[0] ?? null;
 
   // --- State ---
   let currentShippingType: 'paczkomat' | 'kurier' | 'pobranie' = 'kurier';
@@ -1076,10 +1091,10 @@ const hasErrors = Object.keys(errors).length > 0 || !!globalError;
   // --- Loading state on submit ---
   if (checkoutForm) {
     checkoutForm.addEventListener('submit', () => {
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Przetwarzanie...';
-      }
+      submitBtns.forEach((b) => {
+        b.disabled = true;
+        b.textContent = 'Przetwarzanie...';
+      });
     });
   }
 
