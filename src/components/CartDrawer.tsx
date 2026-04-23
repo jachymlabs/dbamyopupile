@@ -318,12 +318,24 @@ function CartDrawerInner() {
 
             {/* Summary + CTA */}
             <div className="shrink-0 border-t border-gray-200 px-4 py-4 space-y-3">
-              {order?.discounts?.map((d, i) => (
-                <div key={i} className="flex justify-between text-sm text-green-700">
-                  <span>{d.description}</span>
-                  <span>-{formatPrice(Math.abs(d.amountWithTax))}</span>
-                </div>
-              ))}
+              {order?.discounts?.map((d, i) => {
+                const isGift = /ebook|gratis/i.test(d.description || '');
+                return (
+                  <div key={i} className="flex items-center justify-between gap-3 py-1 text-sm">
+                    <span className="flex items-center gap-2 text-gray-700 min-w-0">
+                      {isGift ? (
+                        <svg className="w-4 h-4 shrink-0 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+                      ) : (
+                        <svg className="w-4 h-4 shrink-0 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                      )}
+                      <span className="truncate">{d.description}</span>
+                    </span>
+                    <span className="shrink-0 font-semibold text-emerald-700 tabular-nums">
+                      -{formatPrice(Math.abs(d.amountWithTax))}
+                    </span>
+                  </div>
+                );
+              })}
               {(order?.shippingWithTax ?? 0) > 0 && (
                 <div className="flex justify-between text-sm text-gray-600">
                   <span>Dostawa</span>
