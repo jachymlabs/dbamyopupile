@@ -535,7 +535,7 @@ const jsonLd = {
       <section class="section persona-section">
         <div class="wrap">
           <h2 class="h2 reveal">Dla kogo idealnie pasuje WolnaMiska</h2>
-          <p class="lede reveal d1">Dwie sytuacje, w których pies zyskuje najwięcej. Sprawdź, czy rozpoznajesz swojego.</p>
+          <p class="lede reveal d1">Cztery sytuacje, w których pies zyskuje najwięcej. Sprawdź, czy rozpoznajesz swojego.</p>
 
           <div class="persona-grid">
             <article class="persona-card reveal">
@@ -556,6 +556,23 @@ const jsonLd = {
               <p class="persona-desc">Posiłek znika w 30 sekund? Ruchoma kulka i labirynt zmuszają psa do wolnego tempa. Każdy kęs trzeba wypracować — to wycisza i zapobiega bólowi brzucha.</p>
             </article>
 
+            <article class="persona-card reveal d2">
+              <div class="persona-icon">
+                <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="24" r="14"/><path d="M24 14v10l6 4"/><circle cx="24" cy="24" r="2" fill="currentColor" stroke="none"/></svg>
+              </div>
+              <h3 class="persona-name">Senior pies</h3>
+              <p class="persona-target">Każda rasa po 7+ latach</p>
+              <p class="persona-desc">Starszy pies trawi wolniej i łatwiej miewa refluks. Spowolnienie posiłku daje żołądkowi czas, a kulka utrzymuje zaangażowanie psa, który już mniej biega po dworze.</p>
+            </article>
+
+            <article class="persona-card reveal d3">
+              <div class="persona-icon">
+                <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M24 6L24 14M14 10l4 7M34 10l-4 7M10 18l7 3M38 18l-7 3"/><circle cx="24" cy="28" r="10"/><circle cx="20" cy="26" r="1.5" fill="currentColor" stroke="none"/><circle cx="28" cy="26" r="1.5" fill="currentColor" stroke="none"/><path d="M20 32c1 1.5 2.5 2.5 4 2.5s3-1 4-2.5"/></svg>
+              </div>
+              <h3 class="persona-name">Pies, który się nudzi</h3>
+              <p class="persona-target">Terierki, owczarki, husky, border collie</p>
+              <p class="persona-desc">Inteligentne rasy nudzą się w domu po Twojej pracy. Posiłek z kulką to 15 minut łamigłówki dla mózgu — mniej szczekania na sąsiada, mniej pożartych kapci.</p>
+            </article>
           </div>
 
           <p class="persona-footer reveal">Nie pasujesz idealnie do żadnej? Spokojnie — miska sprawdzi się wszędzie tam, gdzie chcesz wydłużyć posiłek i dać psu mentalną stymulację.</p>
@@ -861,7 +878,7 @@ const jsonLd = {
           </div>
 
           <div class="ugc-grid">
-            <div class="ugc-tile reveal big">
+            <div class="ugc-tile reveal">
               <img src="/produkty/wolnamiska/frenchie-licking.png" alt="Buldog francuski liże WolnaMiska" loading="lazy" />
               <div class="ugc-overlay">
                 <span class="ugc-tag">Mokra karma</span>
@@ -882,20 +899,12 @@ const jsonLd = {
               </div>
             </div>
 
-            <div class="ugc-tile reveal d1">
+            <div class="ugc-tile reveal d3">
               <img src="/produkty/wolnamiska/flatlay.png" alt="WolnaMiska gotowa do mycia" loading="lazy" />
               <div class="ugc-overlay">
                 <span class="ugc-tag">Po posiłku</span>
               </div>
             </div>
-
-            <div class="ugc-tile reveal d2">
-              <img src="/produkty/wolnamiska/frenchie-licking.png" alt="Pies z miską" loading="lazy" />
-              <div class="ugc-overlay">
-                <span class="ugc-tag">Pasta orzechowa</span>
-              </div>
-            </div>
-
           </div>
         </div>
       </section>
@@ -1507,8 +1516,9 @@ const jsonLd = {
       /* PERSONA — Dla kogo idealnie                  */
       /* ============================================ */
       .wm-pdp .persona-section{background:var(--wm-canvas)}
-      .wm-pdp .persona-grid{display:grid;grid-template-columns:1fr;gap:18px;margin-top:44px;max-width:880px;margin-left:auto;margin-right:auto}
-      @media(min-width:640px){.wm-pdp .persona-grid{grid-template-columns:repeat(2,1fr);gap:24px}}
+      .wm-pdp .persona-grid{display:grid;grid-template-columns:1fr;gap:18px;margin-top:44px}
+      @media(min-width:640px){.wm-pdp .persona-grid{grid-template-columns:repeat(2,1fr);gap:20px}}
+      @media(min-width:1100px){.wm-pdp .persona-grid{grid-template-columns:repeat(4,1fr);gap:22px}}
       .wm-pdp .persona-card{background:var(--wm-white);border:1px solid var(--wm-rule);border-radius:16px;padding:28px 24px;display:flex;flex-direction:column;gap:10px;transition:all 280ms var(--wm-ease);position:relative;overflow:hidden}
       .wm-pdp .persona-card::after{content:"";position:absolute;inset:0;border-radius:16px;border:2px solid var(--wm-navy);opacity:0;transition:opacity 280ms var(--wm-ease);pointer-events:none}
       .wm-pdp .persona-card:hover{transform:translateY(-4px);box-shadow:var(--wm-shadow-lift)}
@@ -1549,14 +1559,9 @@ const jsonLd = {
       .wm-pdp .ugc-eyebrow{display:inline-block;font-family:var(--wm-f-body);font-weight:700;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:var(--wm-navy);background:var(--wm-blue);padding:6px 14px;border-radius:999px;margin-bottom:18px}
       .wm-pdp .ugc-head .h2{margin:0 auto}
       .wm-pdp .ugc-head .lede{margin:18px auto 0}
-      .wm-pdp .ugc-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:48px}
-      @media(min-width:640px){.wm-pdp .ugc-grid{grid-template-columns:repeat(3,1fr);gap:12px}}
-      @media(min-width:1024px){.wm-pdp .ugc-grid{grid-template-columns:repeat(4,1fr);gap:14px;grid-auto-rows:240px}}
+      .wm-pdp .ugc-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:48px}
+      @media(min-width:1024px){.wm-pdp .ugc-grid{grid-template-columns:repeat(4,1fr);gap:14px}}
       .wm-pdp .ugc-tile{position:relative;display:block;aspect-ratio:1/1;overflow:hidden;border-radius:14px;background:var(--wm-white);border:1px solid var(--wm-rule-soft);transition:all 300ms var(--wm-ease)}
-      @media(min-width:1024px){
-        .wm-pdp .ugc-tile{aspect-ratio:auto}
-        .wm-pdp .ugc-tile.big{grid-column:span 2;grid-row:span 2}
-      }
       .wm-pdp .ugc-tile img{width:100%;height:100%;object-fit:cover;object-position:center 40%;transition:transform 600ms var(--wm-ease)}
       .wm-pdp .ugc-tile:hover{transform:translateY(-2px);box-shadow:var(--wm-shadow-lift)}
       .wm-pdp .ugc-tile:hover img{transform:scale(1.06)}
