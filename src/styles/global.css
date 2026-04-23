@@ -125,6 +125,9 @@
   animation: smsSlideUp 0.3s ease-out both;
 }
 
+/* Anti-FOUC: ukryj PromoBar od razu gdy localStorage flag set (set w BaseLayout head) */
+.promo-dismissed #promo-bar { display: none !important; }
+
 /* ============================================ */
 /* HEADER + MOBILE DRAWER (load-blocking, no FOUC) */
 /* ============================================ */

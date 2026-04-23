@@ -100,6 +100,17 @@ if (hasConsent && config.metaPixelId) {
     />
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" /></noscript>
 
+    <!-- Anti-FOUC: ukryj PromoBar od razu jeśli był wcześniej zamknięty (zapobiega skoku po hydratacji) -->
+    <script is:inline>
+      (function () {
+        try {
+          if (localStorage.getItem('promo-dismissed-promo-bar') === '1') {
+            document.documentElement.classList.add('promo-dismissed');
+          }
+        } catch (e) {}
+      })();
+    </script>
+
     <!-- Meta Pixel (consent-gated, ID from Channel config) -->
     <MetaPixel pixelId={config.metaPixelId} pageViewEventId={pageViewEventId} />
 
