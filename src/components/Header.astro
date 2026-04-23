@@ -1,64 +1,427 @@
 ---
 import { shopApi } from '@/lib/vendure';
-import { GET_COLLECTIONS, GET_ACTIVE_ORDER } from '@/lib/queries';
+import { GET_ACTIVE_ORDER } from '@/lib/queries';
 import CartBadge from './CartBadge';
-import type { VendureCollection } from '@/types/vendure';
 
 interface Props {
   storeName?: string;
   hideCart?: boolean;
 }
-const { storeName = 'Store', hideCart = false } = Astro.props;
+const { storeName = 'dbamyopupile.pl', hideCart = false } = Astro.props;
 
-let collections: VendureCollection[] = [];
 let cartQuantity = 0;
-
 try {
-  const [collectionsData, orderData] = await Promise.all([
-    shopApi<any>(GET_COLLECTIONS, {}, Astro.request),
-    shopApi<any>(GET_ACTIVE_ORDER, {}, Astro.request),
-  ]);
-  collections = collectionsData.collections?.items ?? [];
+  const orderData = await shopApi<any>(GET_ACTIVE_ORDER, {}, Astro.request);
   cartQuantity = orderData.activeOrder?.totalQuantity ?? 0;
 } catch (e: any) {
-  if (import.meta.env.DEV) console.error('Header data fetch failed:', e?.message);
+  if (import.meta.env.DEV) console.error('Header cart fetch failed:', e?.message);
 }
+
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+
+const navLinks = [
+  { href: '/', label: 'Strona główna', match: (p: string) => p === '/' },
+  { href: '/produkty/wolnamiska', label: 'WolnaMiska', match: (p: string) => p.startsWith('/produkty/wolnamiska') },
+  { href: '/ebook', label: 'Ebook', match: (p: string) => p.startsWith('/ebook') },
+  { href: '/pomoc', label: 'Pomoc', match: (p: string) => p.startsWith('/pomoc') },
+];
 ---
 
-<header class="sticky top-0 z-50 border-b border-gray-200 bg-white/95 backdrop-blur-sm">
-  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-    <div class="flex h-14 items-center justify-between gap-4">
-      <!-- Logo -->
-      <a href="/" class="text-lg font-bold text-gray-900 no-underline shrink-0">
-        {storeName}
-      </a>
+<header class="dop-header">
+  <div class="dop-header-inner">
+    <!-- Logo -->
+    <a href="/" class="dop-logo" aria-label={storeName}>
+      <img src="/logo/dbamyopupileprostokatbezta.png" alt={storeName} width="160" height="44" />
+    </a>
 
-      <!-- Navigation -->
-      <nav class="hidden sm:flex items-center gap-6">
-        {collections.map((col: VendureCollection) => (
+    <!-- Desktop nav -->
+    <nav class="dop-nav-desktop" aria-label="Główna nawigacja">
+      {navLinks.map((link) => {
+        const active = link.match(path);
+        return (
           <a
-            href={`/kolekcje/${col.slug}`}
-            class="text-sm text-gray-600 hover:text-gray-900 transition-colors no-underline"
+            href={link.href}
+            class={`dop-nav-link${active ? ' is-active' : ''}`}
+            aria-current={active ? 'page' : undefined}
           >
-            {col.name}
+            {link.label}
           </a>
-        ))}
-      </nav>
+        );
+      })}
+    </nav>
 
-      <!-- Cart button (opens drawer) -->
+    <div class="dop-header-actions">
       {!hideCart && <CartBadge client:only="react" initialQuantity={cartQuantity} />}
+
+      <!-- Hamburger -->
+      <button
+        type="button"
+        class="dop-hamburger"
+        aria-label="Otwórz menu"
+        aria-expanded="false"
+        aria-controls="dop-mobile-drawer"
+        id="dop-hamburger-btn"
+      >
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
     </div>
   </div>
 
-  <!-- Mobile nav -->
-  <nav class="sm:hidden border-t border-gray-100 px-4 py-2 flex gap-4 overflow-x-auto">
-    {collections.map((col: VendureCollection) => (
-      <a
-        href={`/kolekcje/${col.slug}`}
-        class="text-sm text-gray-600 hover:text-gray-900 whitespace-nowrap no-underline"
-      >
-        {col.name}
+  <!-- Mobile drawer -->
+  <div class="dop-drawer-backdrop" id="dop-drawer-backdrop" aria-hidden="true"></div>
+  <aside
+    class="dop-drawer"
+    id="dop-mobile-drawer"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Menu mobilne"
+    aria-hidden="true"
+  >
+    <div class="dop-drawer-head">
+      <a href="/" class="dop-drawer-logo">
+        <img src="/logo/dbamyopupileprostokatbezta.png" alt={storeName} width="140" height="38" />
       </a>
-    ))}
-  </nav>
+      <button type="button" class="dop-drawer-close" aria-label="Zamknij menu" id="dop-drawer-close">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <nav class="dop-drawer-nav" aria-label="Menu mobilne">
+      {navLinks.map((link) => {
+        const active = link.match(path);
+        return (
+          <a
+            href={link.href}
+            class={`dop-drawer-link${active ? ' is-active' : ''}`}
+            aria-current={active ? 'page' : undefined}
+          >
+            <span>{link.label}</span>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </a>
+        );
+      })}
+    </nav>
+
+    <div class="dop-drawer-contact">
+      <p class="dop-drawer-contact-label">Kontakt</p>
+      <a href="tel:577723506" class="dop-drawer-contact-link">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.33 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/>
+        </svg>
+        577 723 506
+      </a>
+      <a href="mailto:sklep@dbamyopupile.pl" class="dop-drawer-contact-link">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+          <polyline points="22,6 12,13 2,6"/>
+        </svg>
+        sklep@dbamyopupile.pl
+      </a>
+    </div>
+  </aside>
 </header>
+
+<style is:inline>
+  .dop-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid #E5E7EB;
+  }
+  .dop-header-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 16px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+  @media (min-width: 640px) {
+    .dop-header-inner { padding: 0 24px; }
+  }
+
+  /* Logo */
+  .dop-logo {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    flex-shrink: 0;
+  }
+  .dop-logo img {
+    height: 36px;
+    width: auto;
+    display: block;
+  }
+  @media (min-width: 640px) {
+    .dop-logo img { height: 40px; }
+  }
+
+  /* Desktop nav */
+  .dop-nav-desktop {
+    display: none;
+    align-items: center;
+    gap: 32px;
+    flex: 1;
+    justify-content: center;
+  }
+  @media (min-width: 900px) {
+    .dop-nav-desktop { display: flex; }
+  }
+  .dop-nav-link {
+    position: relative;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: #4B5563;
+    text-decoration: none;
+    padding: 8px 2px;
+    transition: color 200ms ease;
+    letter-spacing: -0.005em;
+  }
+  .dop-nav-link:hover {
+    color: #1E3A5F;
+  }
+  .dop-nav-link.is-active {
+    color: #1E3A5F;
+    font-weight: 700;
+  }
+  .dop-nav-link.is-active::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -2px;
+    height: 2px;
+    background: #1E3A5F;
+    border-radius: 2px;
+  }
+
+  /* Actions */
+  .dop-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  /* Hamburger */
+  .dop-hamburger {
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    gap: 5px;
+  }
+  @media (min-width: 900px) {
+    .dop-hamburger { display: none; }
+  }
+  .dop-hamburger span {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: #1E3A5F;
+    border-radius: 2px;
+    transition: transform 250ms ease, opacity 200ms ease;
+  }
+  .dop-hamburger[aria-expanded="true"] span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+  .dop-hamburger[aria-expanded="true"] span:nth-child(2) {
+    opacity: 0;
+  }
+  .dop-hamburger[aria-expanded="true"] span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+
+  /* Drawer backdrop */
+  .dop-drawer-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.5);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 250ms ease;
+    z-index: 60;
+  }
+  .dop-drawer-backdrop.is-open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Drawer */
+  .dop-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(86vw, 360px);
+    background: #FFFFFF;
+    z-index: 70;
+    transform: translateX(100%);
+    transition: transform 300ms cubic-bezier(0.32, 0.72, 0, 1);
+    display: flex;
+    flex-direction: column;
+    box-shadow: -8px 0 32px rgba(15, 23, 42, 0.12);
+  }
+  .dop-drawer.is-open {
+    transform: translateX(0);
+  }
+
+  .dop-drawer-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid #E5E7EB;
+  }
+  .dop-drawer-logo img {
+    height: 32px;
+    width: auto;
+    display: block;
+  }
+  .dop-drawer-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #1E3A5F;
+    border-radius: 8px;
+    transition: background 200ms ease;
+  }
+  .dop-drawer-close:hover {
+    background: #F3F4F6;
+  }
+
+  .dop-drawer-nav {
+    flex: 1;
+    padding: 8px 8px;
+    display: flex;
+    flex-direction: column;
+  }
+  .dop-drawer-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 14px;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    color: #1A1A1A;
+    text-decoration: none;
+    border-radius: 10px;
+    transition: background 200ms ease, color 200ms ease;
+  }
+  .dop-drawer-link:hover {
+    background: #F8FAFC;
+  }
+  .dop-drawer-link.is-active {
+    background: #EEF4F8;
+    color: #1E3A5F;
+    font-weight: 700;
+  }
+  .dop-drawer-link svg {
+    color: #9CA3AF;
+  }
+  .dop-drawer-link.is-active svg {
+    color: #1E3A5F;
+  }
+
+  .dop-drawer-contact {
+    padding: 16px 22px 24px;
+    border-top: 1px solid #E5E7EB;
+    background: #FAF7F2;
+  }
+  .dop-drawer-contact-label {
+    margin: 0 0 8px;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #6B7280;
+  }
+  .dop-drawer-contact-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1E3A5F;
+    text-decoration: none;
+  }
+  .dop-drawer-contact-link svg {
+    color: #1E3A5F;
+    flex-shrink: 0;
+  }
+
+  /* Lock body scroll when drawer open */
+  body.dop-drawer-open {
+    overflow: hidden;
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    const btn = document.getElementById('dop-hamburger-btn');
+    const drawer = document.getElementById('dop-mobile-drawer');
+    const backdrop = document.getElementById('dop-drawer-backdrop');
+    const closeBtn = document.getElementById('dop-drawer-close');
+    if (!btn || !drawer || !backdrop) return;
+
+    function open() {
+      drawer.classList.add('is-open');
+      backdrop.classList.add('is-open');
+      btn.setAttribute('aria-expanded', 'true');
+      drawer.setAttribute('aria-hidden', 'false');
+      backdrop.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('dop-drawer-open');
+    }
+    function close() {
+      drawer.classList.remove('is-open');
+      backdrop.classList.remove('is-open');
+      btn.setAttribute('aria-expanded', 'false');
+      drawer.setAttribute('aria-hidden', 'true');
+      backdrop.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('dop-drawer-open');
+    }
+
+    btn.addEventListener('click', () => {
+      const isOpen = drawer.classList.contains('is-open');
+      isOpen ? close() : open();
+    });
+    backdrop.addEventListener('click', close);
+    closeBtn && closeBtn.addEventListener('click', close);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && drawer.classList.contains('is-open')) close();
+    });
+
+    // Close on link click (Astro doesn't auto-unmount on nav)
+    drawer.querySelectorAll('a').forEach(a => {
+      a.addEventListener('click', close);
+    });
+  })();
+</script>

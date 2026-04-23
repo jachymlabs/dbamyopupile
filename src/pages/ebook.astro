@@ -1,0 +1,591 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Ebook — 30 przepisów do WolnaMiska"
+  description="Darmowy ebook z 30 sprawdzonymi przepisami do miski spowalniającej WolnaMiska — mokra karma, pasty, bulion bez soli, schłodzone smakołyki na lato."
+>
+  <div class="ebook-page">
+    <!-- HERO -->
+    <section class="ebook-hero">
+      <div class="ebook-wrap">
+        <div class="ebook-hero-grid">
+          <div class="ebook-hero-text">
+            <span class="ebook-pill">GRATIS DO KAŻDEGO ZAMÓWIENIA</span>
+            <h1 class="ebook-h1">30 sprawdzonych przepisów do WolnaMiski</h1>
+            <p class="ebook-lede">
+              Pasty, mokre dania, bulion bez soli, schłodzone smakołyki na lato.
+              Plan na cały miesiąc bez powtarzania tej samej karmy — przygotowany przez behawiorystkę i weterynarza.
+            </p>
+
+            <ul class="ebook-checks">
+              <li>
+                <span class="ebook-check">✓</span>
+                30 przepisów — śniadania, obiady, lato/zima
+              </li>
+              <li>
+                <span class="ebook-check">✓</span>
+                Lista składników do każdego — bez ważenia
+              </li>
+              <li>
+                <span class="ebook-check">✓</span>
+                Co MOŻNA, a czego absolutnie NIE dawać psu
+              </li>
+              <li>
+                <span class="ebook-check">✓</span>
+                PDF do druku lub na telefon
+              </li>
+            </ul>
+
+            <div class="ebook-cta-row">
+              <a href="/produkty/wolnamiska" class="ebook-btn-primary">
+                Zamów WolnaMiskę i odbierz ebook
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </a>
+              <p class="ebook-cta-meta">PDF wysyłamy mailem od razu po zamówieniu</p>
+            </div>
+          </div>
+
+          <div class="ebook-hero-visual">
+            <div class="ebook-cover">
+              <div class="ebook-cover-pages"></div>
+              <div class="ebook-cover-front">
+                <div class="ebook-cover-tag">EBOOK PDF</div>
+                <h2 class="ebook-cover-title">30 przepisów<br/>do WolnaMiski</h2>
+                <p class="ebook-cover-sub">Pasty, mokre dania, smakołyki dla psa</p>
+                <div class="ebook-cover-foot">
+                  <span>dbamyopupile.pl</span>
+                  <span class="ebook-cover-pill">+30 stron</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WHAT INSIDE -->
+    <section class="ebook-section">
+      <div class="ebook-wrap">
+        <h2 class="ebook-h2">Co znajdziesz w środku</h2>
+        <p class="ebook-section-lede">Nie kolejne ogólniki z internetu. Konkretne przepisy, które od razu wkładasz do WolnaMiski.</p>
+
+        <div class="ebook-grid">
+          <article class="ebook-card">
+            <div class="ebook-card-num">01</div>
+            <h3>10 past i mas do lizania</h3>
+            <p>Banan-jogurt, twaróg-truskawka, pasta z dyni z odrobiną oliwy. Wszystko z 3-5 składników, które masz w lodówce.</p>
+          </article>
+          <article class="ebook-card">
+            <div class="ebook-card-num">02</div>
+            <h3>8 mokrych dań pełnowartościowych</h3>
+            <p>Cała porcja dziennej karmy w wersji rozłożonej wokół kulki — żeby pies pracował 15 minut zamiast 30 sekund.</p>
+          </article>
+          <article class="ebook-card">
+            <div class="ebook-card-num">03</div>
+            <h3>6 schłodzonych smakołyków na lato</h3>
+            <p>Mrożone w misce — ratunek na 35°C. Bulion z kurczaka, pasta z arbuza bez pestek, jogurt z owocami.</p>
+          </article>
+          <article class="ebook-card">
+            <div class="ebook-card-num">04</div>
+            <h3>6 ratunkowych przepisów</h3>
+            <p>Co dać po szczepieniu, kiedy pies nie chce jeść, kiedy ma wzdęcie, podczas burzy. Sprawdzone przez weterynarza.</p>
+          </article>
+          <article class="ebook-card">
+            <div class="ebook-card-num">05</div>
+            <h3>Lista CO MOŻNA / CZEGO NIE</h3>
+            <p>50 składników, które pies może i 30 takich, których absolutnie nie. Cebula, czekolada, ksylitol — pełna lista trucizn.</p>
+          </article>
+          <article class="ebook-card">
+            <div class="ebook-card-num">06</div>
+            <h3>Plan tygodnia + zakupy</h3>
+            <p>Gotowy 7-dniowy plan dla psa małego, średniego i dużego — z listą zakupów, którą bierzesz do sklepu.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- AUTHORS -->
+    <section class="ebook-section ebook-section-soft">
+      <div class="ebook-wrap">
+        <h2 class="ebook-h2">Kto pisał ten ebook</h2>
+        <p class="ebook-section-lede">Nie copy-paste z forum. Konsultacje z osobami, które codziennie pracują z psami.</p>
+
+        <div class="ebook-authors">
+          <div class="ebook-author">
+            <div class="ebook-author-avatar">M</div>
+            <div>
+              <h3>Marta — behawiorystka</h3>
+              <p>10 lat pracy z psami problematycznymi. Specjalizacja: zaburzenia żywieniowe, lęk separacyjny, nuda u psów ras pracujących.</p>
+            </div>
+          </div>
+          <div class="ebook-author">
+            <div class="ebook-author-avatar">P</div>
+            <div>
+              <h3>Piotr — lekarz weterynarii</h3>
+              <p>Konsultacja medyczna: które składniki bezpieczne, które ryzykowne, jakie ilości dla danej masy ciała psa.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="ebook-section">
+      <div class="ebook-wrap">
+        <h2 class="ebook-h2">Jak dostaniesz ebook</h2>
+
+        <div class="ebook-steps">
+          <div class="ebook-step">
+            <div class="ebook-step-num">1</div>
+            <h3>Zamów WolnaMiskę</h3>
+            <p>Wybierz dowolny zestaw — 1, 2 lub 3 sztuki. Każde zamówienie = ebook gratis.</p>
+          </div>
+          <div class="ebook-step">
+            <div class="ebook-step-num">2</div>
+            <h3>Sprawdź skrzynkę</h3>
+            <p>Link do PDF wysyłamy automatycznie na email z zamówienia. Dostarczenie: kilka minut.</p>
+          </div>
+          <div class="ebook-step">
+            <div class="ebook-step-num">3</div>
+            <h3>Otwieraj na telefonie</h3>
+            <p>PDF działa na każdym telefonie — przeglądasz przy lodówce, gotujesz, dajesz psu. Bez logowania.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FINAL CTA -->
+    <section class="ebook-cta-final">
+      <div class="ebook-wrap">
+        <h2>Zamów WolnaMiskę. Ebook dostajesz gratis.</h2>
+        <p>30 dni gwarancji satysfakcji. Jeśli pies nie podejdzie do miski — zwracamy pieniądze, ebook zostaje.</p>
+        <a href="/produkty/wolnamiska" class="ebook-btn-primary lg">
+          Zobacz WolnaMiskę
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"/>
+            <polyline points="12 5 19 12 12 19"/>
+          </svg>
+        </a>
+      </div>
+    </section>
+  </div>
+
+  <style is:inline slot="head">
+  .ebook-page {
+    --eb-navy: #1E3A5F;
+    --eb-blue: #B8D8E8;
+    --eb-canvas: #FAF7F2;
+    --eb-text: #1A1A1A;
+    --eb-muted: #6B7280;
+    --eb-rule: #E5E7EB;
+    font-family: 'Inter', system-ui, sans-serif;
+    color: var(--eb-text);
+  }
+  .ebook-wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 16px;
+  }
+  @media (min-width: 640px) {
+    .ebook-wrap { padding: 0 24px; }
+  }
+
+  /* HERO */
+  .ebook-hero {
+    background: linear-gradient(180deg, var(--eb-canvas) 0%, #FFFFFF 100%);
+    padding: 48px 0 56px;
+  }
+  @media (min-width: 900px) {
+    .ebook-hero { padding: 80px 0 96px; }
+  }
+  .ebook-hero-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 40px;
+    align-items: center;
+  }
+  @media (min-width: 900px) {
+    .ebook-hero-grid {
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 64px;
+    }
+  }
+  .ebook-pill {
+    display: inline-block;
+    padding: 6px 12px;
+    background: var(--eb-blue);
+    color: var(--eb-navy);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border-radius: 999px;
+    margin-bottom: 18px;
+  }
+  .ebook-h1 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: clamp(32px, 6vw, 52px);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--eb-navy);
+    margin: 0 0 18px;
+  }
+  .ebook-lede {
+    font-size: clamp(15px, 2vw, 17px);
+    line-height: 1.6;
+    color: var(--eb-text);
+    margin: 0 0 28px;
+    max-width: 560px;
+  }
+  .ebook-checks {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 32px;
+    display: grid;
+    gap: 10px;
+  }
+  .ebook-checks li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 15px;
+    color: var(--eb-text);
+  }
+  .ebook-check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    background: var(--eb-navy);
+    color: #fff;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .ebook-cta-row {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .ebook-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 26px;
+    background: var(--eb-navy);
+    color: #fff;
+    font-weight: 700;
+    font-size: 15px;
+    border-radius: 12px;
+    text-decoration: none;
+    box-shadow: 0 4px 14px rgba(30, 58, 95, 0.28);
+    transition: transform 200ms ease, box-shadow 200ms ease, background 200ms ease;
+  }
+  .ebook-btn-primary:hover {
+    background: #152C48;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(30, 58, 95, 0.32);
+  }
+  .ebook-btn-primary.lg {
+    font-size: 16px;
+    padding: 18px 32px;
+  }
+  .ebook-cta-meta {
+    font-size: 13px;
+    color: var(--eb-muted);
+    margin: 0;
+  }
+
+  /* COVER */
+  .ebook-hero-visual {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    perspective: 1200px;
+  }
+  .ebook-cover {
+    position: relative;
+    width: clamp(240px, 70vw, 340px);
+    aspect-ratio: 3/4;
+    transform: rotateY(-12deg) rotateX(4deg);
+    transform-style: preserve-3d;
+  }
+  .ebook-cover-pages {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, #fff 0%, #F3F4F6 8%, #fff 12%);
+    border-radius: 4px 8px 8px 4px;
+    box-shadow:
+      -3px 0 0 #fff,
+      -6px 0 0 #F3F4F6,
+      -9px 0 0 #fff,
+      -12px 0 0 #E5E7EB,
+      0 24px 50px rgba(15, 23, 42, 0.18);
+    transform: translateZ(-8px);
+  }
+  .ebook-cover-front {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(160deg, var(--eb-navy) 0%, #2A4F7E 100%);
+    color: #fff;
+    border-radius: 4px 12px 12px 4px;
+    padding: 28px 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .ebook-cover-tag {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: var(--eb-blue);
+    text-transform: uppercase;
+  }
+  .ebook-cover-title {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: clamp(22px, 4vw, 30px);
+    font-weight: 700;
+    line-height: 1.1;
+    margin: 18px 0 0;
+    letter-spacing: -0.015em;
+  }
+  .ebook-cover-sub {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.75);
+    margin: 8px 0 0;
+    line-height: 1.4;
+  }
+  .ebook-cover-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 500;
+    letter-spacing: 0.04em;
+  }
+  .ebook-cover-pill {
+    padding: 4px 8px;
+    background: rgba(184, 216, 232, 0.2);
+    border: 1px solid rgba(184, 216, 232, 0.35);
+    border-radius: 999px;
+    font-size: 10px;
+    color: var(--eb-blue);
+    font-weight: 700;
+  }
+
+  /* SECTIONS */
+  .ebook-section {
+    padding: 56px 0;
+  }
+  @media (min-width: 900px) {
+    .ebook-section { padding: 88px 0; }
+  }
+  .ebook-section-soft {
+    background: var(--eb-canvas);
+  }
+  .ebook-h2 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: clamp(26px, 4.5vw, 38px);
+    font-weight: 700;
+    color: var(--eb-navy);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin: 0 0 12px;
+  }
+  .ebook-section-lede {
+    font-size: 16px;
+    color: var(--eb-muted);
+    margin: 0 0 36px;
+    max-width: 620px;
+    line-height: 1.6;
+  }
+
+  /* GRID OF CARDS */
+  .ebook-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  @media (min-width: 640px) {
+    .ebook-grid { grid-template-columns: repeat(2, 1fr); gap: 18px; }
+  }
+  @media (min-width: 1024px) {
+    .ebook-grid { grid-template-columns: repeat(3, 1fr); gap: 22px; }
+  }
+  .ebook-card {
+    background: #fff;
+    border: 1px solid var(--eb-rule);
+    border-radius: 16px;
+    padding: 24px;
+    transition: transform 250ms ease, box-shadow 250ms ease, border-color 250ms ease;
+  }
+  .ebook-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+    border-color: var(--eb-blue);
+  }
+  .ebook-card-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: var(--eb-blue);
+    color: var(--eb-navy);
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    margin-bottom: 14px;
+  }
+  .ebook-card h3 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 19px;
+    font-weight: 600;
+    color: var(--eb-navy);
+    line-height: 1.25;
+    margin: 0 0 8px;
+    letter-spacing: -0.01em;
+  }
+  .ebook-card p {
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--eb-muted);
+    margin: 0;
+  }
+
+  /* AUTHORS */
+  .ebook-authors {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  @media (min-width: 768px) {
+    .ebook-authors { grid-template-columns: repeat(2, 1fr); gap: 22px; }
+  }
+  .ebook-author {
+    background: #fff;
+    border: 1px solid var(--eb-rule);
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .ebook-author-avatar {
+    flex-shrink: 0;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--eb-navy), #2A4F7E);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 22px;
+    font-weight: 700;
+  }
+  .ebook-author h3 {
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--eb-navy);
+    margin: 0 0 6px;
+  }
+  .ebook-author p {
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--eb-muted);
+    margin: 0;
+  }
+
+  /* STEPS */
+  .ebook-steps {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 22px;
+    margin-top: 32px;
+  }
+  @media (min-width: 768px) {
+    .ebook-steps { grid-template-columns: repeat(3, 1fr); gap: 28px; }
+  }
+  .ebook-step {
+    text-align: left;
+  }
+  .ebook-step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background: var(--eb-navy);
+    color: #fff;
+    border-radius: 50%;
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 700;
+    font-size: 18px;
+    margin-bottom: 14px;
+  }
+  .ebook-step h3 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--eb-navy);
+    margin: 0 0 6px;
+    letter-spacing: -0.01em;
+  }
+  .ebook-step p {
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--eb-muted);
+    margin: 0;
+  }
+
+  /* FINAL CTA */
+  .ebook-cta-final {
+    background: var(--eb-navy);
+    color: #fff;
+    padding: 64px 0;
+    text-align: center;
+  }
+  @media (min-width: 900px) {
+    .ebook-cta-final { padding: 96px 0; }
+  }
+  .ebook-cta-final h2 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: clamp(28px, 5vw, 42px);
+    font-weight: 700;
+    line-height: 1.1;
+    color: #fff;
+    margin: 0 0 14px;
+    letter-spacing: -0.02em;
+  }
+  .ebook-cta-final p {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.78);
+    margin: 0 auto 32px;
+    max-width: 540px;
+    line-height: 1.55;
+  }
+  .ebook-cta-final .ebook-btn-primary {
+    background: #fff;
+    color: var(--eb-navy);
+  }
+  .ebook-cta-final .ebook-btn-primary:hover {
+    background: var(--eb-canvas);
+    color: var(--eb-navy);
+  }
+</style>
+</BaseLayout>
