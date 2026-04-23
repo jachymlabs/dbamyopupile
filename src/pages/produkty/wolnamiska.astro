@@ -231,39 +231,48 @@ const jsonLd = {
               <div class="wm-bundles" role="radiogroup" aria-label="Wybierz zestaw">
                 <label class="wm-bundle-card active" data-qty="1" data-price="59,99 zł">
                   <input type="radio" name="bundle" value="1" checked />
-                  <div class="wm-bundle-radio"></div>
-                  <div class="wm-bundle-body">
-                    <div class="wm-bundle-top">
-                      <span class="wm-bundle-name">1 sztuka</span>
-                      <span class="wm-bundle-price">59,99 zł</span>
-                    </div>
-                    <div class="wm-bundle-sub">Na spróbowanie</div>
+                  <div class="wm-bundle-check">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  </div>
+                  <div class="wm-bundle-main">
+                    <div class="wm-bundle-name">1 sztuka</div>
+                    <div class="wm-bundle-meta">Standard</div>
+                  </div>
+                  <div class="wm-bundle-pricing">
+                    <div class="wm-bundle-price">59,99 zł</div>
+                    <div class="wm-bundle-perunit">59,99 zł / szt</div>
                   </div>
                 </label>
 
                 <label class="wm-bundle-card popular" data-qty="2" data-price="104,99 zł">
-                  <span class="wm-bundle-badge">Bestseller · −15 zł</span>
+                  <span class="wm-bundle-badge">Bestseller · oszczędzasz 15 zł</span>
                   <input type="radio" name="bundle" value="2" />
-                  <div class="wm-bundle-radio"></div>
-                  <div class="wm-bundle-body">
-                    <div class="wm-bundle-top">
-                      <span class="wm-bundle-name">Zestaw 2 szt</span>
-                      <span class="wm-bundle-price">104,99 zł</span>
-                    </div>
-                    <div class="wm-bundle-sub">Wybór 70% klientów · 52,49 zł / szt</div>
+                  <div class="wm-bundle-check">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  </div>
+                  <div class="wm-bundle-main">
+                    <div class="wm-bundle-name">Zestaw 2 szt</div>
+                    <div class="wm-bundle-meta">Wybór 70% klientów</div>
+                  </div>
+                  <div class="wm-bundle-pricing">
+                    <div class="wm-bundle-price">104,99 zł</div>
+                    <div class="wm-bundle-perunit"><s>59,99</s> 52,49 zł / szt</div>
                   </div>
                 </label>
 
                 <label class="wm-bundle-card" data-qty="3" data-price="149,99 zł">
-                  <span class="wm-bundle-badge gold">−30 zł + Darmowa dostawa</span>
+                  <span class="wm-bundle-badge navy">−30 zł + darmowa dostawa</span>
                   <input type="radio" name="bundle" value="3" />
-                  <div class="wm-bundle-radio"></div>
-                  <div class="wm-bundle-body">
-                    <div class="wm-bundle-top">
-                      <span class="wm-bundle-name">Zestaw 3 szt</span>
-                      <span class="wm-bundle-price">149,99 zł</span>
-                    </div>
-                    <div class="wm-bundle-sub">49,99 zł / szt · maksymalna oszczędność</div>
+                  <div class="wm-bundle-check">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  </div>
+                  <div class="wm-bundle-main">
+                    <div class="wm-bundle-name">Zestaw 3 szt</div>
+                    <div class="wm-bundle-meta">Maksymalna oszczędność</div>
+                  </div>
+                  <div class="wm-bundle-pricing">
+                    <div class="wm-bundle-price">149,99 zł</div>
+                    <div class="wm-bundle-perunit"><s>59,99</s> 49,99 zł / szt</div>
                   </div>
                 </label>
               </div>
@@ -323,76 +332,6 @@ const jsonLd = {
               </div>
             </div>
 
-            <!-- Accordions -->
-            <div class="wm-accordions">
-              <details class="wm-acc">
-                <summary>
-                  <span class="wm-acc-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-                  </span>
-                  <span class="wm-acc-title">Opis produktu</span>
-                  <span class="wm-acc-chevron" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-                  </span>
-                </summary>
-                <div class="wm-acc-body">
-                  <p><strong>WolnaMiska</strong> to hybrydowa miska spowalniająca z ruchomą kulką w środku. Łączy funkcję slow-feedera (labirynt na dnie) z lick matem (powierzchnia do lizania) — w jednym produkcie.</p>
-                  <ul class="wm-acc-list">
-                    <li><strong>Wymiary:</strong> 16 × 6,8 cm</li>
-                    <li><strong>Pojemność:</strong> 300–500 ml</li>
-                    <li><strong>Wydłuża posiłek:</strong> z 30 sekund do 10–15 minut</li>
-                    <li><strong>Dla kogo:</strong> psy łapczywe, brachycefaliczne (buldogi, mopsy, shih-tzu), koty z wymiotami</li>
-                    <li><strong>Co możesz wlać:</strong> mokra karma, suche pellet, jogurt naturalny, bulion bez soli, pasta orzechowa</li>
-                  </ul>
-                </div>
-              </details>
-
-              <details class="wm-acc">
-                <summary>
-                  <span class="wm-acc-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v6c0 4.5-3.5 7-8 8-4.5-1-8-3.5-8-8V7l8-4z"/></svg>
-                  </span>
-                  <span class="wm-acc-title">Materiał i bezpieczeństwo</span>
-                  <span class="wm-acc-chevron" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-                  </span>
-                </summary>
-                <div class="wm-acc-body">
-                  <p>Wykonana z <strong>bezpiecznego tworzywa</strong> dopuszczonego do kontaktu z żywnością. Bez metalowych elementów, bez ostrych krawędzi.</p>
-                  <ul class="wm-acc-list">
-                    <li><strong>Mycie w zmywarce:</strong> tak, górny kosz, do 70°C</li>
-                    <li><strong>Antypoślizgowy spód:</strong> miska nie ślizga się po kafelkach</li>
-                    <li><strong>Kulka:</strong> trwale zamocowana, nie wypada — nie ma ryzyka połknięcia</li>
-                    <li><strong>Krawędzie:</strong> zaokrąglone, bezpieczne dla pyska</li>
-                  </ul>
-                  <p class="wm-acc-note">Przed pierwszym użyciem zalecamy umyć ciepłą wodą z płynem do naczyń.</p>
-                </div>
-              </details>
-
-              <details class="wm-acc">
-                <summary>
-                  <span class="wm-acc-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-                  </span>
-                  <span class="wm-acc-title">Dostawa i zwroty</span>
-                  <span class="wm-acc-chevron" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-                  </span>
-                </summary>
-                <div class="wm-acc-body">
-                  <p><strong>Wysyłka:</strong> zamówienia złożone do 14:00 wysyłamy <strong>tego samego dnia</strong>. Następne dnia roboczego do godz. 12:00.</p>
-                  <ul class="wm-acc-list">
-                    <li><strong>InPost Paczkomat:</strong> 9,99 zł · dostawa 24h</li>
-                    <li><strong>Kurier InPost:</strong> 14,99 zł · dostawa 24–48h</li>
-                    <li><strong>Kurier za pobraniem:</strong> 19,99 zł</li>
-                    <li><strong>Darmowa dostawa</strong> przy zamówieniu zestawu 3 sztuk</li>
-                  </ul>
-                  <p><strong>Zwroty:</strong> masz <strong>30 dni</strong> na bezproblemowy zwrot. Pies nie polubił miski? Odsyłasz, dostajesz zwrot. Nie pytamy o powód.</p>
-                  <p class="wm-acc-note">Ryzyko zwrotu jest po naszej stronie. Koszt odsyłki: 9,99 zł (Paczkomat).</p>
-                </div>
-              </details>
-            </div>
-
             {!allOutOfStock && firstVariant && (
               <StickyATCBar
                 client:idle
@@ -403,6 +342,82 @@ const jsonLd = {
               />
             )}
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- ACCORDIONS — szczegoly produktu (pelna szerokosc, pod hero) -->
+    <!-- ============================================ -->
+    <section class="wm-acc-section">
+      <div class="wm-acc-wrap">
+        <div class="wm-accordions">
+          <details class="wm-acc">
+            <summary>
+              <span class="wm-acc-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              </span>
+              <span class="wm-acc-title">Opis produktu</span>
+              <span class="wm-acc-chevron" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </span>
+            </summary>
+            <div class="wm-acc-body">
+              <p><strong>WolnaMiska</strong> to hybrydowa miska spowalniająca z ruchomą kulką w środku. Łączy funkcję slow-feedera (labirynt na dnie) z lick matem (powierzchnia do lizania) — w jednym produkcie.</p>
+              <ul class="wm-acc-list">
+                <li><strong>Wymiary:</strong> 16 × 6,8 cm</li>
+                <li><strong>Pojemność:</strong> 300–500 ml</li>
+                <li><strong>Wydłuża posiłek:</strong> z 30 sekund do 10–15 minut</li>
+                <li><strong>Dla kogo:</strong> psy łapczywe, brachycefaliczne (buldogi, mopsy, shih-tzu), koty z wymiotami</li>
+                <li><strong>Co możesz wlać:</strong> mokra karma, suche pellet, jogurt naturalny, bulion bez soli, pasta orzechowa</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="wm-acc">
+            <summary>
+              <span class="wm-acc-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v6c0 4.5-3.5 7-8 8-4.5-1-8-3.5-8-8V7l8-4z"/></svg>
+              </span>
+              <span class="wm-acc-title">Materiał i bezpieczeństwo</span>
+              <span class="wm-acc-chevron" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </span>
+            </summary>
+            <div class="wm-acc-body">
+              <p>Wykonana z <strong>bezpiecznego tworzywa</strong> dopuszczonego do kontaktu z żywnością. Bez metalowych elementów, bez ostrych krawędzi.</p>
+              <ul class="wm-acc-list">
+                <li><strong>Mycie w zmywarce:</strong> tak, górny kosz, do 70°C</li>
+                <li><strong>Antypoślizgowy spód:</strong> miska nie ślizga się po kafelkach</li>
+                <li><strong>Kulka:</strong> trwale zamocowana, nie wypada — nie ma ryzyka połknięcia</li>
+                <li><strong>Krawędzie:</strong> zaokrąglone, bezpieczne dla pyska</li>
+              </ul>
+              <p class="wm-acc-note">Przed pierwszym użyciem zalecamy umyć ciepłą wodą z płynem do naczyń.</p>
+            </div>
+          </details>
+
+          <details class="wm-acc">
+            <summary>
+              <span class="wm-acc-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+              </span>
+              <span class="wm-acc-title">Dostawa i zwroty</span>
+              <span class="wm-acc-chevron" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </span>
+            </summary>
+            <div class="wm-acc-body">
+              <p><strong>Wysyłka:</strong> zamówienia złożone do 14:00 wysyłamy <strong>tego samego dnia</strong>. Następne dnia roboczego do godz. 12:00.</p>
+              <ul class="wm-acc-list">
+                <li><strong>InPost Paczkomat:</strong> 9,99 zł · dostawa 24h</li>
+                <li><strong>Kurier InPost:</strong> 14,99 zł · dostawa 24–48h</li>
+                <li><strong>Kurier za pobraniem:</strong> 19,99 zł</li>
+                <li><strong>Darmowa dostawa</strong> przy zamówieniu zestawu 3 sztuk</li>
+              </ul>
+              <p><strong>Zwroty:</strong> masz <strong>30 dni</strong> na bezproblemowy zwrot. Pies nie polubił miski? Odsyłasz, dostajesz zwrot. Nie pytamy o powód.</p>
+              <p class="wm-acc-note">Ryzyko zwrotu jest po naszej stronie. Koszt odsyłki: 9,99 zł (Paczkomat).</p>
+            </div>
+          </details>
         </div>
       </div>
     </section>
@@ -916,36 +931,52 @@ const jsonLd = {
       .wm-form{display:flex;flex-direction:column;gap:18px;margin-bottom:24px}
       .wm-bundle-label{font-family:var(--h-f-body);font-weight:600;font-size:13px;letter-spacing:0.03em;text-transform:uppercase;color:var(--h-ink);margin-bottom:-6px}
 
-      /* Bundle cards */
+      /* Bundle cards — Shopify-style clean */
       .wm-bundles{display:flex;flex-direction:column;gap:10px}
-      .wm-bundle-card{position:relative;display:flex;align-items:center;gap:14px;padding:16px 18px;background:var(--h-white);border:1.5px solid var(--h-rule);border-radius:12px;cursor:pointer;transition:all 250ms var(--h-ease)}
-      .wm-bundle-card:hover{border-color:var(--h-navy);transform:translateY(-1px);box-shadow:var(--h-shadow-card)}
-      .wm-bundle-card.active{border-color:var(--h-navy);background:oklch(0.93 0.025 235 / 0.35);box-shadow:0 0 0 1px var(--h-navy), var(--h-shadow-card)}
-      .wm-bundle-card.popular{border-color:var(--h-orange-2)}
-      .wm-bundle-card.popular.active{border-color:var(--h-navy);background:oklch(0.93 0.025 235 / 0.35);box-shadow:0 0 0 1px var(--h-navy), var(--h-shadow-card)}
+      .wm-bundle-card{position:relative;display:flex;align-items:center;gap:14px;padding:16px 18px;background:var(--h-white);border:2px solid var(--h-rule);border-radius:14px;cursor:pointer;transition:all 200ms var(--h-ease)}
+      .wm-bundle-card:hover{border-color:oklch(0.30 0.06 255 / 0.5)}
+      .wm-bundle-card.active{border-color:var(--h-navy);background:linear-gradient(180deg, oklch(0.85 0.055 235 / 0.22) 0%, oklch(0.85 0.055 235 / 0.10) 100%)}
       .wm-bundle-card input[type="radio"]{position:absolute;opacity:0;pointer-events:none}
-      .wm-bundle-radio{flex-shrink:0;width:20px;height:20px;border-radius:50%;border:2px solid var(--h-rule);background:var(--h-white);position:relative;transition:border-color 200ms var(--h-ease)}
-      .wm-bundle-card.active .wm-bundle-radio{border-color:var(--h-navy)}
-      .wm-bundle-card.active .wm-bundle-radio::after{content:"";position:absolute;inset:3px;background:var(--h-navy);border-radius:50%}
-      .wm-bundle-body{flex:1;display:flex;flex-direction:column;gap:3px;min-width:0}
-      .wm-bundle-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
-      .wm-bundle-name{font-family:var(--h-f-body);font-weight:600;font-size:15px;color:var(--h-ink)}
-      .wm-bundle-price{font-family:var(--h-f-display);font-weight:700;font-size:17px;color:var(--h-navy);letter-spacing:-0.01em;white-space:nowrap}
-      .wm-bundle-sub{font-family:var(--h-f-body);font-weight:400;font-size:12.5px;color:var(--h-ink-3)}
-      .wm-bundle-badge{position:absolute;top:-9px;left:14px;background:var(--h-orange-2);color:var(--h-white);font-family:var(--h-f-body);font-weight:700;font-size:10px;letter-spacing:0.06em;text-transform:uppercase;padding:4px 10px;border-radius:6px;line-height:1.3;white-space:nowrap}
-      .wm-bundle-badge.gold{background:var(--h-navy)}
 
-      /* ATC button */
-      .wm-atc{position:relative;display:flex;align-items:center;justify-content:center;gap:14px;width:100%;min-height:60px;padding:18px 28px;background:var(--h-orange);color:var(--h-white);border-radius:14px;font-family:var(--h-f-body);font-weight:700;font-size:16px;letter-spacing:0.01em;box-shadow:var(--h-shadow-cta);transition:all 250ms var(--h-ease);overflow:hidden}
-      .wm-atc::before{content:"";position:absolute;inset:0;background:linear-gradient(135deg, oklch(1 0 0 / 0.18) 0%, transparent 50%);pointer-events:none}
-      .wm-atc:hover{background:var(--h-orange-2);transform:translateY(-2px);box-shadow:var(--h-shadow-cta-hover)}
+      .wm-bundle-check{flex-shrink:0;width:24px;height:24px;border-radius:50%;border:2px solid var(--h-rule);background:var(--h-white);display:flex;align-items:center;justify-content:center;color:transparent;transition:all 200ms var(--h-ease)}
+      .wm-bundle-check svg{width:14px;height:14px}
+      .wm-bundle-card:hover .wm-bundle-check{border-color:oklch(0.30 0.06 255 / 0.5)}
+      .wm-bundle-card.active .wm-bundle-check{background:var(--h-navy);border-color:var(--h-navy);color:#ffffff}
+
+      .wm-bundle-main{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
+      .wm-bundle-name{font-family:var(--h-f-body);font-weight:600;font-size:15px;color:var(--h-ink);letter-spacing:-0.005em;line-height:1.2}
+      .wm-bundle-meta{font-family:var(--h-f-body);font-weight:400;font-size:12.5px;color:var(--h-ink-3);line-height:1.3}
+
+      .wm-bundle-pricing{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:1px;text-align:right}
+      .wm-bundle-price{font-family:var(--h-f-display);font-weight:700;font-size:18px;color:var(--h-navy);letter-spacing:-0.015em;line-height:1.1;white-space:nowrap}
+      .wm-bundle-perunit{font-family:var(--h-f-body);font-weight:500;font-size:11.5px;color:var(--h-ink-3);line-height:1.2;white-space:nowrap}
+      .wm-bundle-perunit s{color:oklch(0.62 0.008 265);font-weight:400;margin-right:4px}
+
+      .wm-bundle-badge{position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--h-orange);color:var(--h-white);font-family:var(--h-f-body);font-weight:700;font-size:10px;letter-spacing:0.05em;text-transform:uppercase;padding:5px 12px;border-radius:999px;line-height:1.3;white-space:nowrap;box-shadow:0 2px 6px oklch(0.66 0.20 42 / 0.30)}
+      .wm-bundle-badge.navy{background:var(--h-navy);box-shadow:0 2px 6px oklch(0.30 0.06 255 / 0.30)}
+
+      .wm-bundle-card.popular{border-color:oklch(0.72 0.18 45 / 0.4)}
+      .wm-bundle-card.popular.active{border-color:var(--h-navy)}
+
+      @media(max-width:520px){
+        .wm-bundle-card{padding:14px 14px;gap:11px}
+        .wm-bundle-name{font-size:14px}
+        .wm-bundle-meta{font-size:11.5px}
+        .wm-bundle-price{font-size:16px}
+        .wm-bundle-perunit{font-size:10.5px}
+      }
+
+      /* ATC button — Deep Navy brand CTA */
+      .wm-atc{position:relative;display:flex;align-items:center;justify-content:center;gap:14px;width:100%;min-height:62px;padding:18px 28px;background:var(--h-navy);color:#ffffff;border-radius:14px;font-family:var(--h-f-body);font-weight:700;font-size:16px;letter-spacing:0.02em;box-shadow:0 6px 20px oklch(0.30 0.06 255 / 0.28), 0 2px 6px oklch(0.30 0.06 255 / 0.18);transition:all 220ms var(--h-ease);overflow:hidden}
+      .wm-atc::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg, oklch(1 0 0 / 0.10) 0%, transparent 100%);pointer-events:none}
+      .wm-atc:hover{background:var(--h-navy-2);transform:translateY(-2px);box-shadow:0 12px 28px oklch(0.30 0.06 255 / 0.36), 0 3px 8px oklch(0.30 0.06 255 / 0.22)}
       .wm-atc:active{transform:translateY(0);transition-duration:80ms}
       .wm-atc.disabled{background:var(--h-rule);color:var(--h-ink-3);box-shadow:none;cursor:not-allowed}
       .wm-atc.disabled:hover{transform:none;background:var(--h-rule)}
-      .wm-atc-text{font-weight:700}
-      .wm-atc-price{font-family:var(--h-f-display);font-weight:700;font-size:19px;letter-spacing:-0.01em}
-      .wm-atc-price::before{content:"·";margin-right:14px;opacity:0.5}
-      .wm-atc-arrow{width:20px;height:20px;transition:transform 250ms var(--h-ease)}
+      .wm-atc-text{font-weight:700;color:#ffffff}
+      .wm-atc-price{font-family:var(--h-f-display);font-weight:700;font-size:20px;letter-spacing:-0.01em;color:#ffffff}
+      .wm-atc-price::before{content:"";display:inline-block;width:1px;height:18px;background:oklch(1 0 0 / 0.28);margin-right:14px;vertical-align:middle}
+      .wm-atc-arrow{width:20px;height:20px;color:#ffffff;transition:transform 250ms var(--h-ease)}
       .wm-atc:hover .wm-atc-arrow{transform:translateX(4px)}
 
       /* Delivery promise */
@@ -953,19 +984,35 @@ const jsonLd = {
       .wm-delivery-promise svg{width:20px;height:20px;flex-shrink:0;color:var(--h-navy)}
       .wm-delivery-promise strong{font-weight:700}
 
-      /* Trust row — premium card grid */
-      .wm-trust-row{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding-top:24px;margin-top:4px;border-top:1px solid var(--h-rule-soft)}
-      @media(min-width:540px){.wm-trust-row{grid-template-columns:repeat(4,1fr);gap:8px}}
-      .wm-trust{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:14px 8px;background:var(--h-white);border:1px solid var(--h-rule-soft);border-radius:12px;transition:all 200ms var(--h-ease)}
-      .wm-trust:hover{border-color:var(--h-blue);transform:translateY(-2px);box-shadow:0 4px 14px oklch(0.30 0.06 255 / 0.06)}
-      .wm-trust-icon{width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:oklch(0.85 0.055 235 / 0.18);color:var(--h-navy);border-radius:50%}
-      .wm-trust-icon svg{width:20px;height:20px}
-      .wm-trust-text{display:flex;flex-direction:column;gap:2px;line-height:1.25}
-      .wm-trust strong{font-family:var(--h-f-body);font-weight:600;font-size:12px;color:var(--h-ink);letter-spacing:-0.005em}
-      .wm-trust small{font-family:var(--h-f-body);font-weight:400;font-size:10.5px;color:var(--h-ink-3);letter-spacing:0.01em}
+      /* Trust row — refined horizontal with dividers */
+      .wm-trust-row{display:grid;grid-template-columns:repeat(2,1fr);gap:0;padding:18px 0;margin-top:4px;border-top:1px solid var(--h-rule-soft);border-bottom:1px solid var(--h-rule-soft)}
+      @media(min-width:680px){.wm-trust-row{grid-template-columns:repeat(4,1fr)}}
+      .wm-trust{display:flex;align-items:center;gap:11px;padding:8px 12px;border-right:1px solid var(--h-rule-soft);transition:opacity 200ms var(--h-ease)}
+      .wm-trust:nth-child(2n){border-right:none}
+      @media(min-width:680px){
+        .wm-trust:nth-child(2n){border-right:1px solid var(--h-rule-soft)}
+        .wm-trust:last-child{border-right:none}
+      }
+      .wm-trust:hover{opacity:0.85}
+      .wm-trust-icon{flex-shrink:0;width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:oklch(0.85 0.055 235 / 0.20);color:var(--h-navy);border-radius:9px}
+      .wm-trust-icon svg{width:18px;height:18px}
+      .wm-trust-text{display:flex;flex-direction:column;gap:1px;line-height:1.2;min-width:0}
+      .wm-trust strong{font-family:var(--h-f-body);font-weight:600;font-size:12.5px;color:var(--h-ink);letter-spacing:-0.005em}
+      .wm-trust small{font-family:var(--h-f-body);font-weight:400;font-size:11px;color:var(--h-ink-3);letter-spacing:0.005em}
+      @media(max-width:520px){
+        .wm-trust{padding:6px 8px;gap:9px}
+        .wm-trust-icon{width:30px;height:30px}
+        .wm-trust-icon svg{width:16px;height:16px}
+        .wm-trust strong{font-size:11.5px}
+        .wm-trust small{font-size:10.5px}
+      }
+
+      /* Accordions section (full-width, below hero) */
+      .wm-acc-section{padding:clamp(28px, 4vw, 56px) 0;background:var(--h-canvas);border-top:1px solid var(--h-rule-soft)}
+      .wm-acc-wrap{max-width:1240px;margin:0 auto;padding:0 clamp(16px, 4vw, 56px)}
 
       /* Accordions */
-      .wm-accordions{display:flex;flex-direction:column;gap:8px;margin-top:18px}
+      .wm-accordions{display:flex;flex-direction:column;gap:8px;margin-top:0}
       .wm-acc{background:var(--h-white);border:1px solid var(--h-rule-soft);border-radius:12px;overflow:hidden;transition:border-color 200ms var(--h-ease), box-shadow 200ms var(--h-ease)}
       .wm-acc:hover{border-color:var(--h-blue)}
       .wm-acc[open]{border-color:var(--h-navy);box-shadow:var(--h-shadow-card)}
