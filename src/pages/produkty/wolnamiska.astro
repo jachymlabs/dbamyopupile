@@ -245,7 +245,7 @@ const jsonLd = {
 
               <div class="wm-bundle-label">Wybierz zestaw</div>
               <div class="wm-bundles" role="radiogroup" aria-label="Wybierz zestaw">
-                <label class="wm-bundle-card active" data-qty="1" data-price="59,99 zł">
+                <label class="wm-bundle-card active" data-qty="1" data-price="59,99 zł" data-old="89,99 zł" data-save="Oszczędzasz 30 zł">
                   <input type="radio" name="bundle" value="1" checked />
                   <div class="wm-bundle-check">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -260,7 +260,7 @@ const jsonLd = {
                   </div>
                 </label>
 
-                <label class="wm-bundle-card popular" data-qty="2" data-price="104,99 zł">
+                <label class="wm-bundle-card popular" data-qty="2" data-price="104,99 zł" data-old="119,98 zł" data-save="Oszczędzasz 15 zł">
                   <span class="wm-bundle-badge">Oszczędzasz 15 zł</span>
                   <input type="radio" name="bundle" value="2" />
                   <div class="wm-bundle-check">
@@ -276,7 +276,7 @@ const jsonLd = {
                   </div>
                 </label>
 
-                <label class="wm-bundle-card" data-qty="3" data-price="149,99 zł">
+                <label class="wm-bundle-card" data-qty="3" data-price="149,99 zł" data-old="179,97 zł" data-save="Oszczędzasz 30 zł + darmowa dostawa">
                   <span class="wm-bundle-badge navy">−30 zł + darmowa dostawa</span>
                   <input type="radio" name="bundle" value="3" />
                   <div class="wm-bundle-check">
@@ -1153,6 +1153,9 @@ const jsonLd = {
       const cards = document.querySelectorAll('.wm-bundle-card');
       const qtyInput = document.getElementById('wm-qty');
       const atcPrice = document.getElementById('wm-atc-price');
+      const heroPrice = document.getElementById('wm-price');
+      const heroPriceOld = document.querySelector('.wm-price-old');
+      const heroPriceSave = document.querySelector('.wm-price-save');
 
       cards.forEach((card) => {
         card.addEventListener('click', (e) => {
@@ -1165,8 +1168,13 @@ const jsonLd = {
 
           const qty = card.getAttribute('data-qty');
           const price = card.getAttribute('data-price');
+          const oldPrice = card.getAttribute('data-old');
+          const save = card.getAttribute('data-save');
           if (qtyInput && qty) qtyInput.value = qty;
           if (atcPrice && price) atcPrice.textContent = price;
+          if (heroPrice && price) heroPrice.textContent = price;
+          if (heroPriceOld && oldPrice) heroPriceOld.textContent = oldPrice;
+          if (heroPriceSave && save) heroPriceSave.textContent = save;
 
           // Notify StickyATCBar of bundle change
           window.dispatchEvent(new CustomEvent('wm-bundle-change', {
