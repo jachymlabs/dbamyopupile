@@ -87,15 +87,11 @@ const firstVariant = product.variants?.[0];
 // ============================================
 type GalleryImage = { src: string; thumb?: string; alt: string };
 const galleryImages: GalleryImage[] = [
-  ...(mainImage ? [{
-    src: buildAssetUrl(mainImage.preview, 'large'),
-    thumb: buildAssetUrl(mainImage.preview, 'medium'),
-    alt: product.name,
-  }] : []),
-  { src: '/produkty/wolnamiska/frenchie-licking.png', alt: 'WolnaMiska w użyciu — buldog francuski' },
-  { src: '/produkty/wolnamiska/product-linen-v2.png', alt: 'WolnaMiska — skala produktu' },
-  { src: '/produkty/wolnamiska/broth-pour.png', alt: 'Wlewanie do WolnaMiska — detal' },
-  { src: '/produkty/wolnamiska/flatlay.png', alt: 'WolnaMiska — gotowa do mycia' },
+  { src: '/produkty/wolnamiska/hero-shiba.webp', alt: 'WolnaMiska — Shiba Inu liże miskę z 4 zaletami' },
+  { src: '/produkty/wolnamiska/shiba-jedzenie.webp', alt: 'WolnaMiska w użyciu — Shiba Inu pracuje językiem nad kulką' },
+  { src: '/produkty/wolnamiska/frenchie-jasny.webp', alt: 'WolnaMiska — buldog francuski liże w salonie' },
+  { src: '/produkty/wolnamiska/kuchnia-shiba.webp', alt: 'WolnaMiska na podłodze kuchennej' },
+  { src: '/produkty/wolnamiska/rece-misa.webp', alt: 'WolnaMiska — skala produktu w rękach' },
 ];
 const lowestPrice = firstVariant?.priceWithTax ?? 0;
 const allOutOfStock = product.variants?.every((v: VendureVariant) => v.stockLevel === 'OUT_OF_STOCK');
@@ -464,7 +460,7 @@ const jsonLd = {
           <div class="how-grid wm-carousel-mobile" data-carousel>
             <article class="how-card reveal">
               <div class="how-media">
-                <img src="/produkty/wolnamiska/broth-pour.png" alt="Wlewanie bulionu do miski WolnaMiska" loading="lazy" />
+                <img src="/produkty/wolnamiska/wlewanie-bulionu.webp" alt="Wlewanie bulionu do miski WolnaMiska" loading="lazy" />
                 <span class="how-placeholder">GIF · do podmiany</span>
               </div>
               <span class="how-num">01</span>
@@ -474,7 +470,7 @@ const jsonLd = {
 
             <article class="how-card reveal d1">
               <div class="how-media">
-                <img src="/produkty/wolnamiska/product-linen-v2.png" alt="WolnaMiska postawiona na podłodze" loading="lazy" />
+                <img src="/produkty/wolnamiska/na-stole.webp" alt="WolnaMiska postawiona na podłodze" loading="lazy" />
                 <span class="how-placeholder">GIF · do podmiany</span>
               </div>
               <span class="how-num">02</span>
@@ -484,7 +480,7 @@ const jsonLd = {
 
             <article class="how-card reveal d2">
               <div class="how-media">
-                <img src="/produkty/wolnamiska/frenchie-licking.png" alt="Buldog francuski liże WolnaMiska" loading="lazy" />
+                <img src="/produkty/wolnamiska/frenchie-okno.webp" alt="Buldog francuski liże WolnaMiska" loading="lazy" />
                 <span class="how-placeholder">GIF · do podmiany</span>
               </div>
               <span class="how-num">03</span>
@@ -494,7 +490,7 @@ const jsonLd = {
 
             <article class="how-card reveal d3">
               <div class="how-media">
-                <img src="/produkty/wolnamiska/flatlay.png" alt="WolnaMiska po posiłku gotowa do mycia" loading="lazy" />
+                <img src="/produkty/wolnamiska/flatlay-marble.webp" alt="WolnaMiska po posiłku gotowa do mycia" loading="lazy" />
                 <span class="how-placeholder">GIF · do podmiany</span>
               </div>
               <span class="how-num">04</span>
@@ -510,7 +506,7 @@ const jsonLd = {
         <div class="wrap">
           <div class="split-grid">
             <div class="split-media reveal">
-              <img src="/produkty/wolnamiska/broth-pour.png" alt="Kulka w środku WolnaMiska — close-up konstrukcji" loading="lazy" />
+              <img src="/produkty/wolnamiska/wlewanie-bulionu.webp" alt="Kulka w środku WolnaMiska — close-up konstrukcji" loading="lazy" />
             </div>
             <div class="split-content reveal d1">
               <span class="split-eyebrow">Kluczowa innowacja</span>
@@ -543,7 +539,7 @@ const jsonLd = {
               <p class="split-note">PDF dostajesz mailem zaraz po zakupie — przygotujesz pierwszy przepis, zanim paczka dotrze.</p>
             </div>
             <div class="split-media reveal d1">
-              <img src="/produkty/wolnamiska/broth-pour.png" alt="Bulion wlewany do WolnaMiska — przykład przepisu z ebooka" loading="lazy" />
+              <img src="/produkty/wolnamiska/wlewanie-bulionu.webp" alt="Bulion wlewany do WolnaMiska — przykład przepisu z ebooka" loading="lazy" />
             </div>
           </div>
         </div>
@@ -635,19 +631,19 @@ const jsonLd = {
 
           <div class="features-grid wm-carousel-mobile" data-carousel>
             <article class="feat reveal">
-              <div class="feat-img"><img src="/produkty/wolnamiska/product-linen-v2.png" alt="WolnaMiska z profilu" loading="lazy"></div>
+              <div class="feat-img"><img src="/produkty/wolnamiska/na-stole.webp" alt="WolnaMiska z profilu" loading="lazy"></div>
               <h3>Koniec z dławieniem</h3>
               <p>Pies je 8 razy wolniej. Mniej powietrza w żołądku. Mniej ryzyka skrętu.</p>
             </article>
 
             <article class="feat reveal d1">
-              <div class="feat-img"><img src="/produkty/wolnamiska/frenchie-licking.png" alt="Buldog francuski liże WolnaMiskę" loading="lazy"></div>
+              <div class="feat-img"><img src="/produkty/wolnamiska/frenchie-okno.webp" alt="Buldog francuski liże WolnaMiskę" loading="lazy"></div>
               <h3>Koniec z wymiotami</h3>
               <p>Żołądek trawi w spokojnym tempie. Czysty dywan, spokojny poranek.</p>
             </article>
 
             <article class="feat reveal d2">
-              <div class="feat-img"><img src="/produkty/wolnamiska/flatlay.png" alt="WolnaMiska gotowa do mycia" loading="lazy"></div>
+              <div class="feat-img"><img src="/produkty/wolnamiska/flatlay-marble.webp" alt="WolnaMiska gotowa do mycia" loading="lazy"></div>
               <h3>Do zmywarki, codziennie</h3>
               <p>Górny kosz, 70°C. LickiMat i Fiboo zakazują. My zaprojektowaliśmy inaczej.</p>
             </article>
@@ -895,7 +891,7 @@ const jsonLd = {
 
           <div class="reviews-grid">
             <article class="review-card reveal">
-              <div class="rc-photo"><img src="/produkty/wolnamiska/frenchie-licking.png" alt="Pies przy WolnaMiska" loading="lazy" /></div>
+              <div class="rc-photo"><img src="/produkty/wolnamiska/frenchie-okno.webp" alt="Pies przy WolnaMiska" loading="lazy" /></div>
               <div class="rc-body">
                 <div class="rc-stars">★★★★★</div>
                 <p class="rc-text">„Kupiłem jedną z tych misek i pies przestał się dławić. Wcześniej musiałem mu robić Heimlicha, masakra po prostu."</p>
@@ -904,7 +900,7 @@ const jsonLd = {
             </article>
 
             <article class="review-card reveal d1">
-              <div class="rc-photo"><img src="/produkty/wolnamiska/product-linen-v2.png" alt="WolnaMiska w domu" loading="lazy" /></div>
+              <div class="rc-photo"><img src="/produkty/wolnamiska/na-stole.webp" alt="WolnaMiska w domu" loading="lazy" /></div>
               <div class="rc-body">
                 <div class="rc-stars">★★★★★</div>
                 <p class="rc-text">„Piętnaście minut z życia psa spędzone na jedzeniu to lepsze niż pochłonięcie miski w 30 sekund. Po takim posiłku po prostu kładzie się i zasypia."</p>
@@ -913,7 +909,7 @@ const jsonLd = {
             </article>
 
             <article class="review-card reveal d2">
-              <div class="rc-photo"><img src="/produkty/wolnamiska/broth-pour.png" alt="Karma w misce" loading="lazy" /></div>
+              <div class="rc-photo"><img src="/produkty/wolnamiska/wlewanie-bulionu.webp" alt="Karma w misce" loading="lazy" /></div>
               <div class="rc-body">
                 <div class="rc-stars">★★★★★</div>
                 <p class="rc-text">„Koniec z bąkami u golden retrievera. Gazy zniknęły jak ręką odjął, odkąd je z tej miski. Nie wiedziałam, że tak połyka powietrze."</p>
@@ -922,7 +918,7 @@ const jsonLd = {
             </article>
 
             <article class="review-card reveal d3">
-              <div class="rc-photo"><img src="/produkty/wolnamiska/flatlay.png" alt="Czysta miska po posiłku" loading="lazy" /></div>
+              <div class="rc-photo"><img src="/produkty/wolnamiska/flatlay-marble.webp" alt="Czysta miska po posiłku" loading="lazy" /></div>
               <div class="rc-body">
                 <div class="rc-stars">★★★★★</div>
                 <p class="rc-text">„Zmywarka to przełom. Wcześniej szorowałam matę godzinę, teraz wrzucam do kosza i tyle. Polski produkt, polska obsługa, polecam."</p>
@@ -998,7 +994,7 @@ const jsonLd = {
             </div>
             <div class="final-buy reveal d2">
               <div class="fb-row">
-                <div class="fb-img"><img src="/produkty/wolnamiska/product-linen-v2.png" alt="WolnaMiska" loading="lazy"></div>
+                <div class="fb-img"><img src="/produkty/wolnamiska/na-stole.webp" alt="WolnaMiska" loading="lazy"></div>
                 <div>
                   <div class="fb-title">{product.name}</div>
                   <div class="fb-desc">Hybrydowa miska spowalniająca</div>
