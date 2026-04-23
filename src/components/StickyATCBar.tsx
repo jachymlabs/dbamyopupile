@@ -25,7 +25,20 @@ export default function StickyATCBar({
   const [visible, setVisible] = useState(false);
   const [adding, setAdding] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [bundleQty, setBundleQty] = useState(1);
+  const [overridePrice, setOverridePrice] = useState<string | null>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
+
+  // Listen for bundle changes from PDP form
+  useEffect(() => {
+    const onBundleChange = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { qty: number; priceText: string };
+      if (detail?.qty) setBundleQty(detail.qty);
+      if (detail?.priceText) setOverridePrice(detail.priceText);
+    };
+    window.addEventListener('wm-bundle-change', onBundleChange);
+    return () => window.removeEventListener('wm-bundle-change', onBundleChange);
+  }, []);
 
   useEffect(() => {
     if (typeof scrollThreshold === 'number') {
@@ -66,13 +79,13 @@ export default function StickyATCBar({
 
   const handleAdd = async () => {
     setAdding(true);
-    await addToCart(variantId, 1);
+    await addToCart(variantId, bundleQty);
     setAdding(false);
     setSuccess(true);
     setTimeout(() => setSuccess(false), 1800);
   };
 
-  const formattedPrice = new Intl.NumberFormat('pl-PL', {
+  const formattedPrice = overridePrice || new Intl.NumberFormat('pl-PL', {
     style: 'currency',
     currency: currencyCode,
   }).format(price / 100);

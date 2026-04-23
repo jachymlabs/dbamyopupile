@@ -869,47 +869,6 @@ const jsonLd = {
         </div>
       </section>
 
-      <!-- 07c UGC WALL -->
-      <section class="section ugc-section">
-        <div class="wrap">
-          <div class="ugc-head reveal">
-            <span class="ugc-eyebrow">Inspiracje</span>
-            <h2 class="h2">Zobacz WolnaMiska w działaniu</h2>
-            <p class="lede">Realne sytuacje z miską — od porannego śniadania po wieczorne wyciszenie. Twój pupil będzie kolejny.</p>
-          </div>
-
-          <div class="ugc-grid">
-            <div class="ugc-tile reveal">
-              <img src="/produkty/wolnamiska/frenchie-licking.png" alt="Buldog francuski liże WolnaMiska" loading="lazy" />
-              <div class="ugc-overlay">
-                <span class="ugc-tag">Mokra karma</span>
-              </div>
-            </div>
-
-            <div class="ugc-tile reveal d1">
-              <img src="/produkty/wolnamiska/product-linen-v2.png" alt="WolnaMiska na podłodze" loading="lazy" />
-              <div class="ugc-overlay">
-                <span class="ugc-tag">Pasta z banana</span>
-              </div>
-            </div>
-
-            <div class="ugc-tile reveal d2">
-              <img src="/produkty/wolnamiska/broth-pour.png" alt="Wlewanie bulionu do miski" loading="lazy" />
-              <div class="ugc-overlay">
-                <span class="ugc-tag">Bulion bez soli</span>
-              </div>
-            </div>
-
-            <div class="ugc-tile reveal d3">
-              <img src="/produkty/wolnamiska/flatlay.png" alt="WolnaMiska gotowa do mycia" loading="lazy" />
-              <div class="ugc-overlay">
-                <span class="ugc-tag">Po posiłku</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <!-- 07b REVIEWS -->
       <section class="section reviews-section">
         <div class="wrap">
@@ -1170,6 +1129,11 @@ const jsonLd = {
           const price = card.getAttribute('data-price');
           if (qtyInput && qty) qtyInput.value = qty;
           if (atcPrice && price) atcPrice.textContent = price;
+
+          // Notify StickyATCBar of bundle change
+          window.dispatchEvent(new CustomEvent('wm-bundle-change', {
+            detail: { qty: parseInt(qty || '1', 10), priceText: price || '' }
+          }));
         });
       });
 

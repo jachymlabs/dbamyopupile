@@ -34,7 +34,7 @@
       .wm-hero img{display:block;max-width:100%;height:auto}
       .wm-hero button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;padding:0}
       .wm-hero a{color:inherit;text-decoration:none}
-      .wm-hero-wrap{max-width:1240px;margin:0 auto;padding-left:clamp(16px, 4vw, 56px);padding-right:clamp(16px, 4vw, 56px);box-sizing:border-box;width:100%}
+      .wm-hero-wrap{max-width:1320px;margin:0 auto;padding-left:clamp(16px, 4vw, 56px);padding-right:clamp(16px, 4vw, 56px);box-sizing:border-box;width:100%}
 
       /* Breadcrumbs */
       .wm-breadcrumbs{display:flex;align-items:center;gap:8px;font-family:var(--h-f-body);font-size:13px;color:var(--h-ink-3);margin-bottom:clamp(16px, 2.5vw, 28px)}
@@ -44,7 +44,7 @@
 
       /* Grid layout */
       .wm-hero-grid{display:grid;grid-template-columns:1fr;gap:clamp(28px, 4vw, 56px);align-items:start}
-      @media(min-width:980px){.wm-hero-grid{grid-template-columns:0.9fr 1.1fr;gap:clamp(40px, 5vw, 72px);align-items:stretch}}
+      @media(min-width:980px){.wm-hero-grid{grid-template-columns:1.05fr 1fr;gap:clamp(40px, 5vw, 72px);align-items:stretch}}
 
       /* Gallery — sticky on .wm-gallery (inside col), col stretches to match conv-col height */
       .wm-gallery-col{position:relative;min-width:0}
@@ -53,9 +53,9 @@
 
       /* Conversion column — also needs min-width:0 to respect grid container */
       .wm-conv-col{display:flex;flex-direction:column;gap:0;min-width:0}
-      .wm-gallery-main{position:relative;aspect-ratio:4/5;background:var(--h-white);overflow:hidden;border:1px solid var(--h-rule-soft);border-radius:14px;box-shadow:var(--h-shadow-card)}
-      @media(min-width:980px){.wm-gallery-main{aspect-ratio:1/1;border-radius:18px}}
-      .wm-gallery-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 40%;opacity:0;transition:opacity 350ms var(--h-ease)}
+      .wm-gallery-main{position:relative;aspect-ratio:1/1;background:var(--h-canvas);overflow:hidden;border:1px solid var(--h-rule-soft);border-radius:14px;box-shadow:var(--h-shadow-card)}
+      @media(min-width:980px){.wm-gallery-main{border-radius:18px}}
+      .wm-gallery-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center center;opacity:0;transition:opacity 350ms var(--h-ease)}
       .wm-gallery-img.active{opacity:1}
 
       /* Gallery arrows (prev/next) — desktop + mobile */
@@ -123,14 +123,14 @@
       .wm-bundle-card:hover .wm-bundle-check{border-color:oklch(0.30 0.06 255 / 0.5)}
       .wm-bundle-card.active .wm-bundle-check{background:var(--h-navy);border-color:var(--h-navy);color:#ffffff}
 
-      .wm-bundle-main{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
-      .wm-bundle-name{font-family:var(--h-f-body);font-weight:600;font-size:15px;color:var(--h-ink);letter-spacing:-0.005em;line-height:1.2}
-      .wm-bundle-meta{font-family:var(--h-f-body);font-weight:400;font-size:12.5px;color:var(--h-ink-3);line-height:1.3}
+      .wm-bundle-main{flex:1;display:flex;flex-direction:column;gap:3px;min-width:0}
+      .wm-bundle-name{font-family:var(--h-f-body);font-weight:700;font-size:16.5px;color:var(--h-ink);letter-spacing:-0.005em;line-height:1.2}
+      .wm-bundle-meta{font-family:var(--h-f-body);font-weight:500;font-size:13px;color:var(--h-ink-2);line-height:1.35}
 
-      .wm-bundle-pricing{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:1px;text-align:right}
-      .wm-bundle-price{font-family:var(--h-f-display);font-weight:700;font-size:18px;color:var(--h-navy);letter-spacing:-0.015em;line-height:1.1;white-space:nowrap}
-      .wm-bundle-perunit{font-family:var(--h-f-body);font-weight:500;font-size:11.5px;color:var(--h-ink-3);line-height:1.2;white-space:nowrap}
-      .wm-bundle-perunit s{color:oklch(0.62 0.008 265);font-weight:400;margin-right:4px}
+      .wm-bundle-pricing{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:2px;text-align:right}
+      .wm-bundle-price{font-family:var(--h-f-display);font-weight:700;font-size:20px;color:var(--h-navy);letter-spacing:-0.015em;line-height:1.1;white-space:nowrap}
+      .wm-bundle-perunit{font-family:var(--h-f-body);font-weight:600;font-size:12.5px;color:var(--h-ink-2);line-height:1.2;white-space:nowrap}
+      .wm-bundle-perunit s{color:var(--h-ink-3);font-weight:500;margin-right:4px}
 
       .wm-bundle-badge{position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--h-navy);color:#ffffff;font-family:var(--h-f-body);font-weight:700;font-size:10px;letter-spacing:0.05em;text-transform:uppercase;padding:5px 12px;border-radius:999px;line-height:1.3;white-space:nowrap}
       .wm-bundle-badge.navy{background:var(--h-navy);color:#ffffff}
@@ -140,10 +140,10 @@
 
       @media(max-width:520px){
         .wm-bundle-card{padding:14px 14px;gap:11px}
-        .wm-bundle-name{font-size:14px}
-        .wm-bundle-meta{font-size:11.5px}
-        .wm-bundle-price{font-size:16px}
-        .wm-bundle-perunit{font-size:10.5px}
+        .wm-bundle-name{font-size:15.5px}
+        .wm-bundle-meta{font-size:12.5px}
+        .wm-bundle-price{font-size:18px}
+        .wm-bundle-perunit{font-size:11.5px}
       }
 
       /* ATC button — solid Deep Navy, only darker on hover */
@@ -185,7 +185,7 @@
       }
 
       /* Accordions section (full-width, below hero) */
-      .wm-acc-section{padding:clamp(28px, 4vw, 56px) 0;background:var(--h-canvas);border-top:1px solid var(--h-rule-soft)}
+      .wm-acc-section{padding:clamp(28px, 4vw, 56px) 0;background:#ffffff;border-top:1px solid var(--h-rule-soft)}
       .wm-acc-wrap{max-width:1240px;margin:0 auto;padding:0 clamp(16px, 4vw, 56px)}
 
       /* Accordions */

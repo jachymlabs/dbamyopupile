@@ -5,8 +5,6 @@ import Footer from '@/components/Footer.astro';
 import MetaPixel from '@/components/MetaPixel.astro';
 import CookieConsent from '@/components/CookieConsent.astro';
 import CartDrawer from '@/components/CartDrawer';
-import ExitIntentOverlay from '@/components/ExitIntentOverlay';
-import SMSCaptureOverlay from '@/components/SMSCaptureOverlay';
 import { getStoreConfig } from '@/lib/store-config';
 import { sendCAPIEvent, buildUserData, generateEventId } from '@/lib/meta-capi';
 import '@/styles/global.css';
@@ -126,8 +124,6 @@ if (hasConsent && config.metaPixelId) {
     </main>
     {!hideFooter && <Footer storeName={config.storeName} storeTagline={config.storeTagline} contactEmail={config.contactEmail} />}
     {!hideCart && <CartDrawer client:only="react" />}
-    <ExitIntentOverlay client:idle />
-    <SMSCaptureOverlay client:idle />
     <CookieConsent />
     <script is:inline>
     (function() {

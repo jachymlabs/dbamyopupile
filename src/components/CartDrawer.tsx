@@ -311,10 +311,6 @@ function CartDrawerInner() {
                   <span>-{formatPrice(Math.abs(d.amountWithTax))}</span>
                 </div>
               ))}
-              <div className="flex justify-between text-sm text-gray-600">
-                <span>Suma czesciowa</span>
-                <span>{formatPrice(order?.subTotalWithTax ?? 0)}</span>
-              </div>
               {(order?.shippingWithTax ?? 0) > 0 && (
                 <div className="flex justify-between text-sm text-gray-600">
                   <span>Dostawa</span>
