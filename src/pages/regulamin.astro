@@ -2,133 +2,154 @@
 import BaseLayout from '@/layouts/BaseLayout.astro';
 ---
 
-<BaseLayout title="Regulamin" description="Regulamin sklepu internetowego." noindex={true}>
+<BaseLayout title="Regulamin sklepu DbamyOPupile.pl" description="Regulamin sklepu internetowego DbamyOPupile.pl. Zasady zakupów, dostawy, płatności, zwrotów i reklamacji.">
   <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-10">
-    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-8">Regulamin sklepu internetowego</h1>
+    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-8">Regulamin sklepu internetowego DbamyOPupile.pl</h1>
+
+    <p class="text-sm text-gray-500 mb-8">Obowiązuje od dnia 23.04.2026</p>
 
     <div class="prose prose-sm prose-gray max-w-none">
 
-      <h2>§ 1. Postanowienia ogolne i dane kontaktowe</h2>
+      <h2>§ 1. Postanowienia ogólne i dane kontaktowe</h2>
       <ol>
-        <li>Sklep internetowy dzialajacy pod adresem <strong>[ADRES_WWW]</strong> prowadzony jest przez <strong>[IMIE_NAZWISKO]</strong> prowadzacego dzialalnosc gospodarcza pod firma <strong>[NAZWA_FIRMY]</strong>, z siedziba pod adresem: <strong>[ADRES_SIEDZIBY]</strong>, wpisanego do Centralnej Ewidencji i Informacji o Dzialalnosci Gospodarczej (CEIDG), NIP: <strong>[NIP]</strong>, REGON: <strong>[REGON]</strong>, zwanego dalej "Sprzedawca".</li>
-        <li>Niniejszy Regulamin okresla zasady korzystania ze Sklepu, w tym zasady zawierania Umow Sprzedazy Towarow na odleglosc, zasady dostarczania Towarow, tryb postepowania reklamacyjnego oraz zasady odstapienia od umowy, zgodnie z wymogami ustawy z dnia 30 maja 2014 r. o prawach konsumenta oraz ustawy z dnia 18 lipca 2002 r. o swiadczeniu uslug droga elektroniczna.</li>
-        <li>Kontakt ze Sprzedawca jest mozliwy za posrednictwem:
+        <li>Sklep internetowy działający pod adresem <strong>dbamyopupile.pl</strong> prowadzony jest przez <strong>Patryka Jachyma</strong> prowadzącego jednoosobową działalność gospodarczą pod firmą <strong>PATRYK JACHYM LABS</strong>, z miejscem prowadzenia działalności pod adresem: <strong>ul. Torowa 1, 33-100 Tarnów</strong>, wpisanego do Centralnej Ewidencji i Informacji o Działalności Gospodarczej (CEIDG), NIP: <strong>9930710781</strong>, REGON: <strong>542607372</strong>, zwanego dalej „Sprzedawcą".</li>
+        <li>Niniejszy Regulamin określa zasady korzystania ze Sklepu, w tym zasady zawierania Umów Sprzedaży Towarów na odległość, zasady dostarczania Towarów, tryb postępowania reklamacyjnego oraz zasady odstąpienia od umowy, zgodnie z wymogami ustawy z dnia 30 maja 2014 r. o prawach konsumenta oraz ustawy z dnia 18 lipca 2002 r. o świadczeniu usług drogą elektroniczną.</li>
+        <li>Kontakt ze Sprzedawcą jest możliwy za pośrednictwem:
           <ul>
-            <li>poczty e-mail: <strong>[EMAIL]</strong></li>
-            <li>telefonu: <strong>[TELEFON]</strong> (koszt polaczenia wg taryfy operatora)</li>
-            <li>pisemnie na adres: <strong>[ADRES_SIEDZIBY]</strong></li>
+            <li>poczty e-mail: <strong>sklep@dbamyopupile.pl</strong></li>
+            <li>telefonu: <strong>+48 577 723 506</strong> (koszt połączenia wg taryfy operatora; pon–pt 9:00–17:00)</li>
+            <li>pisemnie na adres: <strong>ul. Torowa 1, 33-100 Tarnów</strong></li>
           </ul>
         </li>
-        <li>Zlozenie zamowienia w Sklepie jest rownoznaczne z zapoznaniem sie i zaakceptowaniem postanowien niniejszego Regulaminu. Regulamin jest udostepniany Kupujacemu nieprzerwanie w sposob umozliwiajacy jego pozyskanie, odtwarzanie i utrwalanie (art. 384 Kodeksu cywilnego).</li>
+        <li>Złożenie zamówienia w Sklepie jest równoznaczne z zapoznaniem się i zaakceptowaniem postanowień niniejszego Regulaminu. Regulamin jest udostępniany Kupującemu nieprzerwanie w sposób umożliwiający jego pozyskanie, odtwarzanie i utrwalanie (art. 384 Kodeksu cywilnego).</li>
       </ol>
 
       <h2>§ 2. Definicje</h2>
       <ul>
-        <li><strong>Konsument</strong> — osoba fizyczna dokonujaca ze Sprzedawca czynnosci prawnej niezwiazanej bezposrednio z jej dzialalnoscia gospodarcza lub zawodowa.</li>
-        <li><strong>Przedsiebiorca na prawach konsumenta</strong> — osoba fizyczna zawierajaca Umowe Sprzedazy bezposrednio zwiazana z jej dzialalnoscia gospodarcza, gdy z tresci tej umowy wynika, ze nie posiada ona dla tej osoby charakteru zawodowego.</li>
-        <li><strong>Kupujacy</strong> — kazdy podmiot skladajacy Zamowienie w Sklepie.</li>
-        <li><strong>Towar</strong> — dostepna w Sklepie rzecz ruchoma bedaca przedmiotem Umowy Sprzedazy.</li>
-        <li><strong>Zamowienie</strong> — oswiadczenie woli Kupujacego zmierzajace bezposrednio do zawarcia Umowy Sprzedazy.</li>
+        <li><strong>Konsument</strong> — osoba fizyczna dokonująca ze Sprzedawcą czynności prawnej niezwiązanej bezpośrednio z jej działalnością gospodarczą lub zawodową.</li>
+        <li><strong>Przedsiębiorca na prawach konsumenta</strong> — osoba fizyczna zawierająca Umowę Sprzedaży bezpośrednio związaną z jej działalnością gospodarczą, gdy z treści tej umowy wynika, że nie posiada ona dla tej osoby charakteru zawodowego.</li>
+        <li><strong>Kupujący</strong> — każdy podmiot składający Zamówienie w Sklepie.</li>
+        <li><strong>Towar</strong> — dostępna w Sklepie rzecz ruchoma będąca przedmiotem Umowy Sprzedaży.</li>
+        <li><strong>Zamówienie</strong> — oświadczenie woli Kupującego zmierzające bezpośrednio do zawarcia Umowy Sprzedaży.</li>
+        <li><strong>Sklep</strong> — sklep internetowy prowadzony przez Sprzedawcę pod adresem dbamyopupile.pl.</li>
       </ul>
 
       <h2>§ 3. Wymagania techniczne</h2>
-      <p>Do korzystania ze Sklepu niezbedne sa:</p>
+      <p>Do korzystania ze Sklepu niezbędne są:</p>
       <ul>
-        <li>urzadzenie koncowe z dostepem do sieci Internet i przegladarka internetowa w aktualnej wersji,</li>
+        <li>urządzenie końcowe z dostępem do sieci Internet i przeglądarka internetowa w aktualnej wersji,</li>
         <li>aktywne konto poczty elektronicznej (e-mail),</li>
-        <li>wlaczona obsluga plikow cookies oraz skryptow JavaScript.</li>
+        <li>włączona obsługa plików cookies oraz skryptów JavaScript.</li>
       </ul>
+      <p>Sprzedawca informuje, że korzystanie z usług świadczonych drogą elektroniczną wiąże się z typowymi zagrożeniami związanymi z transmisją danych przez Internet. Sprzedawca stosuje zabezpieczenia (m.in. szyfrowanie SSL/TLS) ograniczające te zagrożenia.</p>
 
-      <h2>§ 4. Zasady skladania Zamowien i zawierania Umowy Sprzedazy</h2>
+      <h2>§ 4. Zasady składania Zamówień i zawierania Umowy Sprzedaży</h2>
       <ol>
-        <li>Sklep prowadzi sprzedaz detaliczna na terytorium Rzeczypospolitej Polskiej.</li>
-        <li>Kupujacy moze skladac Zamowienia jako gosc, bez koniecznosci rejestracji konta uzytkownika w Sklepie.</li>
-        <li>W celu zlozenia Zamowienia Kupujacy:
+        <li>Sklep prowadzi sprzedaż detaliczną na terytorium Rzeczypospolitej Polskiej.</li>
+        <li>Kupujący może składać Zamówienia jako gość, bez konieczności rejestracji konta użytkownika w Sklepie.</li>
+        <li>W celu złożenia Zamówienia Kupujący:
           <ul>
             <li>dodaje wybrany Towar do wirtualnego koszyka,</li>
-            <li>przechodzi do formularza zamowienia, podajac dane niezbedne do realizacji dostawy (imie, nazwisko, adres e-mail, numer telefonu, adres docelowy lub paczkomat),</li>
-            <li>wybiera sposob dostawy oraz metode platnosci.</li>
+            <li>przechodzi do formularza zamówienia, podając dane niezbędne do realizacji dostawy (imię, nazwisko, adres e-mail, numer telefonu, adres docelowy lub paczkomat),</li>
+            <li>wybiera sposób dostawy oraz metodę płatności,</li>
+            <li>akceptuje treść Regulaminu oraz zapoznaje się z Polityką Prywatności.</li>
           </ul>
         </li>
-        <li>Przed finalizacja Zamowienia Kupujacy jest jednoznacznie informowany o lacznej cenie Towaru wraz z podatkami oraz kosztami dostawy.</li>
-        <li>Zawarcie Umowy Sprzedazy nastepuje w momencie klikniecia przez Kupujacego przycisku „Zamawiam z obowiazkiem zaplaty". Klikniecie tego przycisku stanowi oswiadczenie woli Kupujacego pociagajace za soba obowiazek zaplaty i skutkuje prawnym zwiazaniem postanowieniami niniejszego Regulaminu.</li>
-        <li>Po zlozeniu Zamowienia Sprzedawca niezwlocznie potwierdza jego otrzymanie i przyjecie do realizacji poprzez przeslanie Kupujacemu wiadomosci e-mail.</li>
+        <li>Przed finalizacją Zamówienia Kupujący jest jednoznacznie informowany o łącznej cenie Towaru wraz z podatkami oraz kosztami dostawy.</li>
+        <li>Zawarcie Umowy Sprzedaży następuje w momencie kliknięcia przez Kupującego przycisku „Zamawiam z obowiązkiem zapłaty". Kliknięcie tego przycisku stanowi oświadczenie woli Kupującego pociągające za sobą obowiązek zapłaty i skutkuje prawnym związaniem postanowieniami niniejszego Regulaminu.</li>
+        <li>Po złożeniu Zamówienia Sprzedawca niezwłocznie potwierdza jego otrzymanie i przyjęcie do realizacji poprzez przesłanie Kupującemu wiadomości e-mail.</li>
+        <li>Utrwalenie, zabezpieczenie oraz udostępnienie Kupującemu treści zawieranej Umowy Sprzedaży następuje poprzez przesłanie wiadomości e-mail z potwierdzeniem zamówienia oraz załączonym Regulaminem (w wersji obowiązującej w dniu zawarcia umowy).</li>
       </ol>
 
-      <h2>§ 5. Ceny, metody platnosci i dostawa</h2>
+      <h2>§ 5. Ceny, metody płatności i dostawa</h2>
       <ol>
-        <li>Wszystkie ceny w Sklepie podane sa w polskich zlotych (PLN) i stanowia ceny brutto (zawieraja podatek VAT).</li>
-        <li>Zgodnie z dyrektywa Omnibus, w przypadku ogloszenia promocji lub obnizki ceny, Sprzedawca obok informacji o obnizzonej cenie uwidacznia informacje o najnizszej cenie tego Towaru, ktora obowiazywala w okresie 30 dni przed wprowadzeniem obnizki.</li>
-        <li>Sprzedawca udostepnia nastepujace metody platnosci:
+        <li>Wszystkie ceny w Sklepie podane są w polskich złotych (PLN) i stanowią ceny brutto (zawierają podatek VAT).</li>
+        <li>Zgodnie z dyrektywą Omnibus, w przypadku ogłoszenia promocji lub obniżki ceny, Sprzedawca obok informacji o obniżonej cenie uwidacznia informację o najniższej cenie tego Towaru, która obowiązywała w okresie 30 dni przed wprowadzeniem obniżki.</li>
+        <li>Sprzedawca udostępnia następujące metody płatności:
           <ul>
-            <li>system platnosci mobilnych BLIK,</li>
-            <li>szybkie przelewy elektroniczne (PayU),</li>
-            <li>platnosc karta platnicza (Visa, Mastercard),</li>
-            <li>PayPo — platnosc odroczona (kup teraz, zaplac w ciagu 30 dni),</li>
-            <li>platnosc przy odbiorze (pobranie).</li>
+            <li>system płatności mobilnych BLIK (za pośrednictwem PayU S.A.),</li>
+            <li>szybkie przelewy elektroniczne (PayU S.A.),</li>
+            <li>płatność kartą płatniczą Visa, Mastercard (za pośrednictwem PayU S.A.),</li>
+            <li>płatność za pobraniem (gotówka przy odbiorze paczki, dopłata do kosztów dostawy).</li>
           </ul>
         </li>
-        <li>Kupujacy zobowiazany jest do dokonania platnosci niezwlocznie po zlozeniu zamowienia. W przypadku braku zaksiegowania platnosci w terminie 24 godzin, Zamowienie zostaje automatycznie anulowane.</li>
-        <li>Dostawa Towaru realizowana jest wylacznie na terytorium Polski za posrednictwem:
+        <li>Operatorem płatności online jest spółka <strong>PayU S.A.</strong> z siedzibą w Poznaniu (60-166), przy ul. Grunwaldzkiej 186, KRS 0000274399, NIP 7792308495.</li>
+        <li>Kupujący zobowiązany jest do dokonania płatności niezwłocznie po złożeniu zamówienia. W przypadku braku zaksięgowania płatności w terminie 24 godzin (z wyłączeniem płatności za pobraniem), Zamówienie zostaje automatycznie anulowane.</li>
+        <li>Dostawa Towaru realizowana jest wyłącznie na terytorium Polski za pośrednictwem operatora <strong>InPost S.A.</strong> z siedzibą w Krakowie:
           <ul>
-            <li>sieci automatow paczkowych InPost Paczkomaty 24/7,</li>
-            <li>przesylki kurierskiej InPost.</li>
+            <li>sieć automatów paczkowych InPost Paczkomaty 24/7,</li>
+            <li>przesyłka kurierska InPost Kurier.</li>
           </ul>
         </li>
-        <li>Koszty dostawy sa wskazywane w formularzu zamowienia przed jego finalizacja.</li>
-        <li>Czas realizacji Zamowienia (przekazania przewoznikowi) wynosi od 1 do 2 dni roboczych od momentu zaksiegowania platnosci.</li>
+        <li>Aktualne koszty i metody dostawy dostępne są w formularzu zamówienia oraz na stronie <a href="/dostawa-i-zwroty">Dostawa i Zwroty</a>. Koszty dostawy są wskazywane Kupującemu przed finalizacją Zamówienia.</li>
+        <li>Sprzedawca może wprowadzać akcje promocyjne, w tym darmową dostawę powyżej określonej wartości zamówienia. Warunki promocji każdorazowo komunikowane są w Sklepie.</li>
+        <li>Czas realizacji Zamówienia (przekazania przewoźnikowi) wynosi od 1 do 2 dni roboczych od momentu zaksięgowania płatności. Zamówienia złożone do godziny 14:00 w dni robocze realizowane są tego samego dnia.</li>
       </ol>
 
-      <h2>§ 6. Prawo odstapienia od umowy (Zwroty)</h2>
+      <h2>§ 6. Prawo odstąpienia od umowy (Zwroty)</h2>
       <ol>
-        <li>Konsument oraz Przedsiebiorca na prawach konsumenta maja prawo odstapic od Umowy Sprzedazy bez podania przyczyny w terminie 14 dni od dnia objecia Towaru w posiadanie.</li>
-        <li>Aby skorzystac z prawa odstapienia, Kupujacy musi poinformowac Sprzedawce o swojej decyzji w drodze jednoznacznego oswiadczenia (pismo pocztowe na adres: <strong>[ADRES]</strong> lub poczta elektroniczna na adres: <strong>[EMAIL]</strong>).</li>
-        <li>Kupujacy moze skorzystac ze wzoru formularza odstapienia (Zalacznik nr 1), jednak nie jest to obowiazkowe.</li>
-        <li>W przypadku odstapienia Sprzedawca zwraca wszystkie otrzymane platnosci, w tym koszty dostarczenia Towaru (z wyjatkiem dodatkowych kosztow wynikajacych z wybranego sposobu dostarczenia innego niz najtanszy), niezwlocznie, nie pozniej niz 14 dni od dnia otrzymania oswiadczenia o odstapieniu. Sprzedawca moze wstrzymac sie ze zwrotem do czasu otrzymania Towaru z powrotem.</li>
-        <li>Zwrot platnosci dokonywany jest przy uzyciu takich samych sposobow platnosci, jakie zostaly uzyte w pierwotnej transakcji.</li>
-        <li>Kupujacy ponosi bezposrednie koszty zwrotu Towaru do Sprzedawcy. Towar nalezy odeslac na adres: <strong>[ADRES_ZWROTOW]</strong>.</li>
-        <li>Kupujacy odpowiada za zmniejszenie wartosci Towaru wynikajace z korzystania z niego w sposob inny niz konieczny do stwierdzenia charakteru, cech i funkcjonowania Towaru.</li>
+        <li>Konsument oraz Przedsiębiorca na prawach konsumenta mają prawo odstąpić od Umowy Sprzedaży bez podania przyczyny w terminie <strong>30 dni</strong> od dnia objęcia Towaru w posiadanie. Sprzedawca dobrowolnie wydłuża ustawowy termin 14-dniowy do 30 dni.</li>
+        <li>Aby skorzystać z prawa odstąpienia, Kupujący musi poinformować Sprzedawcę o swojej decyzji w drodze jednoznacznego oświadczenia (pismo pocztowe na adres: ul. Torowa 1, 33-100 Tarnów lub poczta elektroniczna na adres: <strong>sklep@dbamyopupile.pl</strong>).</li>
+        <li>Kupujący może skorzystać ze wzoru formularza odstąpienia (Załącznik nr 1), jednak nie jest to obowiązkowe.</li>
+        <li>Do zachowania terminu wystarczy wysłanie oświadczenia przed jego upływem.</li>
+        <li>W przypadku odstąpienia Sprzedawca zwraca wszystkie otrzymane płatności, w tym koszty dostarczenia Towaru (z wyjątkiem dodatkowych kosztów wynikających z wybranego sposobu dostarczenia innego niż najtańszy zwykły sposób dostarczenia oferowany przez Sprzedawcę), niezwłocznie, nie później niż 14 dni od dnia otrzymania oświadczenia o odstąpieniu. Sprzedawca może wstrzymać się ze zwrotem do czasu otrzymania Towaru z powrotem lub dostarczenia dowodu jego odesłania, w zależności od tego, które zdarzenie nastąpi wcześniej.</li>
+        <li>Zwrot płatności dokonywany jest przy użyciu takich samych sposobów płatności, jakie zostały użyte w pierwotnej transakcji, chyba że Kupujący wyraźnie zgodził się na inne rozwiązanie. Kupujący nie ponosi żadnych opłat w związku ze zwrotem płatności.</li>
+        <li>Kupujący ponosi bezpośrednie koszty zwrotu Towaru do Sprzedawcy. Towar należy odesłać na adres: <strong>ul. Torowa 1, 33-100 Tarnów</strong>.</li>
+        <li>Kupujący odpowiada za zmniejszenie wartości Towaru wynikające z korzystania z niego w sposób inny niż konieczny do stwierdzenia charakteru, cech i funkcjonowania Towaru.</li>
+        <li>Prawo odstąpienia od umowy nie przysługuje w przypadkach określonych w art. 38 ustawy o prawach konsumenta, w szczególności gdy przedmiotem świadczenia jest rzecz nieprefabrykowana, wyprodukowana według specyfikacji Konsumenta lub służąca zaspokojeniu jego zindywidualizowanych potrzeb.</li>
       </ol>
 
-      <h2>§ 7. Reklamacje (Brak zgodnosci Towaru z umowa)</h2>
+      <h2>§ 7. Reklamacje (Brak zgodności Towaru z umową)</h2>
       <ol>
-        <li>Sprzedawca jest zobowiazany do dostarczenia Towaru zgodnego z Umowa Sprzedazy.</li>
-        <li>Wobec Konsumentow oraz Przedsiebiorcow na prawach konsumenta zastosowanie maja przepisy Rozdzialu 5a ustawy o prawach konsumenta regulujace odpowiedzialnosc za brak zgodnosci towaru z umowa.</li>
-        <li>Jezeli Towar jest niezgodny z umowa, Konsument moze w pierwszej kolejnosci zadac jego naprawy lub wymiany.</li>
-        <li>Konsument moze zlozyc oswiadczenie o obnizeniu ceny albo odstapieniu od umowy w sytuacjach okreslonych w ustawie.</li>
-        <li>Reklamacje nalezy zglaszac na adres e-mail: <strong>[EMAIL]</strong> lub pisemnie na adres Sprzedawcy. Zgloszenie powinno zawierac dane Kupujacego, opis niezgodnosci oraz wybrane roszczenie.</li>
-        <li>Sprzedawca ustosunkuje sie do reklamacji niezwlocznie, nie pozniej niz w terminie 14 dni od dnia jej otrzymania.</li>
+        <li>Sprzedawca jest zobowiązany do dostarczenia Towaru zgodnego z Umową Sprzedaży.</li>
+        <li>Wobec Konsumentów oraz Przedsiębiorców na prawach konsumenta zastosowanie mają przepisy Rozdziału 5a ustawy z dnia 30 maja 2014 r. o prawach konsumenta regulujące odpowiedzialność za brak zgodności towaru z umową.</li>
+        <li>Sprzedawca ponosi odpowiedzialność za brak zgodności Towaru z umową istniejący w chwili dostarczenia Towaru i ujawniony w ciągu dwóch lat od tej chwili.</li>
+        <li>Jeżeli Towar jest niezgodny z umową, Konsument może w pierwszej kolejności żądać jego naprawy lub wymiany.</li>
+        <li>Konsument może złożyć oświadczenie o obniżeniu ceny albo odstąpieniu od umowy w sytuacjach określonych w ustawie, w szczególności gdy:
+          <ul>
+            <li>Sprzedawca odmówił naprawy lub wymiany Towaru,</li>
+            <li>Sprzedawca nie doprowadził Towaru do zgodności z umową,</li>
+            <li>brak zgodności Towaru z umową jest na tyle istotny, że uzasadnia odstąpienie od umowy bez wcześniejszego skorzystania z innych środków ochrony.</li>
+          </ul>
+        </li>
+        <li>Reklamacje należy zgłaszać na adres e-mail: <strong>sklep@dbamyopupile.pl</strong> lub pisemnie na adres Sprzedawcy. Zgłoszenie powinno zawierać dane Kupującego, opis niezgodności oraz wybrane roszczenie.</li>
+        <li>Sprzedawca ustosunkuje się do reklamacji niezwłocznie, nie później niż w terminie 14 dni od dnia jej otrzymania. Brak odpowiedzi w tym terminie oznacza uznanie reklamacji za zasadną.</li>
       </ol>
 
       <h2>§ 8. Opinie o Towarach</h2>
-      <p>Jezeli Sklep udostepnia mozliwosc publikowania opinii, Sprzedawca zapewnia, ze zamieszczone opinie pochodza wylacznie od zweryfikowanych Konsumentow, ktorzy faktycznie kupili dany Towar.</p>
+      <ol>
+        <li>Sprzedawca może umożliwiać Kupującym wystawianie opinii o Towarach za pośrednictwem Sklepu lub serwisów zewnętrznych.</li>
+        <li>Sprzedawca zapewnia, że publikowane na stronie opinie pochodzą wyłącznie od zweryfikowanych Konsumentów, którzy faktycznie kupili dany Towar. W tym celu Sprzedawca przesyła zaproszenie do wystawienia opinii wyłącznie do osób, które złożyły zamówienie i otrzymały Towar.</li>
+        <li>Sprzedawca nie modyfikuje treści opinii. Opinie naruszające prawo, dobre obyczaje lub niezwiązane z Towarem mogą zostać usunięte.</li>
+      </ol>
 
       <h2>§ 9. Ochrona Danych Osobowych (RODO)</h2>
       <ol>
-        <li>Administratorem danych osobowych jest Sprzedawca.</li>
-        <li>Dane osobowe Kupujacych przetwarzane sa w celu zawarcia i wykonania Umowy Sprzedazy na podstawie art. 6 ust. 1 lit. b RODO, a takze w celu wypelnienia obowiazkow prawnych na podstawie art. 6 ust. 1 lit. c RODO.</li>
-        <li>Podanie danych osobowych jest dobrowolne, jednakze jest warunkiem koniecznym do zlozenia Zamowienia.</li>
-        <li>Szczegolowe zasady przetwarzania danych osobowych zawarte sa w <a href="/polityka-prywatnosci">Polityce Prywatnosci</a>.</li>
+        <li>Administratorem danych osobowych jest Sprzedawca, tj. <strong>Patryk Jachym</strong> prowadzący jednoosobową działalność gospodarczą pod firmą <strong>PATRYK JACHYM LABS</strong>, ul. Torowa 1, 33-100 Tarnów, NIP: 9930710781.</li>
+        <li>Dane osobowe Kupujących przetwarzane są w celu zawarcia i wykonania Umowy Sprzedaży na podstawie art. 6 ust. 1 lit. b RODO, a także w celu wypełnienia obowiązków prawnych (m.in. podatkowych i księgowych) na podstawie art. 6 ust. 1 lit. c RODO.</li>
+        <li>Podanie danych osobowych jest dobrowolne, jednakże jest warunkiem koniecznym do złożenia Zamówienia.</li>
+        <li>Szczegółowe zasady przetwarzania danych osobowych, w tym informacje o odbiorcach danych, okresach przechowywania, prawach osób, których dane dotyczą oraz wykorzystywaniu plików cookies, zawarte są w <a href="/polityka-prywatnosci">Polityce Prywatności</a>.</li>
       </ol>
 
-      <h2>§ 10. Postanowienia koncowe</h2>
+      <h2>§ 10. Postanowienia końcowe</h2>
       <ol>
-        <li>Konsument ma mozliwosc skorzystania z pozasadowych sposobow rozpatrywania reklamacji i dochodzenia roszczen.</li>
-        <li>Pod adresem <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener">https://ec.europa.eu/consumers/odr</a> Konsument ma dostep do unijnej platformy internetowego rozstrzygania sporow (Platforma ODR).</li>
-        <li>W sprawach nieuregulowanych w niniejszym Regulaminie maja zastosowanie powszechnie obowiazujace przepisy prawa polskiego.</li>
-        <li>Regulamin obowiazuje od dnia <strong>[DATA]</strong>. Sprzedawca zastrzega sobie prawo do zmian Regulaminu z waznych przyczyn. Do umow zawartych przed wejsciem w zycie zmian stosuje sie postanowienia Regulaminu obowiazujacego w chwili zlozenia Zamowienia.</li>
+        <li>Konsument ma możliwość skorzystania z pozasądowych sposobów rozpatrywania reklamacji i dochodzenia roszczeń, m.in. poprzez zwrócenie się do właściwego wojewódzkiego inspektora Inspekcji Handlowej lub stałego polubownego sądu konsumenckiego.</li>
+        <li>Pod adresem <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener">https://ec.europa.eu/consumers/odr</a> Konsument ma dostęp do unijnej platformy internetowego rozstrzygania sporów (Platforma ODR).</li>
+        <li>W sprawach nieuregulowanych w niniejszym Regulaminie mają zastosowanie powszechnie obowiązujące przepisy prawa polskiego, w szczególności Kodeksu cywilnego, ustawy o prawach konsumenta oraz ustawy o świadczeniu usług drogą elektroniczną.</li>
+        <li>Sprzedawca zastrzega sobie prawo do zmian Regulaminu z ważnych przyczyn (zmiany przepisów prawa, zmiany metod płatności i dostaw, dodanie nowych funkcjonalności Sklepu). Do umów zawartych przed wejściem w życie zmian stosuje się postanowienia Regulaminu obowiązującego w chwili złożenia Zamówienia.</li>
+        <li>Regulamin obowiązuje od dnia <strong>23.04.2026</strong>.</li>
       </ol>
 
-      <h2>Zalacznik nr 1 — Wzor formularza odstapienia od umowy</h2>
-      <p><em>(Formularz ten nalezy wypelnic i odeslac tylko w przypadku checi odstapienia od umowy)</em></p>
-      <p>Adresat: <strong>[NAZWA_FIRMY]</strong>, <strong>[ADRES_SIEDZIBY]</strong>, <strong>[EMAIL]</strong></p>
-      <p>Ja/My(*) niniejszym informuje/informujemy(*) o moim/naszym odstapieniu od umowy sprzedazy nastepujacych rzeczy: ________________</p>
+      <h2>Załącznik nr 1 — Wzór formularza odstąpienia od umowy</h2>
+      <p><em>(Formularz ten należy wypełnić i odesłać tylko w przypadku chęci odstąpienia od umowy)</em></p>
+      <p>Adresat: <strong>PATRYK JACHYM LABS</strong>, ul. Torowa 1, 33-100 Tarnów, e-mail: sklep@dbamyopupile.pl</p>
+      <p>Ja/My(*) niniejszym informuję/informujemy(*) o moim/naszym odstąpieniu od umowy sprzedaży następujących rzeczy: ________________</p>
       <p>Data zawarcia umowy / odbioru: ________________</p>
-      <p>Imie i nazwisko konsumenta: ________________</p>
+      <p>Imię i nazwisko konsumenta: ________________</p>
       <p>Adres konsumenta: ________________</p>
-      <p>Podpis konsumenta (tylko jezeli formularz jest przesylany w wersji papierowej): ________________</p>
+      <p>Podpis konsumenta (tylko jeżeli formularz jest przesyłany w wersji papierowej): ________________</p>
       <p>Data: ________________</p>
-      <p>(*) Niepotrzebne skreslic.</p>
+      <p>(*) Niepotrzebne skreślić.</p>
 
     </div>
   </div>

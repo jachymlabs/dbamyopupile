@@ -185,6 +185,32 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
       </div>
     </section>
 
+    <!-- DANE FIRMY -->
+    <section class="help-company">
+      <div class="help-wrap">
+        <h2>Dane firmy</h2>
+        <div class="help-company-grid">
+          <div class="help-company-card">
+            <p class="help-company-label">Nazwa</p>
+            <p class="help-company-value">PATRYK JACHYM LABS</p>
+          </div>
+          <div class="help-company-card">
+            <p class="help-company-label">Adres</p>
+            <p class="help-company-value">ul. Torowa 1<br/>33-100 Tarnów</p>
+          </div>
+          <div class="help-company-card">
+            <p class="help-company-label">NIP</p>
+            <p class="help-company-value">9930710781</p>
+          </div>
+          <div class="help-company-card">
+            <p class="help-company-label">REGON</p>
+            <p class="help-company-value">542607372</p>
+          </div>
+        </div>
+        <p class="help-company-meta">Działalność wpisana do CEIDG. Adres do zwrotów i korespondencji: ul. Torowa 1, 33-100 Tarnów.</p>
+      </div>
+    </section>
+
     <!-- STILL NEED HELP -->
     <section class="help-cta-final">
       <div class="help-wrap">
@@ -436,6 +462,57 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
       font-weight: 600;
       text-decoration: underline;
       text-underline-offset: 3px;
+    }
+
+    /* DANE FIRMY */
+    .help-company {
+      background: #FAF7F2;
+      padding: 56px 0;
+      border-top: 1px solid var(--hp-rule, #e8e3d8);
+    }
+    @media (min-width: 900px) { .help-company { padding: 72px 0; } }
+    .help-company h2 {
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: clamp(24px, 3.5vw, 32px);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin: 0 0 28px;
+      color: var(--hp-ink, #1A1A1A);
+    }
+    .help-company-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    @media (min-width: 700px) {
+      .help-company-grid { grid-template-columns: repeat(4, 1fr); gap: 20px; }
+    }
+    .help-company-card {
+      background: #fff;
+      border: 1px solid var(--hp-rule, #e8e3d8);
+      border-radius: 8px;
+      padding: 16px 18px;
+    }
+    .help-company-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--hp-ink-2, #6b6b6b);
+      margin: 0 0 6px;
+    }
+    .help-company-value {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--hp-ink, #1A1A1A);
+      margin: 0;
+      line-height: 1.4;
+    }
+    .help-company-meta {
+      margin: 24px 0 0;
+      font-size: 13px;
+      color: var(--hp-ink-2, #6b6b6b);
+      line-height: 1.6;
     }
 
     /* FINAL CTA */
