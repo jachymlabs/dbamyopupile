@@ -36,57 +36,46 @@ const heroImageUrl = mainImage ? buildAssetUrl(mainImage.preview, 'large') : '/p
     <section class="home-hero">
       <div class="wrap">
         <div class="home-hero-grid">
-          <div class="home-hero-text">
-            <span class="home-pill">Pre-launch w Polsce</span>
+          <div>
+            <span class="home-hero-pill">Pre-launch w Polsce</span>
 
             <h1 class="home-h1">
-              Twój pies pochłania miskę<br/>
-              w <em>30 sekund?</em>
+              Twój pies pochłania miskę w <em>30 sekund?</em>
             </h1>
 
             <p class="home-hero-lede">
-              WolnaMiska to hybrydowa miska z ruchomą kulką w środku.
-              Zmienia każdy posiłek w <strong>15 minut spokojnego jedzenia</strong> —
-              koniec z wzdęciami, krztuszeniem i wymiotami z głodu.
+              WolnaMiska to hybrydowa miska z ruchomą kulką w środku. Zmienia każdy posiłek
+              w <strong>15 minut spokojnego jedzenia</strong> — koniec z wzdęciami, krztuszeniem i wymiotami z głodu.
             </p>
 
-            <div class="home-cta-row">
-              <a href="/produkty/wolnamiska" class="home-btn home-btn-primary">
+            <div class="home-hero-cta">
+              <a href="/produkty/wolnamiska" class="btn btn-primary">
                 Zobacz WolnaMiskę
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="5" y1="12" x2="19" y2="12"/>
-                  <polyline points="12 5 19 12 12 19"/>
-                </svg>
+                <span class="arrow">→</span>
               </a>
-              <a href="/ebook" class="home-btn home-btn-secondary">
+              <a href="/ebook" class="btn btn-ghost">
                 Ebook z 30 przepisami
               </a>
             </div>
 
-            <div class="home-hero-meta">
-              <span>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
-                30 dni gwarancji
-              </span>
-              <span>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
-                Wysyłka 24h z PL
-              </span>
-              <span>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
-                Ebook w prezencie
-              </span>
+            <div class="home-hero-trust">
+              <div class="home-hero-trust-item">
+                <div class="home-hero-trust-num">30 dni</div>
+                <div class="home-hero-trust-label">Gwarancja satysfakcji</div>
+              </div>
+              <div class="home-hero-trust-item">
+                <div class="home-hero-trust-num">24h</div>
+                <div class="home-hero-trust-label">Wysyłka z Polski</div>
+              </div>
+              <div class="home-hero-trust-item">
+                <div class="home-hero-trust-num">+30</div>
+                <div class="home-hero-trust-label">Przepisów w prezencie</div>
+              </div>
             </div>
           </div>
 
           <div class="home-hero-visual">
-            <div class="home-product-img">
+            <div class="home-hero-img">
               <img
                 src={heroImageUrl}
                 alt="WolnaMiska — hybrydowa miska spowalniająca dla psów"
@@ -94,79 +83,81 @@ const heroImageUrl = mainImage ? buildAssetUrl(mainImage.preview, 'large') : '/p
                 loading="eager"
                 decoding="sync"
               />
-            </div>
-            <div class="home-ebook-badge">
-              <div class="home-ebook-badge-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-                </svg>
-              </div>
-              <div>
-                <div class="home-ebook-badge-tag">Gratis do zamówienia</div>
-                <div class="home-ebook-badge-text">Ebook z 30 przepisami</div>
-              </div>
+              <a href="/ebook" class="home-hero-bookmark">
+                <div class="home-hero-bookmark-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                  </svg>
+                </div>
+                <div>
+                  <div class="home-hero-bookmark-tag">Gratis do zamówienia</div>
+                  <div class="home-hero-bookmark-text">Ebook z 30 przepisami</div>
+                </div>
+              </a>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- USP STRIP -->
+    <!-- USP STRIP — editorial asymmetric -->
     <section class="home-usp-strip">
       <div class="wrap">
         <div class="home-usp-grid">
-          <div class="home-usp">
-            <div class="home-usp-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"/>
-                <polyline points="12 6 12 12 16 14"/>
-              </svg>
-            </div>
-            <div>
-              <div class="home-usp-label">15 minut zamiast 30 sekund</div>
-              <div class="home-usp-desc">Jedzenie zamienia się w spokojny rytuał</div>
-            </div>
+          <div class="home-usp-head">
+            <div class="home-usp-eyebrow">Co dostajesz</div>
+            <h2 class="home-usp-title">Nie kolejna miska — narzędzie zaprojektowane pod konkretny problem.</h2>
           </div>
-          <div class="home-usp">
-            <div class="home-usp-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-              </svg>
-            </div>
-            <div>
-              <div class="home-usp-label">Mentalna stymulacja</div>
-              <div class="home-usp-desc">Pies pracuje językiem nad kulką jak nad łamigłówką</div>
-            </div>
-          </div>
-          <div class="home-usp">
-            <div class="home-usp-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/>
-                <circle cx="12" cy="10" r="3"/>
-              </svg>
-            </div>
-            <div>
-              <div class="home-usp-label">Polski sklep, polska wysyłka</div>
-              <div class="home-usp-desc">Wysyłka tego samego dnia, BLIK, Paczkomaty</div>
-            </div>
-          </div>
+
+          <ul class="home-usp-list">
+            <li class="home-usp-item">
+              <div class="home-usp-num">01</div>
+              <div class="home-usp-body">
+                <div class="home-usp-label">15 minut zamiast 30 sekund</div>
+                <div class="home-usp-desc">Pies pracuje językiem nad kulką — żołądek dostaje sygnał sytości</div>
+              </div>
+            </li>
+            <li class="home-usp-item">
+              <div class="home-usp-num">02</div>
+              <div class="home-usp-body">
+                <div class="home-usp-label">Mentalna stymulacja</div>
+                <div class="home-usp-desc">Łamigłówka przy każdym posiłku — koniec z nudą i destrukcją</div>
+              </div>
+            </li>
+            <li class="home-usp-item">
+              <div class="home-usp-num">03</div>
+              <div class="home-usp-body">
+                <div class="home-usp-label">Bezpieczne tworzywo</div>
+                <div class="home-usp-desc">Bez BPA, bez PVC, zmywarka 70°C — bezpieczne na lata</div>
+              </div>
+            </li>
+            <li class="home-usp-item">
+              <div class="home-usp-num">04</div>
+              <div class="home-usp-body">
+                <div class="home-usp-label">Polska wysyłka 24h</div>
+                <div class="home-usp-desc">BLIK, Paczkomat, kurier — wszystko z magazynu w PL</div>
+              </div>
+            </li>
+          </ul>
         </div>
       </div>
     </section>
 
-    <!-- PRODUCT FEATURE CARD -->
-    <section class="home-section home-section-soft">
+    <!-- PRODUCT FEATURE — wzór PDP final-buy -->
+    <section class="home-product-section">
       <div class="wrap">
-        <span class="home-eyebrow">Bestseller pre-launch</span>
-        <h2 class="home-h2">Jedna miska. Tysiąc spokojniejszych posiłków.</h2>
-        <p class="home-section-lede">
-          Hybryda miski i maty do lizania. Pojemność pełnego posiłku w środku, ruchoma kulka, miękkie wnętrze imitujące naturalne żucie. Zaprojektowana w Polsce.
+        <span class="eyebrow">Bestseller pre-launch</span>
+        <h2 class="h2">
+          Jedna miska. <em>Tysiąc</em> spokojniejszych posiłków.
+        </h2>
+        <p class="lede">
+          Hybryda miski i maty do lizania. Pojemność pełnego posiłku, ruchoma kulka, miękkie wnętrze imitujące naturalne żucie. Zaprojektowana w Polsce.
         </p>
 
         <article class="home-product-card">
           <div class="home-pc-media">
-            <span class="home-pc-tag">WolnaMiska</span>
+            <span class="home-pc-badge">WolnaMiska</span>
             <img
               src="/produkty/wolnamiska/product-linen-v2.png"
               alt="WolnaMiska — produkt"
@@ -181,22 +172,10 @@ const heroImageUrl = mainImage ? buildAssetUrl(mainImage.preview, 'large') : '/p
             </p>
 
             <ul class="home-pc-feats">
-              <li>
-                <span class="home-pc-check">✓</span>
-                <span><strong>Spowalnia jedzenie</strong> — pies pracuje językiem nad kulką, dosięgając każdej kropli karmy</span>
-              </li>
-              <li>
-                <span class="home-pc-check">✓</span>
-                <span><strong>Antypoślizgowy spód</strong> — miska nie jeździ po podłodze nawet na kafelkach</span>
-              </li>
-              <li>
-                <span class="home-pc-check">✓</span>
-                <span><strong>Bezpieczna w zmywarce 70°C</strong> — bez BPA, bez PVC, łatwe czyszczenie</span>
-              </li>
-              <li>
-                <span class="home-pc-check">✓</span>
-                <span><strong>Ebook 30 przepisów gratis</strong> — pasty, mokre dania, smakołyki na lato</span>
-              </li>
+              <li><strong>Spowalnia jedzenie</strong> — pies pracuje językiem nad kulką, dosięgając każdej kropli mokrej karmy</li>
+              <li><strong>Antypoślizgowy spód</strong> — miska nie jeździ po podłodze nawet na kafelkach</li>
+              <li><strong>Bezpieczna w zmywarce 70°C</strong> — bez BPA, bez PVC, łatwe czyszczenie</li>
+              <li><strong>Ebook 30 przepisów gratis</strong> — pasty, mokre dania, smakołyki na lato</li>
             </ul>
 
             <div class="home-pc-priceblock">
@@ -208,20 +187,17 @@ const heroImageUrl = mainImage ? buildAssetUrl(mainImage.preview, 'large') : '/p
               <p class="home-pc-omnibus">Najniższa cena z 30 dni przed obniżką: 59,99 zł</p>
             </div>
 
-            <a href="/produkty/wolnamiska" class="home-btn home-btn-primary">
+            <a href="/produkty/wolnamiska" class="btn btn-primary">
               Wybierz zestaw i zamów
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="5" y1="12" x2="19" y2="12"/>
-                <polyline points="12 5 19 12 12 19"/>
-              </svg>
+              <span class="arrow">→</span>
             </a>
           </div>
         </article>
       </div>
     </section>
 
-    <!-- EBOOK SPLIT -->
-    <section class="home-section home-ebook-section">
+    <!-- EBOOK SPLIT — wzór PDP split-section -->
+    <section class="home-ebook-section">
       <div class="wrap">
         <div class="home-ebook-grid">
           <div class="home-ebook-cover-wrap">
@@ -240,28 +216,31 @@ const heroImageUrl = mainImage ? buildAssetUrl(mainImage.preview, 'large') : '/p
           </div>
 
           <div class="home-ebook-content">
-            <span class="home-eyebrow">Gratis do zamówienia</span>
-            <h2 class="home-h2">Plan na cały miesiąc — bez powtarzania tej samej karmy</h2>
-            <p class="home-section-lede" style="margin-bottom:0">
+            <span class="eyebrow">Gratis do zamówienia</span>
+            <h2 class="h2">
+              Plan na cały miesiąc — bez powtarzania <em>tej samej karmy.</em>
+            </h2>
+            <p class="lede" style="margin-top:0">
               30 sprawdzonych przepisów do WolnaMiski. Konsultowane z behawiorystką i lekarzem weterynarii. Dostajesz w PDF razem z zamówieniem.
             </p>
 
             <ul class="home-ebook-list">
-              <li>10 past i mas do lizania</li>
-              <li>8 mokrych dań pełnowartościowych</li>
-              <li>6 schłodzonych smakołyków na lato</li>
-              <li>6 ratunkowych przepisów</li>
-              <li>Lista CO MOŻNA / CZEGO NIE</li>
-              <li>Plan tygodnia + zakupy</li>
+              <li><strong>10 past i mas</strong> do lizania</li>
+              <li><strong>8 mokrych dań</strong> pełnowartościowych</li>
+              <li><strong>6 schłodzonych</strong> smakołyków na lato</li>
+              <li><strong>6 ratunkowych</strong> przepisów</li>
+              <li><strong>Lista CO MOŻNA</strong> / czego nie</li>
+              <li><strong>Plan tygodnia</strong> + lista zakupów</li>
             </ul>
 
-            <div class="home-cta-row">
-              <a href="/ebook" class="home-btn home-btn-primary">
+            <p class="home-ebook-note">
+              Wersja PDF działa na każdym telefonie i komputerze, bez logowania. Otwierasz przy lodówce, gotujesz, dajesz psu.
+            </p>
+
+            <div style="display:flex; gap:14px; flex-wrap:wrap; margin-top:6px">
+              <a href="/ebook" class="btn btn-primary">
                 Zobacz co w środku
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="5" y1="12" x2="19" y2="12"/>
-                  <polyline points="12 5 19 12 12 19"/>
-                </svg>
+                <span class="arrow">→</span>
               </a>
             </div>
           </div>
@@ -269,54 +248,38 @@ const heroImageUrl = mainImage ? buildAssetUrl(mainImage.preview, 'large') : '/p
       </div>
     </section>
 
-    <!-- WHY NEED -->
-    <section class="home-section home-section-white">
+    <!-- WHY NEED — wzór PDP how-grid (italic numbers) -->
+    <section class="section section-soft">
       <div class="wrap">
-        <span class="home-eyebrow">Dlaczego twój pies tego potrzebuje</span>
-        <h2 class="home-h2">4 momenty, w których pomaga WolnaMiska</h2>
-        <p class="home-section-lede">
-          Niezależnie od rasy i wieku — jeśli pies je za szybko, to NIE jest "jego charakter". To problem do rozwiązania.
+        <span class="eyebrow">Dlaczego twój pies tego potrzebuje</span>
+        <h2 class="h2">
+          4 momenty, w których WolnaMiska <em>realnie</em> pomaga.
+        </h2>
+        <p class="lede">
+          Niezależnie od rasy i wieku — jeśli pies je za szybko, to nie "jego charakter". To problem do rozwiązania.
         </p>
 
         <div class="home-why-grid">
           <article class="home-why-card">
-            <div class="home-why-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                <polyline points="22 4 12 14.01 9 11.01"/>
-              </svg>
-            </div>
+            <div class="home-why-num">01</div>
             <h3>Wzdęcia i wymioty</h3>
             <p>Szybkie jedzenie = powietrze w żołądku. Pies wymiotuje karmą po 5 minutach. Wystarczy 15 minut spokojnego posiłku, żeby to zniknęło.</p>
           </article>
 
           <article class="home-why-card">
-            <div class="home-why-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-              </svg>
-            </div>
+            <div class="home-why-num">02</div>
             <h3>Nuda i destrukcja</h3>
-            <p>Owczarki, husky, terrier — rasy pracujące potrzebują mentalnej stymulacji. Łamigłówka w misce to 15 minut "pracy" przy każdym posiłku.</p>
+            <p>Owczarki, husky, terriery — rasy pracujące potrzebują mentalnej stymulacji. Łamigłówka w misce to 15 minut "pracy" przy każdym posiłku.</p>
           </article>
 
           <article class="home-why-card">
-            <div class="home-why-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/>
-              </svg>
-            </div>
+            <div class="home-why-num">03</div>
             <h3>Stres i lęk</h3>
             <p>Lizanie uwalnia endorfiny — naturalny mechanizm uspokajający. Idealne dla psów lękowych, po przeprowadzce, podczas burzy.</p>
           </article>
 
           <article class="home-why-card">
-            <div class="home-why-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"/>
-                <polyline points="12 6 12 12 16 14"/>
-              </svg>
-            </div>
+            <div class="home-why-num">04</div>
             <h3>Senior pies</h3>
             <p>Po 7 latach metabolizm zwalnia. Wolniejsze jedzenie = lepsze trawienie, mniej kilogramów, mniej wizyt u weterynarza.</p>
           </article>
@@ -325,11 +288,11 @@ const heroImageUrl = mainImage ? buildAssetUrl(mainImage.preview, 'large') : '/p
     </section>
 
     <!-- UGC STRIP -->
-    <section class="home-section home-section-soft">
+    <section class="section">
       <div class="wrap">
-        <span class="home-eyebrow">Z polskich domów</span>
-        <h2 class="home-h2">WolnaMiska w akcji</h2>
-        <p class="home-section-lede">
+        <span class="eyebrow">Z polskich domów</span>
+        <h2 class="h2">WolnaMiska w akcji</h2>
+        <p class="lede">
           Pierwsi klienci pokazują, jak ich psy radzą sobie z miską. Wszystkie zdjęcia od opiekunów.
         </p>
 
@@ -362,16 +325,17 @@ const heroImageUrl = mainImage ? buildAssetUrl(mainImage.preview, 'large') : '/p
       </div>
     </section>
 
-    <!-- FAQ MINI -->
-    <section class="home-section home-section-white">
+    <!-- FAQ MINI — wzór PDP faq-list -->
+    <section class="section section-soft">
       <div class="wrap">
-        <span class="home-eyebrow">FAQ — najważniejsze</span>
-        <h2 class="home-h2">3 pytania, które najczęściej dostajemy</h2>
+        <span class="eyebrow">FAQ — najważniejsze</span>
+        <h2 class="h2">3 pytania, które najczęściej dostajemy.</h2>
 
-        <div class="home-faq-grid" style="margin-top:32px">
+        <div class="home-faq-list">
           <details name="home-faq" class="home-faq-item">
             <summary>
-              <span>Co dawać do WolnaMiski?</span>
+              <span class="home-faq-num">01</span>
+              <span class="home-faq-text">Co dawać do WolnaMiski?</span>
               <span class="home-faq-icon"></span>
             </summary>
             <div class="home-faq-body">
@@ -381,7 +345,8 @@ const heroImageUrl = mainImage ? buildAssetUrl(mainImage.preview, 'large') : '/p
 
           <details name="home-faq" class="home-faq-item">
             <summary>
-              <span>Czy nadaje się dla mojej rasy?</span>
+              <span class="home-faq-num">02</span>
+              <span class="home-faq-text">Czy nadaje się dla mojej rasy?</span>
               <span class="home-faq-icon"></span>
             </summary>
             <div class="home-faq-body">
@@ -391,7 +356,8 @@ const heroImageUrl = mainImage ? buildAssetUrl(mainImage.preview, 'large') : '/p
 
           <details name="home-faq" class="home-faq-item">
             <summary>
-              <span>Jak długo trwa dostawa?</span>
+              <span class="home-faq-num">03</span>
+              <span class="home-faq-text">Jak długo trwa dostawa?</span>
               <span class="home-faq-icon"></span>
             </summary>
             <div class="home-faq-body">
@@ -402,38 +368,63 @@ const heroImageUrl = mainImage ? buildAssetUrl(mainImage.preview, 'large') : '/p
 
         <a href="/pomoc" class="home-faq-more">
           Wszystkie pytania w sekcji Pomoc
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="5" y1="12" x2="19" y2="12"/>
-            <polyline points="12 5 19 12 12 19"/>
-          </svg>
+          <span class="arrow" style="font-family:'Fraunces',Georgia,serif; font-weight:300; font-size:18px">→</span>
         </a>
       </div>
     </section>
 
-    <!-- FINAL CTA -->
-    <section class="home-cta-final">
+    <!-- FINAL CTA — wzór PDP .final -->
+    <section class="home-final">
       <div class="wrap">
-        <div class="home-cta-final-grid">
+        <div class="home-final-grid">
           <div>
-            <h2>Zamów WolnaMiskę. Ebook dostajesz gratis.</h2>
-            <p>30 dni gwarancji satysfakcji. Jeśli pies nie podejdzie do miski — zwracamy pieniądze, ebook zostaje u ciebie.</p>
-            <div class="home-cta-row">
-              <a href="/produkty/wolnamiska" class="home-btn home-btn-primary">
-                Zobacz WolnaMiskę
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="5" y1="12" x2="19" y2="12"/>
-                  <polyline points="12 5 19 12 12 19"/>
+            <span class="eyebrow">Zamawiasz miskę — dostajesz ebook</span>
+            <h2>Spokojny pies przy <em>każdym</em> posiłku.</h2>
+            <p class="home-final-lede">
+              Od pierwszego dnia. Bez tresury, bez aplikacji, bez 5 produktów. Jedna miska + 30 przepisów w PDF.
+            </p>
+            <div class="home-final-meta">
+              <div class="home-final-meta-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
                 </svg>
-              </a>
+                30 dni gwarancji satysfakcji
+              </div>
+              <div class="home-final-meta-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Pies nie podchodzi? Zwracamy pieniądze, ebook zostaje
+              </div>
+              <div class="home-final-meta-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Polska wysyłka, BLIK, Paczkomat
+              </div>
             </div>
           </div>
 
-          <div class="home-cta-bonus">
-            <div class="home-cta-bonus-tag">★ Bonus do zamówienia</div>
-            <h3 class="home-cta-bonus-title">Ebook z 30 przepisami</h3>
-            <p class="home-cta-bonus-desc">
-              Pasty, mokre dania, schłodzone smakołyki. Konsultowane z behawiorystką i weterynarzem. PDF wysyłamy mailem od razu po zamówieniu.
-            </p>
+          <div class="home-final-buy">
+            <div class="home-final-buy-row">
+              <div class="home-final-buy-img">
+                <img src="/produkty/wolnamiska/product-linen-v2.png" alt="WolnaMiska" loading="lazy" />
+              </div>
+              <div>
+                <div class="home-final-buy-title">WolnaMiska + Ebook</div>
+                <div class="home-final-buy-desc">Hybrydowa miska + 30 przepisów PDF</div>
+              </div>
+            </div>
+            <span class="home-final-buy-price">{priceFormatted}</span>
+            <a href="/produkty/wolnamiska" class="home-final-cta">
+              Zamawiam
+              <span class="arrow">→</span>
+            </a>
+            <div class="home-final-buy-trust">
+              <span>30 dni gwarancji</span>
+              <span>Wysyłka 24h</span>
+              <span>Ebook gratis</span>
+            </div>
           </div>
         </div>
       </div>
