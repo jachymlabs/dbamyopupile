@@ -19,6 +19,10 @@ const ADD_TO_CART = `mutation AddToCart($variantId: ID!, $quantity: Int!) {
   }
 }`;
 
+// Auto-add config: WolnaMiska variant 21 → dorzuć Ebook variant 23 (cena 0 dzięki promocji)
+const TRIGGER_VARIANT_ID = '21'; // WolnaMiska
+const BONUS_VARIANT_ID = '23';   // Ebook 30 przepisów
+
 export const GET: APIRoute = async ({ request }) => {
   try {
     const token = getToken(request);
@@ -65,7 +69,29 @@ export const POST: APIRoute = async ({ request }) => {
       token,
     );
 
-    const result = data?.addItemToOrder;
+    let result = data?.addItemToOrder;
+    let activeToken = newToken;
+
+    // Auto-add Ebook gdy w koszyku jest WolnaMiska i ebooka jeszcze nie ma
+    if (result?.__typename === 'Order') {
+      const hasTrigger = result.lines?.some((l: any) => l.productVariant?.id === TRIGGER_VARIANT_ID);
+      const hasBonus = result.lines?.some((l: any) => l.productVariant?.id === BONUS_VARIANT_ID);
+      if (hasTrigger && !hasBonus) {
+        try {
+          const bonusResp = await vendureQuery(
+            ADD_TO_CART,
+            { variantId: BONUS_VARIANT_ID, quantity: 1 },
+            activeToken,
+          );
+          const bonusResult = bonusResp.data?.addItemToOrder;
+          if (bonusResult?.__typename === 'Order') {
+            result = bonusResult;
+            activeToken = bonusResp.newToken;
+          }
+        } catch { /* if bonus fails, keep original order */ }
+      }
+    }
+
     if (result?.__typename === 'Order') {
       // CAPI: AddToCart — consent-gated
       const cookies = request.headers.get('cookie') || '';

@@ -130,7 +130,7 @@ export default function StickyATCBar({
             className="leading-none mt-0.5 sm:mt-1"
             style={{
               color: '#1E3A5F',
-              fontFamily: 'Fraunces, "Iowan Old Style", Georgia, serif',
+              fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
               fontWeight: 700,
               fontSize: 'clamp(18px, 4.5vw, 22px)',
               letterSpacing: '-0.015em',

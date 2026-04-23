@@ -15,6 +15,10 @@ const REMOVE = `mutation Remove($lineId: ID!) {
   }
 }`;
 
+// Auto-bonus: usuwamy ebooka jeśli WolnaMiska zniknęła z koszyka
+const TRIGGER_VARIANT_ID = '21'; // WolnaMiska
+const BONUS_VARIANT_ID = '23';   // Ebook gratis
+
 export const POST: APIRoute = async ({ request }) => {
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown';
   if (isRateLimited(ip, 'cart-remove', 30, 60_000)) {
@@ -40,9 +44,27 @@ export const POST: APIRoute = async ({ request }) => {
 
   const { data, newToken } = await vendureQuery(REMOVE, { lineId }, token);
 
-  const result = data?.removeOrderLine;
+  let result = data?.removeOrderLine;
+  let activeToken = newToken;
+
+  // Auto-remove ebook gdy WolnaMiska zniknęła
   if (result?.__typename === 'Order') {
-    return buildResponse({ order: result }, newToken);
+    const hasTrigger = result.lines?.some((l: any) => l.productVariant?.id === TRIGGER_VARIANT_ID);
+    const bonusLine = result.lines?.find((l: any) => l.productVariant?.id === BONUS_VARIANT_ID);
+    if (!hasTrigger && bonusLine) {
+      try {
+        const bonusResp = await vendureQuery(REMOVE, { lineId: bonusLine.id }, activeToken);
+        const bonusResult = bonusResp.data?.removeOrderLine;
+        if (bonusResult?.__typename === 'Order') {
+          result = bonusResult;
+          activeToken = bonusResp.newToken;
+        }
+      } catch { /* ignore */ }
+    }
   }
-  return buildResponse({ order: null, error: result?.message }, newToken);
+
+  if (result?.__typename === 'Order') {
+    return buildResponse({ order: result }, activeToken);
+  }
+  return buildResponse({ order: null, error: result?.message }, activeToken);
 };

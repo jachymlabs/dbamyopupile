@@ -9,10 +9,14 @@ import { useFocusTrap } from '../lib/use-focus-trap';
 
 import { getFreeShippingThreshold } from '../lib/constants';
 
+// Variant ID promocyjnego ebooka — line bez controls, z GRATIS badge
+const BONUS_VARIANT_ID = '23';
+
 function CartLineItem({ line }: { line: CartLine }) {
   const { productVariant } = line;
   const product = productVariant.product;
   const image = product.featuredAsset?.preview;
+  const isBonus = productVariant.id === BONUS_VARIANT_ID;
 
   const handleQuantityChange = (newQty: number) => {
     if (newQty < 1) return;
@@ -62,14 +66,22 @@ function CartLineItem({ line }: { line: CartLine }) {
         >
           {product.name}
         </a>
-        {productVariant.name !== product.name && (
+        {productVariant.name !== product.name && !isBonus && (
           <p className="text-xs text-gray-500 mt-0.5">{productVariant.name}</p>
         )}
-        <p className="text-sm font-medium text-gray-900 mt-1">
-          {formatPrice(line.linePriceWithTax)}
-        </p>
+        {isBonus ? (
+          <div className="flex items-center gap-2 mt-1">
+            <span className="inline-block text-[10px] font-bold tracking-wider px-2 py-0.5 rounded bg-[#1E3A5F] text-white">GRATIS</span>
+            <span className="text-xs text-gray-400 line-through">49,99 zł</span>
+          </div>
+        ) : (
+          <p className="text-sm font-medium text-gray-900 mt-1">
+            {formatPrice(line.linePriceWithTax)}
+          </p>
+        )}
 
-        {/* Quantity + remove */}
+        {/* Quantity + remove (ukryte dla bonus line) */}
+        {!isBonus && (
         <div className="flex items-center gap-2 mt-2">
           <div className="flex items-center border border-gray-200 rounded-md">
             <button
@@ -116,6 +128,7 @@ function CartLineItem({ line }: { line: CartLine }) {
             </svg>
           </button>
         </div>
+        )}
       </div>
     </div>
   );
