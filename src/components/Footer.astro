@@ -4,7 +4,8 @@ interface Props {
   storeTagline?: string;
   contactEmail?: string;
 }
-const { storeName = 'DbamyOPupile.pl', storeTagline = 'Sklep dla świadomych opiekunów', contactEmail = 'sklep@dbamyopupile.pl' } = Astro.props;
+const { storeName = 'DbamyOPupile.pl', storeTagline = 'Sklep dla świadomych opiekunów' } = Astro.props;
+const contactEmail = 'sklep@dbamyopupile.pl';
 const year = new Date().getFullYear();
 ---
 
