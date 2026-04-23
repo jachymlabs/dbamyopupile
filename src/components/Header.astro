@@ -37,7 +37,7 @@ const navLinks: NavLink[] = [
   <div class="dop-header-inner">
     <!-- Logo -->
     <a href="/" class="dop-logo" aria-label={storeName}>
-      <img src="/logo/dbamyopupileprostokatbezta.png" alt={storeName} width="160" height="44" />
+      <img src="/logo/dbamyopupileprostokatbezta.png" alt={storeName} width="160" height="44" fetchpriority="high" decoding="sync" />
     </a>
 
     <!-- Desktop nav -->
@@ -60,7 +60,7 @@ const navLinks: NavLink[] = [
     <div class="dop-header-actions">
       {!hideCart && (
         <div class="dop-cart-slot">
-          <CartBadge client:only="react" initialQuantity={cartQuantity} />
+          <CartBadge client:load initialQuantity={cartQuantity} />
         </div>
       )}
 
