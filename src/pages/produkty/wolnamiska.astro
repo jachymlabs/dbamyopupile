@@ -185,15 +185,9 @@ const jsonLd = {
 
           <!-- RIGHT: Conversion Engine -->
           <div class="wm-conv-col">
-            <div class="wm-rating">
-              <div class="wm-stars" aria-label="Ocena 4.9 na 5">
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
-              </div>
-              <span class="wm-rating-text"><strong>4,9/5</strong> · 240 opinii klientów</span>
+            <div class="wm-prelaunch">
+              <span class="wm-prelaunch-dot"></span>
+              <span><strong>Pre-launch w Polsce</strong> · Bądź jednym z pierwszych opiekunów</span>
             </div>
 
             <h1 class="wm-title">WolnaMiska — Koniec z łapczywym jedzeniem i wzdęciami</h1>
@@ -245,14 +239,14 @@ const jsonLd = {
                 </label>
 
                 <label class="wm-bundle-card popular" data-qty="2" data-price="104,99 zł">
-                  <span class="wm-bundle-badge">Bestseller · oszczędzasz 15 zł</span>
+                  <span class="wm-bundle-badge">Oszczędzasz 15 zł</span>
                   <input type="radio" name="bundle" value="2" />
                   <div class="wm-bundle-check">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                   </div>
                   <div class="wm-bundle-main">
                     <div class="wm-bundle-name">Zestaw 2 szt</div>
-                    <div class="wm-bundle-meta">Wybór 70% klientów</div>
+                    <div class="wm-bundle-meta">Jedna do kuchni, jedna do mokrej karmy</div>
                   </div>
                   <div class="wm-bundle-pricing">
                     <div class="wm-bundle-price">104,99 zł</div>
@@ -448,10 +442,10 @@ const jsonLd = {
       <section class="social-number">
         <div class="wrap">
           <div class="sn-grid reveal">
-            <div class="sn-big">1500+</div>
+            <div class="sn-big">2026</div>
             <div class="sn-text">
-              <div class="sn-title">zadowolonych opiekunów w Polsce</div>
-              <div class="sn-sub">Polska obsługa, wysyłka z Polski, 30-dniowa gwarancja zwrotu. Bez ryzyka.</div>
+              <div class="sn-title">premiera w Polsce — bądź jednym z pierwszych</div>
+              <div class="sn-sub">Polski sklep, polska obsługa, wysyłka tego samego dnia. Próbujesz pierwszy — masz 30 dni, żeby się przekonać. Nie zadziała? Oddajesz bez pytań.</div>
             </div>
           </div>
         </div>
@@ -726,7 +720,7 @@ const jsonLd = {
       <section class="section bundle-section">
         <div class="wrap">
           <h2 class="h2 reveal">Wybierz zestaw</h2>
-          <p class="bundle-lede reveal d1">Najczęściej klienci zamawiają od razu dwie — jedną do kuchni, jedną do mokrej karmy. Trzy sztuki = darmowa dostawa.</p>
+          <p class="bundle-lede reveal d1">Dwie sztuki to praktyczna kombinacja — jedna do kuchni, druga na mokrą karmę. Trzy sztuki to darmowa dostawa i zapas na lata, albo prezent dla znajomego, którego pies też je za szybko.</p>
 
           <div class="bundle-grid">
             <article class="bundle-card reveal">
@@ -746,7 +740,7 @@ const jsonLd = {
             </article>
 
             <article class="bundle-card popular reveal d1">
-              <div class="bc-badge">Najczęściej wybierane</div>
+              <div class="bc-badge">Polecany zestaw</div>
               <div class="bc-qty">2 szt.</div>
               <div class="bc-price">119,98 zł</div>
               <div class="bc-each">59,99 zł / sztuka</div>
@@ -792,57 +786,51 @@ const jsonLd = {
           </div>
 
           <div class="ugc-grid">
-            <a class="ugc-tile reveal big" href="#">
+            <div class="ugc-tile reveal big">
               <img src="/produkty/wolnamiska/frenchie-licking.png" alt="Buldog francuski liże WolnaMiska" loading="lazy" />
               <div class="ugc-overlay">
-                <span class="ugc-handle">Bruno · 4 lata · Buldog francuski</span>
                 <span class="ugc-tag">Mokra karma</span>
               </div>
-            </a>
+            </div>
 
-            <a class="ugc-tile reveal d1" href="#">
+            <div class="ugc-tile reveal d1">
               <img src="/produkty/wolnamiska/product-linen-v2.png" alt="WolnaMiska na podłodze" loading="lazy" />
               <div class="ugc-overlay">
-                <span class="ugc-handle">Luna · 6 miesięcy · Mops</span>
-                <span class="ugc-tag">Pierwsza miska</span>
+                <span class="ugc-tag">Suche pellet</span>
               </div>
-            </a>
+            </div>
 
-            <a class="ugc-tile reveal d2" href="#">
+            <div class="ugc-tile reveal d2">
               <img src="/produkty/wolnamiska/broth-pour.png" alt="Wlewanie bulionu do miski" loading="lazy" />
               <div class="ugc-overlay">
-                <span class="ugc-handle">Czesia · 3 lata · Mieszaniec</span>
                 <span class="ugc-tag">Bulion bez soli</span>
               </div>
-            </a>
+            </div>
 
-            <a class="ugc-tile reveal d1" href="#">
+            <div class="ugc-tile reveal d1">
               <img src="/produkty/wolnamiska/flatlay.png" alt="WolnaMiska gotowa do mycia" loading="lazy" />
               <div class="ugc-overlay">
-                <span class="ugc-handle">Felek · 2 lata · Brytyjczyk</span>
                 <span class="ugc-tag">Po posiłku</span>
               </div>
-            </a>
+            </div>
 
-            <a class="ugc-tile reveal d2" href="#">
+            <div class="ugc-tile reveal d2">
               <img src="/produkty/wolnamiska/frenchie-licking.png" alt="Pies z miską" loading="lazy" />
               <div class="ugc-overlay">
-                <span class="ugc-handle">Maks · 5 lat · Beagle</span>
                 <span class="ugc-tag">Pasta orzechowa</span>
               </div>
-            </a>
+            </div>
 
-            <a class="ugc-tile reveal d3" href="#">
+            <div class="ugc-tile reveal d3">
               <img src="/produkty/wolnamiska/product-linen-v2.png" alt="WolnaMiska blue" loading="lazy" />
               <div class="ugc-overlay">
-                <span class="ugc-handle">Pixi · 1 rok · Ragdoll</span>
-                <span class="ugc-tag">Mokra karma</span>
+                <span class="ugc-tag">Jogurt naturalny</span>
               </div>
-            </a>
+            </div>
           </div>
 
           <p class="ugc-footer reveal">
-            Chcesz pokazać swojego pupila? Oznacz <strong>@dbamyopupile</strong> na Instagramie — najlepsze zdjęcia trafiają tutaj.
+            Pierwsze zdjęcia od polskich klientów pojawią się tutaj wkrótce. Chcesz pokazać swojego pupila po premierze? Oznacz <strong>@dbamyopupile</strong> na Instagramie — najlepsze trafią na stronę.
           </p>
         </div>
       </section>
@@ -851,10 +839,9 @@ const jsonLd = {
       <section class="section reviews-section">
         <div class="wrap">
           <div class="reviews-head reveal">
-            <h2 class="h2">Co mówią klienci</h2>
+            <h2 class="h2">Co mówią opiekunowie psów i kotów</h2>
             <div class="reviews-rating">
-              <div class="rs-stars">★★★★★</div>
-              <div class="rs-num"><strong>4,8 / 5</strong> · z polskich forów psiarskich</div>
+              <div class="rs-num">Cytaty z polskich forów i grup Facebook o miskach spowalniających i lick matach</div>
             </div>
           </div>
 
@@ -906,7 +893,7 @@ const jsonLd = {
 
               <details class="faq-item">
                 <summary class="faq-q"><span class="q-num">02</span><span class="q-text">Mój pies i tak nie będzie z tego jadł.</span><span class="q-icon"></span></summary>
-                <div class="faq-a"><div class="faq-a-inner">Słyszymy to <strong>od 9 na 10 klientów przed zakupem</strong>. Po tygodniu 8 na 10 mówi, że pies sam przychodzi do miski.<br><br>Pierwszego dnia zacznij od mokrej karmy z bulionem — zapach mocniejszy, łatwiej zachęcić. Po 30 dniach nic? Oddajesz bez pytań.</div></div>
+                <div class="faq-a"><div class="faq-a-inner">To najczęstsza obawa przed zakupem — brzmi rozsądnie z punktu widzenia opiekuna, którego pies jest przyzwyczajony do swojej miski.<br><br>Pierwszego dnia zacznij od mokrej karmy z odrobiną bulionu bez soli — zapach jest mocniejszy i łatwiej zachęcić psa do pierwszego kontaktu. Po 30 dniach pies dalej nie chce? Oddajesz bez pytań i bez tłumaczenia.</div></div>
               </details>
 
               <details class="faq-item">
@@ -926,7 +913,7 @@ const jsonLd = {
 
               <details class="faq-item">
                 <summary class="faq-q"><span class="q-num">06</span><span class="q-text">Frenchie się frustruje przy głębokich miskach.</span><span class="q-icon"></span></summary>
-                <div class="faq-a"><div class="faq-a-inner">Dlatego WolnaMiska ma <strong>szeroki otwór i płytkie wnętrze</strong>. Zaprojektowana pod psy z płaskim pyskiem. Płaski pysk dosięga dna bez wyginania karku.<br><br>Trzech naszych testerów ma buldogi z Warszawy i Krakowa. Bruno, Zula i Nugat jedli z prototypów przez 6 tygodni przed startem produkcji.</div></div>
+                <div class="faq-a"><div class="faq-a-inner">Dlatego WolnaMiska ma <strong>szeroki otwór i płytkie wnętrze</strong>. Zaprojektowana pod psy z płaskim pyskiem — buldog, mops, shih-tzu, kot perski czy egzotyczny dosięgają dna bez wyginania karku.<br><br>Konstrukcja celowo unika głębokich studzienek typowych dla większości misek spowalniających. Krótki pysk nie musi się gimnastykować, żeby zjeść.</div></div>
               </details>
 
               <details class="faq-item">
@@ -954,8 +941,8 @@ const jsonLd = {
             </div>
             <div class="phone-cta reveal d1">
               <div class="phone-label">Zamówienia i pytania</div>
-              <a href="tel:+48000000000" class="phone-number">+48 000 000 000</a>
-              <div class="phone-or">albo napisz: <a href="mailto:kontakt@dbamyopupile.pl">kontakt@dbamyopupile.pl</a></div>
+              <a href="tel:+48577723506" class="phone-number">577 723 506</a>
+              <div class="phone-or">albo napisz: <a href="mailto:sklep@dbamyopupile.pl">sklep@dbamyopupile.pl</a></div>
             </div>
           </div>
         </div>
@@ -1075,12 +1062,11 @@ const jsonLd = {
       .wm-thumb:hover{border-color:var(--h-navy)}
       .wm-thumb.active{border-color:var(--h-navy);box-shadow:0 0 0 1px var(--h-navy)}
 
-      /* Rating row */
-      .wm-rating{display:flex;align-items:center;gap:10px;margin-bottom:14px}
-      .wm-stars{display:flex;gap:2px;color:var(--h-gold)}
-      .wm-stars svg{width:16px;height:16px}
-      .wm-rating-text{font-family:var(--h-f-body);font-size:13px;color:var(--h-ink-2)}
-      .wm-rating-text strong{color:var(--h-ink);font-weight:600}
+      /* Pre-launch pill (zamiast rating) */
+      .wm-prelaunch{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;background:oklch(0.85 0.055 235 / 0.4);border:1px solid var(--h-blue);border-radius:999px;font-family:var(--h-f-body);font-size:12.5px;color:var(--h-navy);margin-bottom:16px;line-height:1.3}
+      .wm-prelaunch strong{font-weight:700}
+      .wm-prelaunch-dot{width:7px;height:7px;border-radius:50%;background:var(--h-navy);flex-shrink:0;animation:wm-pulse 2s ease-in-out infinite}
+      @keyframes wm-pulse{0%,100%{opacity:1}50%{opacity:0.4}}
 
       /* Title + subtitle */
       .wm-title{font-family:var(--h-f-display);font-weight:700;font-size:clamp(28px, 3.6vw, 44px);line-height:1.05;letter-spacing:-0.025em;color:var(--h-ink);margin:0 0 14px;max-width:580px}
