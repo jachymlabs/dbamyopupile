@@ -92,6 +92,8 @@ const galleryImages: GalleryImage[] = [
   { src: '/produkty/wolnamiska/frenchie-jasny.webp', alt: 'WolnaMiska — buldog francuski liże w salonie' },
   { src: '/produkty/wolnamiska/kuchnia-shiba.webp', alt: 'WolnaMiska na podłodze kuchennej' },
   { src: '/produkty/wolnamiska/rece-misa.webp', alt: 'WolnaMiska — skala produktu w rękach' },
+  { src: '/produkty/wolnamiska/misa-kubek.webp', alt: 'WolnaMiska — porównanie skali z kubkiem' },
+  { src: '/produkty/wolnamiska/wymiar-16cm.webp', alt: 'WolnaMiska — wymiar 16cm średnicy' },
 ];
 const lowestPrice = firstVariant?.priceWithTax ?? 0;
 const allOutOfStock = product.variants?.every((v: VendureVariant) => v.stockLevel === 'OUT_OF_STOCK');
@@ -457,6 +459,10 @@ const jsonLd = {
         <div class="wrap">
           <h2 class="h2 reveal">Cztery kroki. Piętnaście minut spokoju.</h2>
 
+          <div class="how-banner reveal" style="margin:24px 0 32px;border-radius:16px;overflow:hidden;background:#FAF7F2;">
+            <img src="/produkty/wolnamiska/jak-dziala.webp" alt="Jak działa WolnaMiska — 3 kroki: wlej, postaw, obserwuj" loading="lazy" style="width:100%;height:auto;display:block;" />
+          </div>
+
           <div class="how-grid wm-carousel-mobile" data-carousel>
             <article class="how-card reveal">
               <div class="how-media">
@@ -551,6 +557,10 @@ const jsonLd = {
           <h2 class="h2 reveal">Dla kogo idealnie pasuje WolnaMiska</h2>
           <p class="lede reveal d1">Cztery sytuacje, w których pies zyskuje najwięcej. Sprawdź, czy rozpoznajesz swojego.</p>
 
+          <div class="reveal d1" style="margin:24px 0 32px;border-radius:16px;overflow:hidden;background:#FAF7F2;">
+            <img src="/produkty/wolnamiska/dla-kogo.webp" alt="Dla kogo WolnaMiska — pies z płaskim pyskiem, łapczywy, senior, znudzony" loading="lazy" style="width:100%;height:auto;display:block;" />
+          </div>
+
           <div class="persona-grid">
             <article class="persona-card reveal">
               <div class="persona-icon">
@@ -624,92 +634,36 @@ const jsonLd = {
         </div>
       </section>
 
-      <!-- 06 PILLARS — uproszczone do grid 4-card -->
-      <section class="section" id="pillars">
+      <!-- 05b BEZ vs Z — gotowa infografika porównawcza -->
+      <section class="section">
         <div class="wrap">
-          <h2 class="h2 reveal">Co dostajesz</h2>
-
-          <div class="features-grid wm-carousel-mobile" data-carousel>
-            <article class="feat reveal">
-              <div class="feat-img"><img src="/produkty/wolnamiska/na-stole.webp" alt="WolnaMiska z profilu" loading="lazy"></div>
-              <h3>Koniec z dławieniem</h3>
-              <p>Pies je 8 razy wolniej. Mniej powietrza w żołądku. Mniej ryzyka skrętu.</p>
-            </article>
-
-            <article class="feat reveal d1">
-              <div class="feat-img"><img src="/produkty/wolnamiska/frenchie-okno.webp" alt="Buldog francuski liże WolnaMiskę" loading="lazy"></div>
-              <h3>Koniec z wymiotami</h3>
-              <p>Żołądek trawi w spokojnym tempie. Czysty dywan, spokojny poranek.</p>
-            </article>
-
-            <article class="feat reveal d2">
-              <div class="feat-img"><img src="/produkty/wolnamiska/flatlay-marble.webp" alt="WolnaMiska gotowa do mycia" loading="lazy"></div>
-              <h3>Do zmywarki, codziennie</h3>
-              <p>Górny kosz, 70°C. LickiMat i Fiboo zakazują. My zaprojektowaliśmy inaczej.</p>
-            </article>
-
-            <article class="feat reveal d3">
-              <div class="feat-img"><img src="/produkty/wolnamiska/hero-frenchie.png" alt="Buldog francuski obok WolnaMiski" loading="lazy"></div>
-              <h3>Dla psów z płaskim pyskiem</h3>
-              <p>Płytkie wnętrze, szeroki otwór. Buldog, mops, shih-tzu czy bokser wreszcie jedzą bez gimnastykowania pyska.</p>
-            </article>
+          <h2 class="h2 reveal">Bez WolnaMiski vs z WolnaMiską</h2>
+          <p class="lede reveal d1">Ten sam pies. Dwa różne posiłki.</p>
+          <div class="reveal d1" style="margin-top:32px;border-radius:20px;overflow:hidden;background:#FAF7F2;">
+            <img src="/produkty/wolnamiska/bez-z-porownanie.webp" alt="Bez WolnaMiski vs z WolnaMiską — porównanie szybkości jedzenia" loading="lazy" style="width:100%;height:auto;display:block;" />
           </div>
         </div>
       </section>
 
-      <!-- 06b BEFORE/AFTER NUMBERS BAND -->
+      <!-- 06 PILLARS — gotowa infografika "5 zalet" -->
+      <section class="section" id="pillars">
+        <div class="wrap">
+          <h2 class="h2 reveal">Co dostajesz</h2>
+          <div class="reveal" style="margin-top:24px;border-radius:20px;overflow:hidden;background:#FAF7F2;">
+            <img src="/produkty/wolnamiska/piec-zalet.webp" alt="Pięć zalet WolnaMiska — koniec z dławieniem, mniej wymiotów, do zmywarki, dla płaskiego pyska, ebook gratis" loading="lazy" style="width:100%;height:auto;display:block;" />
+          </div>
+        </div>
+      </section>
+
+      <!-- 06b BEFORE/AFTER — gotowa infografika -->
       <section class="ba-band">
         <div class="wrap">
           <div class="ba-head reveal">
             <span class="ba-eyebrow">Co się zmienia</span>
             <h2 class="ba-title">Trzy liczby, które robią różnicę</h2>
           </div>
-
-          <div class="ba-grid">
-            <div class="ba-pair reveal">
-              <div class="ba-row">
-                <div class="ba-side before">
-                  <span class="ba-label">Przed</span>
-                  <span class="ba-num">30<span class="ba-unit">sek</span></span>
-                </div>
-                <span class="ba-arrow" aria-hidden="true">→</span>
-                <div class="ba-side after">
-                  <span class="ba-label">Z miską</span>
-                  <span class="ba-num">15<span class="ba-unit">min</span></span>
-                </div>
-              </div>
-              <p class="ba-cap">Czas posiłku — z błyskawicznego pochłaniania do spokojnego rytuału.</p>
-            </div>
-
-            <div class="ba-pair reveal d1">
-              <div class="ba-row">
-                <div class="ba-side before">
-                  <span class="ba-label">Przed</span>
-                  <span class="ba-num">0<span class="ba-unit">min</span></span>
-                </div>
-                <span class="ba-arrow" aria-hidden="true">→</span>
-                <div class="ba-side after">
-                  <span class="ba-label">Z miską</span>
-                  <span class="ba-num">10<span class="ba-unit">min</span></span>
-                </div>
-              </div>
-              <p class="ba-cap">Stymulacja umysłowa — lizanie i wyciąganie kulki to praca dla mózgu.</p>
-            </div>
-
-            <div class="ba-pair reveal d2">
-              <div class="ba-row">
-                <div class="ba-side before">
-                  <span class="ba-label">Przed</span>
-                  <span class="ba-num ba-text">stres</span>
-                </div>
-                <span class="ba-arrow" aria-hidden="true">→</span>
-                <div class="ba-side after">
-                  <span class="ba-label">Z miską</span>
-                  <span class="ba-num ba-text">spokój</span>
-                </div>
-              </div>
-              <p class="ba-cap">Endorfiny z lizania działają wyciszająco — naturalny rytuał odprężenia.</p>
-            </div>
+          <div class="reveal" style="margin-top:32px;border-radius:20px;overflow:hidden;background:#FAF7F2;">
+            <img src="/produkty/wolnamiska/przed-po.webp" alt="WolnaMiska przed i po — 30 sekund vs 15 minut, stres vs spokój" loading="lazy" style="width:100%;height:auto;display:block;" />
           </div>
         </div>
       </section>
@@ -909,7 +863,7 @@ const jsonLd = {
             </article>
 
             <article class="review-card reveal d2">
-              <div class="rc-photo"><img src="/produkty/wolnamiska/wlewanie-bulionu.webp" alt="Karma w misce" loading="lazy" /></div>
+              <div class="rc-photo"><img src="/produkty/wolnamiska/cocker-spaniel.webp" alt="Cocker spaniel je z WolnaMiska" loading="lazy" /></div>
               <div class="rc-body">
                 <div class="rc-stars">★★★★★</div>
                 <p class="rc-text">„Koniec z bąkami u golden retrievera. Gazy zniknęły jak ręką odjął, odkąd je z tej miski. Nie wiedziałam, że tak połyka powietrze."</p>
@@ -918,7 +872,7 @@ const jsonLd = {
             </article>
 
             <article class="review-card reveal d3">
-              <div class="rc-photo"><img src="/produkty/wolnamiska/flatlay-marble.webp" alt="Czysta miska po posiłku" loading="lazy" /></div>
+              <div class="rc-photo"><img src="/produkty/wolnamiska/na-lnianym.webp" alt="WolnaMiska na lnianej tkaninie" loading="lazy" /></div>
               <div class="rc-body">
                 <div class="rc-stars">★★★★★</div>
                 <p class="rc-text">„Zmywarka to przełom. Wcześniej szorowałam matę godzinę, teraz wrzucam do kosza i tyle. Polski produkt, polska obsługa, polecam."</p>
@@ -980,6 +934,15 @@ const jsonLd = {
                 <div class="faq-a"><div class="faq-a-inner">Zamówienia złożone do <strong>14:00 wysyłamy tego samego dnia</strong>. InPost Paczkomat dotrze w 24h, kurier InPost w 24-48h.<br><br><strong>Masz 30 dni na bezproblemowy zwrot.</strong> Pies nie polubił miski? Odsyłasz, dostajesz pełny zwrot. Nie pytamy o powód, nie tłumaczysz się.</div></div>
               </details>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 08b POLISA NA ŻYCIE — gotowa infografika ROI -->
+      <section class="section">
+        <div class="wrap">
+          <div class="reveal" style="border-radius:20px;overflow:hidden;background:#FAF7F2;">
+            <img src="/produkty/wolnamiska/polisa-na-zycie.webp" alt="WolnaMiska — polisa na życie. 70 zł vs 7000 zł za skręt żołądka" loading="lazy" style="width:100%;height:auto;display:block;" />
           </div>
         </div>
       </section>
