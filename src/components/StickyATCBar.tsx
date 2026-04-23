@@ -7,6 +7,7 @@ interface Props {
   variantId: string;
   currencyCode?: string;
   observeSelector?: string;
+  scrollThreshold?: number;
 }
 
 export default function StickyATCBar({
@@ -15,13 +16,33 @@ export default function StickyATCBar({
   variantId,
   currencyCode = 'PLN',
   observeSelector = '#primary-atc-btn',
+  scrollThreshold,
 }: Props) {
   const [visible, setVisible] = useState(false);
   const [adding, setAdding] = useState(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {
-    // Small delay to ensure Astro has rendered the target element
+    // Mode 1: scroll percentage threshold (e.g. show after 30% page scroll)
+    if (typeof scrollThreshold === 'number') {
+      let ticking = false;
+      const onScroll = () => {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(() => {
+          const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+          const scrolled = window.scrollY;
+          const percent = docHeight > 0 ? (scrolled / docHeight) * 100 : 0;
+          setVisible(percent >= scrollThreshold);
+          ticking = false;
+        });
+      };
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+      return () => window.removeEventListener('scroll', onScroll);
+    }
+
+    // Mode 2 (default): intersection observer on primary ATC element
     const timer = setTimeout(() => {
       const target = document.querySelector(observeSelector);
       if (!target) return;
@@ -38,7 +59,7 @@ export default function StickyATCBar({
       clearTimeout(timer);
       observerRef.current?.disconnect();
     };
-  }, [observeSelector]);
+  }, [observeSelector, scrollThreshold]);
 
   const handleAdd = async () => {
     setAdding(true);
