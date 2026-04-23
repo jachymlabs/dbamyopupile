@@ -27,7 +27,7 @@ function CartLineItem({ line }: { line: CartLine }) {
     <div className="flex gap-3 py-4 border-b border-gray-100 last:border-0">
       {/* Image */}
       <a
-        href={`/produkty/${product.slug}`}
+        href={isBonus ? '/ebook' : `/produkty/${product.slug}`}
         className="shrink-0 w-16 h-16 rounded-md overflow-hidden bg-gray-100"
       >
         {image ? (
@@ -61,7 +61,7 @@ function CartLineItem({ line }: { line: CartLine }) {
       {/* Details */}
       <div className="flex-1 min-w-0">
         <a
-          href={`/produkty/${product.slug}`}
+          href={isBonus ? '/ebook' : `/produkty/${product.slug}`}
           className="text-sm font-medium text-gray-900 hover:text-gray-700 no-underline line-clamp-1"
         >
           {product.name}
