@@ -81,6 +81,22 @@ if (!product) return Astro.rewrite('/404');
 
 const mainImage = product.featuredAsset || product.assets?.[0];
 const firstVariant = product.variants?.[0];
+
+// ============================================
+// GALLERY — dynamic array (dodaj/usuń tu, reszta JS się dostosuje)
+// ============================================
+type GalleryImage = { src: string; thumb?: string; alt: string };
+const galleryImages: GalleryImage[] = [
+  ...(mainImage ? [{
+    src: buildAssetUrl(mainImage.preview, 'large'),
+    thumb: buildAssetUrl(mainImage.preview, 'medium'),
+    alt: product.name,
+  }] : []),
+  { src: '/produkty/wolnamiska/frenchie-licking.png', alt: 'WolnaMiska w użyciu — buldog francuski' },
+  { src: '/produkty/wolnamiska/product-linen-v2.png', alt: 'WolnaMiska — skala produktu' },
+  { src: '/produkty/wolnamiska/broth-pour.png', alt: 'Wlewanie do WolnaMiska — detal' },
+  { src: '/produkty/wolnamiska/flatlay.png', alt: 'WolnaMiska — gotowa do mycia' },
+];
 const lowestPrice = firstVariant?.priceWithTax ?? 0;
 const allOutOfStock = product.variants?.every((v: VendureVariant) => v.stockLevel === 'OUT_OF_STOCK');
 
@@ -145,22 +161,18 @@ const jsonLd = {
           <div class="wm-gallery-col">
             <div class="wm-gallery">
               <div class="wm-gallery-main" id="wm-gallery-main">
-                {mainImage && (
+                {galleryImages.map((img, i) => (
                   <img
-                    src={buildAssetUrl(mainImage.preview, 'large')}
-                    alt={product.name}
+                    src={img.src}
+                    alt={img.alt}
                     width="900"
                     height="900"
-                    class="wm-gallery-img active"
-                    data-idx="0"
-                    fetchpriority="high"
-                    loading="eager"
+                    class:list={['wm-gallery-img', i === 0 && 'active']}
+                    data-idx={String(i)}
+                    fetchpriority={i === 0 ? 'high' : undefined}
+                    loading={i === 0 ? 'eager' : 'lazy'}
                   />
-                )}
-                <img src="/produkty/wolnamiska/frenchie-licking.png" alt="WolnaMiska w użyciu — buldog francuski" class="wm-gallery-img" data-idx="1" loading="lazy" />
-                <img src="/produkty/wolnamiska/product-linen-v2.png" alt="WolnaMiska — skala produktu" class="wm-gallery-img" data-idx="2" loading="lazy" />
-                <img src="/produkty/wolnamiska/broth-pour.png" alt="Wlewanie do WolnaMiska — detal" class="wm-gallery-img" data-idx="3" loading="lazy" />
-                <img src="/produkty/wolnamiska/flatlay.png" alt="WolnaMiska — gotowa do mycia" class="wm-gallery-img" data-idx="4" loading="lazy" />
+                ))}
 
                 <button type="button" class="wm-gallery-arrow prev" id="wm-arrow-prev" aria-label="Poprzednie zdjęcie">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
@@ -169,17 +181,22 @@ const jsonLd = {
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
                 </button>
 
-                <span class="wm-gallery-counter"><span id="wm-counter-current">1</span> / 5</span>
+                <span class="wm-gallery-counter">
+                  <span id="wm-counter-current">1</span> / <span id="wm-counter-total">{galleryImages.length}</span>
+                </span>
               </div>
 
               <div class="wm-gallery-thumbs" role="tablist" aria-label="Galeria produktu">
-                <button class="wm-thumb active" data-target="0" aria-label="Zdjęcie 1">
-                  {mainImage && <img src={buildAssetUrl(mainImage.preview, 'medium')} alt="" />}
-                </button>
-                <button class="wm-thumb" data-target="1" aria-label="Zdjęcie 2"><img src="/produkty/wolnamiska/frenchie-licking.png" alt="" loading="lazy" /></button>
-                <button class="wm-thumb" data-target="2" aria-label="Zdjęcie 3"><img src="/produkty/wolnamiska/product-linen-v2.png" alt="" loading="lazy" /></button>
-                <button class="wm-thumb" data-target="3" aria-label="Zdjęcie 4"><img src="/produkty/wolnamiska/broth-pour.png" alt="" loading="lazy" /></button>
-                <button class="wm-thumb" data-target="4" aria-label="Zdjęcie 5"><img src="/produkty/wolnamiska/flatlay.png" alt="" loading="lazy" /></button>
+                {galleryImages.map((img, i) => (
+                  <button
+                    class:list={['wm-thumb', i === 0 && 'active']}
+                    data-target={String(i)}
+                    aria-label={`Zdjęcie ${i + 1}`}
+                    type="button"
+                  >
+                    <img src={img.thumb || img.src} alt="" loading="lazy" />
+                  </button>
+                ))}
               </div>
             </div>
           </div>
