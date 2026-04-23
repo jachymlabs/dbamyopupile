@@ -1081,46 +1081,47 @@ const jsonLd = {
     </script>
   )}
 
-  {/* Async ATC form */}
+  {/* Async ATC forms — hero + bundle cards */}
   <script>
     (function() {
-      const form = document.querySelector('form[method="POST"]');
-      if (!form) return;
-      const btn = form.querySelector('button[type="submit"]');
-      if (!btn) return;
+      const forms = document.querySelectorAll('form[method="POST"]');
+      forms.forEach((form) => {
+        const btn = form.querySelector('button[type="submit"]');
+        if (!btn) return;
 
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const formData = new FormData(form);
-        const variantId = formData.get('variantId');
-        const quantity = parseInt(formData.get('quantity') || '1', 10);
-        if (!variantId) return;
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const formData = new FormData(form);
+          const variantId = formData.get('variantId');
+          const quantity = parseInt(formData.get('quantity') || '1', 10);
+          if (!variantId) return;
 
-        btn.disabled = true;
-        const original = btn.textContent;
-        btn.textContent = 'Dodawanie...';
+          btn.disabled = true;
+          const original = btn.textContent;
+          btn.textContent = 'Dodawanie...';
 
-        try {
-          const res = await fetch('/api/cart', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'same-origin',
-            body: JSON.stringify({ variantId, quantity }),
-          });
-          if (res.ok) {
-            const data = await res.json();
-            window.dispatchEvent(new CustomEvent('cart-updated', { detail: data.order }));
-          } else {
+          try {
+            const res = await fetch('/api/cart', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'same-origin',
+              body: JSON.stringify({ variantId, quantity }),
+            });
+            if (res.ok) {
+              const data = await res.json();
+              window.dispatchEvent(new CustomEvent('cart-updated', { detail: data.order }));
+            } else {
+              form.submit();
+              return;
+            }
+          } catch {
             form.submit();
             return;
           }
-        } catch {
-          form.submit();
-          return;
-        }
 
-        btn.disabled = false;
-        btn.textContent = original;
+          btn.disabled = false;
+          btn.textContent = original;
+        });
       });
     })();
   </script>
