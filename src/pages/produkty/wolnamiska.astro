@@ -139,12 +139,6 @@ const jsonLd = {
     <!-- ============================================ -->
     <section class="wm-hero">
       <div class="wm-hero-wrap">
-        <nav class="wm-breadcrumbs" aria-label="Breadcrumb">
-          <a href="/">Strona główna</a>
-          <span aria-hidden="true">/</span>
-          <span>{product.name}</span>
-        </nav>
-
         <div class="wm-hero-grid">
           <!-- LEFT: Sticky Gallery -->
           <div class="wm-gallery-col">
@@ -292,21 +286,111 @@ const jsonLd = {
 
             <div class="wm-trust-row">
               <div class="wm-trust">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-                <span><strong>BLIK + PayU</strong><small>Bezpieczne płatności</small></span>
+                <div class="wm-trust-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                </div>
+                <div class="wm-trust-text">
+                  <strong>BLIK + PayU</strong>
+                  <small>Bezpieczne płatności</small>
+                </div>
               </div>
               <div class="wm-trust">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="1"/><line x1="9" y1="4" x2="9" y2="20"/><line x1="15" y1="4" x2="15" y2="20"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/></svg>
-                <span><strong>InPost Paczkomat</strong><small>Wysyłka 24h</small></span>
+                <div class="wm-trust-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="1"/><line x1="9" y1="4" x2="9" y2="20"/><line x1="15" y1="4" x2="15" y2="20"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/></svg>
+                </div>
+                <div class="wm-trust-text">
+                  <strong>InPost Paczkomat</strong>
+                  <small>Wysyłka 24h</small>
+                </div>
               </div>
               <div class="wm-trust">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
-                <span><strong>30 dni zwrotu</strong><small>Bez tłumaczenia się</small></span>
+                <div class="wm-trust-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+                </div>
+                <div class="wm-trust-text">
+                  <strong>30 dni zwrotu</strong>
+                  <small>Bez tłumaczenia się</small>
+                </div>
               </div>
               <div class="wm-trust">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v6c0 4.5-3.5 7-8 8-4.5-1-8-3.5-8-8V7l8-4z"/></svg>
-                <span><strong>Polski sklep</strong><small>Wysyłka z PL</small></span>
+                <div class="wm-trust-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v6c0 4.5-3.5 7-8 8-4.5-1-8-3.5-8-8V7l8-4z"/></svg>
+                </div>
+                <div class="wm-trust-text">
+                  <strong>Polski sklep</strong>
+                  <small>Wysyłka z PL</small>
+                </div>
               </div>
+            </div>
+
+            <!-- Accordions -->
+            <div class="wm-accordions">
+              <details class="wm-acc">
+                <summary>
+                  <span class="wm-acc-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                  </span>
+                  <span class="wm-acc-title">Opis produktu</span>
+                  <span class="wm-acc-chevron" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                  </span>
+                </summary>
+                <div class="wm-acc-body">
+                  <p><strong>WolnaMiska</strong> to hybrydowa miska spowalniająca z ruchomą kulką w środku. Łączy funkcję slow-feedera (labirynt na dnie) z lick matem (powierzchnia do lizania) — w jednym produkcie.</p>
+                  <ul class="wm-acc-list">
+                    <li><strong>Wymiary:</strong> 16 × 6,8 cm</li>
+                    <li><strong>Pojemność:</strong> 300–500 ml</li>
+                    <li><strong>Wydłuża posiłek:</strong> z 30 sekund do 10–15 minut</li>
+                    <li><strong>Dla kogo:</strong> psy łapczywe, brachycefaliczne (buldogi, mopsy, shih-tzu), koty z wymiotami</li>
+                    <li><strong>Co możesz wlać:</strong> mokra karma, suche pellet, jogurt naturalny, bulion bez soli, pasta orzechowa</li>
+                  </ul>
+                </div>
+              </details>
+
+              <details class="wm-acc">
+                <summary>
+                  <span class="wm-acc-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v6c0 4.5-3.5 7-8 8-4.5-1-8-3.5-8-8V7l8-4z"/></svg>
+                  </span>
+                  <span class="wm-acc-title">Materiał i bezpieczeństwo</span>
+                  <span class="wm-acc-chevron" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                  </span>
+                </summary>
+                <div class="wm-acc-body">
+                  <p>Wykonana z <strong>bezpiecznego tworzywa</strong> dopuszczonego do kontaktu z żywnością. Bez metalowych elementów, bez ostrych krawędzi.</p>
+                  <ul class="wm-acc-list">
+                    <li><strong>Mycie w zmywarce:</strong> tak, górny kosz, do 70°C</li>
+                    <li><strong>Antypoślizgowy spód:</strong> miska nie ślizga się po kafelkach</li>
+                    <li><strong>Kulka:</strong> trwale zamocowana, nie wypada — nie ma ryzyka połknięcia</li>
+                    <li><strong>Krawędzie:</strong> zaokrąglone, bezpieczne dla pyska</li>
+                  </ul>
+                  <p class="wm-acc-note">Przed pierwszym użyciem zalecamy umyć ciepłą wodą z płynem do naczyń.</p>
+                </div>
+              </details>
+
+              <details class="wm-acc">
+                <summary>
+                  <span class="wm-acc-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                  </span>
+                  <span class="wm-acc-title">Dostawa i zwroty</span>
+                  <span class="wm-acc-chevron" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                  </span>
+                </summary>
+                <div class="wm-acc-body">
+                  <p><strong>Wysyłka:</strong> zamówienia złożone do 14:00 wysyłamy <strong>tego samego dnia</strong>. Następne dnia roboczego do godz. 12:00.</p>
+                  <ul class="wm-acc-list">
+                    <li><strong>InPost Paczkomat:</strong> 9,99 zł · dostawa 24h</li>
+                    <li><strong>Kurier InPost:</strong> 14,99 zł · dostawa 24–48h</li>
+                    <li><strong>Kurier za pobraniem:</strong> 19,99 zł</li>
+                    <li><strong>Darmowa dostawa</strong> przy zamówieniu zestawu 3 sztuk</li>
+                  </ul>
+                  <p><strong>Zwroty:</strong> masz <strong>30 dni</strong> na bezproblemowy zwrot. Pies nie polubił miski? Odsyłasz, dostajesz zwrot. Nie pytamy o powód.</p>
+                  <p class="wm-acc-note">Ryzyko zwrotu jest po naszej stronie. Koszt odsyłki: 9,99 zł (Paczkomat).</p>
+                </div>
+              </details>
             </div>
 
             {!allOutOfStock && firstVariant && (
@@ -359,10 +443,10 @@ const jsonLd = {
       <section class="social-number">
         <div class="wrap">
           <div class="sn-grid reveal">
-            <div class="sn-big">300&nbsp;000+</div>
+            <div class="sn-big">1500+</div>
             <div class="sn-text">
-              <div class="sn-title">zadowolonych pupili na całym świecie</div>
-              <div class="sn-sub">Sprawdzona konstrukcja, dostępna teraz w Polsce z polską obsługą i 30-dniową gwarancją zwrotu.</div>
+              <div class="sn-title">zadowolonych opiekunów w Polsce</div>
+              <div class="sn-sub">Polska obsługa, wysyłka z Polski, 30-dniowa gwarancja zwrotu. Bez ryzyka.</div>
             </div>
           </div>
         </div>
@@ -868,14 +952,43 @@ const jsonLd = {
       .wm-delivery-promise svg{width:20px;height:20px;flex-shrink:0;color:var(--h-navy)}
       .wm-delivery-promise strong{font-weight:700}
 
-      /* Trust row */
-      .wm-trust-row{display:grid;grid-template-columns:repeat(2,1fr);gap:14px 18px;padding-top:24px;border-top:1px solid var(--h-rule-soft)}
-      @media(min-width:540px){.wm-trust-row{grid-template-columns:repeat(4,1fr)}}
-      .wm-trust{display:flex;align-items:center;gap:10px;color:var(--h-ink-2)}
-      .wm-trust svg{width:24px;height:24px;flex-shrink:0;color:var(--h-navy)}
-      .wm-trust span{display:flex;flex-direction:column;gap:1px;line-height:1.2;min-width:0}
-      .wm-trust strong{font-family:var(--h-f-body);font-weight:600;font-size:12.5px;color:var(--h-ink);letter-spacing:-0.005em}
-      .wm-trust small{font-family:var(--h-f-body);font-weight:400;font-size:11px;color:var(--h-ink-3)}
+      /* Trust row — premium card grid */
+      .wm-trust-row{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding-top:24px;margin-top:4px;border-top:1px solid var(--h-rule-soft)}
+      @media(min-width:540px){.wm-trust-row{grid-template-columns:repeat(4,1fr);gap:8px}}
+      .wm-trust{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:14px 8px;background:var(--h-white);border:1px solid var(--h-rule-soft);border-radius:12px;transition:all 200ms var(--h-ease)}
+      .wm-trust:hover{border-color:var(--h-blue);transform:translateY(-2px);box-shadow:0 4px 14px oklch(0.30 0.06 255 / 0.06)}
+      .wm-trust-icon{width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:oklch(0.85 0.055 235 / 0.18);color:var(--h-navy);border-radius:50%}
+      .wm-trust-icon svg{width:20px;height:20px}
+      .wm-trust-text{display:flex;flex-direction:column;gap:2px;line-height:1.25}
+      .wm-trust strong{font-family:var(--h-f-body);font-weight:600;font-size:12px;color:var(--h-ink);letter-spacing:-0.005em}
+      .wm-trust small{font-family:var(--h-f-body);font-weight:400;font-size:10.5px;color:var(--h-ink-3);letter-spacing:0.01em}
+
+      /* Accordions */
+      .wm-accordions{display:flex;flex-direction:column;gap:8px;margin-top:18px}
+      .wm-acc{background:var(--h-white);border:1px solid var(--h-rule-soft);border-radius:12px;overflow:hidden;transition:border-color 200ms var(--h-ease), box-shadow 200ms var(--h-ease)}
+      .wm-acc:hover{border-color:var(--h-blue)}
+      .wm-acc[open]{border-color:var(--h-navy);box-shadow:var(--h-shadow-card)}
+      .wm-acc summary{display:flex;align-items:center;gap:14px;padding:16px 18px;cursor:pointer;list-style:none;user-select:none;transition:background 200ms var(--h-ease)}
+      .wm-acc summary::-webkit-details-marker{display:none}
+      .wm-acc summary:hover{background:oklch(0.97 0.012 85)}
+      .wm-acc-icon{flex-shrink:0;width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:oklch(0.85 0.055 235 / 0.18);color:var(--h-navy);border-radius:8px}
+      .wm-acc-icon svg{width:18px;height:18px}
+      .wm-acc-title{flex:1;font-family:var(--h-f-body);font-weight:600;font-size:14.5px;color:var(--h-ink);letter-spacing:-0.005em}
+      .wm-acc-chevron{flex-shrink:0;width:20px;height:20px;color:var(--h-ink-3);transition:transform 250ms var(--h-ease)}
+      .wm-acc-chevron svg{width:100%;height:100%}
+      .wm-acc[open] .wm-acc-chevron{transform:rotate(180deg);color:var(--h-navy)}
+      .wm-acc-body{padding:0 18px 20px 64px;font-family:var(--h-f-body);font-size:14px;line-height:1.6;color:var(--h-ink-2);display:flex;flex-direction:column;gap:12px}
+      .wm-acc-body p{margin:0}
+      .wm-acc-body strong{color:var(--h-ink);font-weight:600}
+      .wm-acc-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:7px}
+      .wm-acc-list li{display:flex;gap:8px;padding-left:14px;position:relative;font-size:13.5px}
+      .wm-acc-list li::before{content:"";position:absolute;left:0;top:9px;width:5px;height:5px;background:var(--h-navy);border-radius:50%}
+      .wm-acc-note{font-size:12.5px;color:var(--h-ink-3);font-style:italic;padding-top:4px;border-top:1px dashed var(--h-rule-soft);margin-top:4px !important}
+      @media(max-width:520px){
+        .wm-acc summary{padding:14px 14px;gap:10px}
+        .wm-acc-title{font-size:13.5px}
+        .wm-acc-body{padding:0 14px 18px 52px;font-size:13.5px}
+      }
 
       /* Mobile tweaks */
       @media(max-width:520px){
