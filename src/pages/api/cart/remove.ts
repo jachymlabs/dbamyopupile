@@ -45,19 +45,21 @@ export const POST: APIRoute = async ({ request }) => {
   const { data, newToken } = await vendureQuery(REMOVE, { lineId }, token);
 
   let result = data?.removeOrderLine;
-  let activeToken = newToken;
+  // Zachowaj oryginalny token jako fallback, żeby drugi call nie trafił
+  // do nowej sesji (ebook usuwany z innego koszyka)
+  let activeToken = newToken || token;
 
   // Auto-remove ebook gdy WolnaMiska zniknęła
   if (result?.__typename === 'Order') {
     const hasTrigger = result.lines?.some((l: any) => l.productVariant?.id === TRIGGER_VARIANT_ID);
     const bonusLine = result.lines?.find((l: any) => l.productVariant?.id === BONUS_VARIANT_ID);
-    if (!hasTrigger && bonusLine) {
+    if (!hasTrigger && bonusLine && activeToken) {
       try {
         const bonusResp = await vendureQuery(REMOVE, { lineId: bonusLine.id }, activeToken);
         const bonusResult = bonusResp.data?.removeOrderLine;
         if (bonusResult?.__typename === 'Order') {
           result = bonusResult;
-          activeToken = bonusResp.newToken;
+          activeToken = bonusResp.newToken || activeToken;
         }
       } catch { /* ignore */ }
     }

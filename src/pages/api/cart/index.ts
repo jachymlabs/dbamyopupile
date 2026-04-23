@@ -70,13 +70,16 @@ export const POST: APIRoute = async ({ request }) => {
     );
 
     let result = data?.addItemToOrder;
-    let activeToken = newToken;
+    // Krytyczne: jeśli Vendure nie rotował sesji, newToken będzie undefined.
+    // Zachowujemy oryginalny token jako fallback — inaczej drugi call
+    // trafia do NOWEJ anonimowej sesji i koszyk zawiera tylko bonus item.
+    let activeToken = newToken || token;
 
     // Auto-add Ebook gdy w koszyku jest WolnaMiska i ebooka jeszcze nie ma
     if (result?.__typename === 'Order') {
       const hasTrigger = result.lines?.some((l: any) => l.productVariant?.id === TRIGGER_VARIANT_ID);
       const hasBonus = result.lines?.some((l: any) => l.productVariant?.id === BONUS_VARIANT_ID);
-      if (hasTrigger && !hasBonus) {
+      if (hasTrigger && !hasBonus && activeToken) {
         try {
           const bonusResp = await vendureQuery(
             ADD_TO_CART,
@@ -84,11 +87,24 @@ export const POST: APIRoute = async ({ request }) => {
             activeToken,
           );
           const bonusResult = bonusResp.data?.addItemToOrder;
-          if (bonusResult?.__typename === 'Order') {
+          // Walidacja: drugi call MUSI zawierać trigger variant w lines
+          // (bo używamy tej samej sesji). Jeśli nie — coś poszło źle,
+          // używamy result z pierwszej mutacji i nie nadpisujemy.
+          if (bonusResult?.__typename === 'Order' &&
+              bonusResult.lines?.some((l: any) => l.productVariant?.id === TRIGGER_VARIANT_ID)) {
             result = bonusResult;
-            activeToken = bonusResp.newToken;
+            activeToken = bonusResp.newToken || activeToken;
           }
         } catch { /* if bonus fails, keep original order */ }
+      }
+    }
+
+    // Ochrona: jeśli user próbuje dodać ebook bezpośrednio bez WolnaMiski,
+    // odmów. Ebook jest dostępny tylko jako bonus do miski.
+    if (variantId === BONUS_VARIANT_ID && result?.__typename === 'Order') {
+      const hasTrigger = result.lines?.some((l: any) => l.productVariant?.id === TRIGGER_VARIANT_ID);
+      if (!hasTrigger) {
+        return buildResponse({ order: null, error: 'Ebook dostępny tylko z WolnaMiską' }, activeToken);
       }
     }
 
