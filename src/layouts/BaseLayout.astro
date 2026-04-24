@@ -58,15 +58,17 @@ if (hasConsent && config.metaPixelId) {
 }
 
 // ============================================================
-// H9 (Sprint 1): Content Security Policy — REPORT-ONLY
+// H9 (Sprint 2): Content Security Policy — ENFORCED
 // ============================================================
-// Pierwszy deploy: tylko report (nie blokuje), żeby zobaczyć jakie
-// zasoby aplikacja rzeczywiście ładuje. Patryk sprawdza w DevTools console
-// po 24h i przełączamy na enforced osobnym PR.
+// Sprint 1 deploył w trybie Report-Only (tylko log w console). Sprint 2:
+// przełączamy na enforced — przeglądarka BLOKUJE zasoby spoza whitelist.
+// Sklep nie jest jeszcze produkcyjny, więc ryzyko OK.
 //
-// Brak `report-uri` — nie mamy endpointu raportującego, więc violations
-// będą widoczne tylko w przeglądarce (console: "Content Security Policy
-// (Report Only): Refused to ..."). To wystarczy do diagnostyki.
+// Po deploy: monitoruj DevTools console. Każdy "Refused to load/execute"
+// = należy dodać domenę do whitelist (NIE wracać do Report-Only).
+//
+// Brak `report-uri` — violations widoczne tylko w przeglądarce
+// (console: "Refused to ... because it violates CSP directive ...").
 //
 // Hosty wpisane na podstawie obecnego stanu:
 //   - script: connect.facebook.net (pixel), geowidget.inpost.pl (geowidget SDK)
@@ -93,7 +95,7 @@ const csp = [
   "object-src 'none'",
 ].join('; ');
 
-Astro.response.headers.set('Content-Security-Policy-Report-Only', csp);
+Astro.response.headers.set('Content-Security-Policy', csp);
 ---
 
 <!doctype html>
