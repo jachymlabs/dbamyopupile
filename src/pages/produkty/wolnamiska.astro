@@ -96,7 +96,7 @@ const galleryImages: GalleryImage[] = [
   { src: '/produkty/wolnamiska/dla-kogo.webp', alt: 'Dla kogo WolnaMiska — płaski pysk, łapczywy, senior, znudzony' },
   { src: '/produkty/wolnamiska/bez-z-porownanie.webp', alt: 'Bez WolnaMiski vs z WolnaMiską — porównanie' },
   { src: '/produkty/wolnamiska/kuchnia-shiba.webp', alt: 'WolnaMiska na podłodze kuchennej' },
-  { src: '/produkty/wolnamiska/polisa-na-zycie.webp', alt: 'WolnaMiska polisa na życie — 70 zł vs 7000 zł' },
+  { src: '/produkty/wolnamiska/polisa-na-zycie.webp', alt: 'WolnaMiska polisa na życie — 80 zł vs 7000 zł' },
   { src: '/produkty/wolnamiska/rece-misa.webp', alt: 'WolnaMiska — skala produktu w rękach' },
   { src: '/produkty/wolnamiska/misa-kubek.webp', alt: 'WolnaMiska — porównanie skali z kubkiem' },
   { src: '/produkty/wolnamiska/wymiar-16cm.webp', alt: 'WolnaMiska — wymiar 16cm średnicy' },
@@ -217,11 +217,11 @@ const jsonLd = {
 
             <div class="wm-price-block">
               <div class="wm-price-row">
-                <span class="wm-price" id="wm-price">59,99 zł</span>
-                <span class="wm-price-old">89,99 zł</span>
-                <span class="wm-price-save">Oszczędzasz 30 zł</span>
+                <span class="wm-price" id="wm-price">79,99 zł</span>
+                <span class="wm-price-old"></span>
+                <span class="wm-price-save"></span>
               </div>
-              <div class="wm-omnibus">Najniższa cena z 30 dni przed obniżką: 59,99 zł</div>
+              <div class="wm-omnibus">Najniższa cena z 30 dni przed obniżką: 79,99 zł</div>
             </div>
 
             <ul class="wm-usps">
@@ -260,7 +260,7 @@ const jsonLd = {
                 TODO [Sprint 3+]: jeśli rozszerzymy katalog → dynamic Promotion lookup.
               */}
               <div class="wm-bundles" role="radiogroup" aria-label="Wybierz zestaw">
-                <label class="wm-bundle-card active" data-qty="1" data-price="59,99 zł" data-old="89,99 zł" data-save="Oszczędzasz 30 zł">
+                <label class="wm-bundle-card active" data-qty="1" data-price="79,99 zł" data-old="" data-save="">
                   <input type="radio" name="bundle" value="1" checked />
                   <div class="wm-bundle-check">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -270,13 +270,13 @@ const jsonLd = {
                     <div class="wm-bundle-meta">Standard</div>
                   </div>
                   <div class="wm-bundle-pricing">
-                    <div class="wm-bundle-price">59,99 zł</div>
-                    <div class="wm-bundle-perunit">59,99 zł / szt</div>
+                    <div class="wm-bundle-price">79,99 zł</div>
+                    <div class="wm-bundle-perunit">79,99 zł / szt</div>
                   </div>
                 </label>
 
-                <label class="wm-bundle-card popular" data-qty="2" data-price="104,99 zł" data-old="119,98 zł" data-save="Oszczędzasz 15 zł">
-                  <span class="wm-bundle-badge">Oszczędzasz 15 zł</span>
+                <label class="wm-bundle-card popular" data-qty="2" data-price="139,99 zł" data-old="" data-save="Oszczędzasz 20 zł">
+                  <span class="wm-bundle-badge">Oszczędzasz 20 zł</span>
                   <input type="radio" name="bundle" value="2" />
                   <div class="wm-bundle-check">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -286,13 +286,13 @@ const jsonLd = {
                     <div class="wm-bundle-meta">Idealnie jeśli masz 2 psy w domu</div>
                   </div>
                   <div class="wm-bundle-pricing">
-                    <div class="wm-bundle-price">104,99 zł</div>
-                    <div class="wm-bundle-perunit"><s>59,99</s> 52,49 zł / szt</div>
+                    <div class="wm-bundle-price">139,99 zł</div>
+                    <div class="wm-bundle-perunit"><s>79,99</s> 69,99 zł / szt</div>
                   </div>
                 </label>
 
-                <label class="wm-bundle-card" data-qty="3" data-price="149,99 zł" data-old="179,97 zł" data-save="Oszczędzasz 30 zł + darmowa dostawa">
-                  <span class="wm-bundle-badge navy">−30 zł + darmowa dostawa</span>
+                <label class="wm-bundle-card" data-qty="3" data-price="199,99 zł" data-old="" data-save="Oszczędzasz 40 zł + darmowa dostawa">
+                  <span class="wm-bundle-badge navy">−40 zł + darmowa dostawa</span>
                   <input type="radio" name="bundle" value="3" />
                   <div class="wm-bundle-check">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -302,8 +302,8 @@ const jsonLd = {
                     <div class="wm-bundle-meta">Maksymalna oszczędność</div>
                   </div>
                   <div class="wm-bundle-pricing">
-                    <div class="wm-bundle-price">149,99 zł</div>
-                    <div class="wm-bundle-perunit"><s>59,99</s> 49,99 zł / szt</div>
+                    <div class="wm-bundle-price">199,99 zł</div>
+                    <div class="wm-bundle-perunit"><s>79,99</s> 66,66 zł / szt</div>
                   </div>
                 </label>
               </div>
@@ -313,7 +313,7 @@ const jsonLd = {
               ) : (
                 <button type="submit" class="wm-atc" id="primary-atc-btn">
                   <span class="wm-atc-text">Kup Teraz</span>
-                  <span class="wm-atc-price" id="wm-atc-price">59,99 zł</span>
+                  <span class="wm-atc-price" id="wm-atc-price">79,99 zł</span>
                   <svg class="wm-atc-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                 </button>
               )}
@@ -650,17 +650,17 @@ const jsonLd = {
           <div class="split-grid reverse">
             <div class="split-content reveal">
               <span class="split-eyebrow">Ile to naprawdę kosztuje</span>
-              <h2 class="split-title">60 zł teraz albo 7000 zł u weterynarza</h2>
+              <h2 class="split-title">80 zł teraz albo 7000 zł u weterynarza</h2>
               <p class="split-lede">Skręt żołądka to nie abstrakcja. Nocny wyjazd, operacja, rachunek na karcie kredytowej na pół roku.</p>
               <ul class="split-list">
                 <li><strong>Operacja skrętu:</strong> 4 000 – 7 000 zł w klinikach w dużych miastach. Czas reakcji: 60 minut od pierwszych objawów.</li>
                 <li><strong>Wizyta interwencyjna w nocy:</strong> 300 – 600 zł zanim w ogóle dotkną psa.</li>
-                <li><strong>WolnaMiska:</strong> 59,99 zł raz, używasz codziennie przez lata.</li>
+                <li><strong>WolnaMiska:</strong> 79,99 zł raz, używasz codziennie przez lata.</li>
               </ul>
               <p class="split-note">Nie obiecujemy, że miska zatrzyma każdy problem zdrowotny. Ale wolne tempo jedzenia to jeden z głównych czynników, które eliminują ryzyko skrętu. To realny argument, nie marketing.</p>
             </div>
             <div class="split-media reveal d1">
-              <img src="/produkty/wolnamiska/polisa-na-zycie.webp" alt="WolnaMiska polisa na życie — porównanie 70 zł vs 7000 zł u weterynarza" loading="lazy" />
+              <img src="/produkty/wolnamiska/polisa-na-zycie.webp" alt="WolnaMiska polisa na życie — porównanie 80 zł vs 7000 zł u weterynarza" loading="lazy" />
             </div>
           </div>
         </div>
@@ -796,7 +796,7 @@ const jsonLd = {
                 </svg>
               </div>
               <span class="cc-type">WolnaMiska — hybryda 2-w-1</span>
-              <p class="cc-price">59,99 zł</p>
+              <p class="cc-price">79,99 zł</p>
               <ul>
                 <li class="yes"><span class="mark">✓</span> Płytka — dla psów z płaskim pyskiem</li>
                 <li class="yes"><span class="mark">✓</span> Kulka w środku — stymulacja</li>
@@ -871,7 +871,7 @@ const jsonLd = {
           <div class="bundle-grid">
             <article class="bundle-card reveal">
               <div class="bc-qty">1 sztuka</div>
-              <div class="bc-price">59,99 zł</div>
+              <div class="bc-price">79,99 zł</div>
               <div class="bc-each">Na spróbowanie</div>
               <ul class="bc-feat">
                 <li>Spokojny posiłek od pierwszego dnia</li>
@@ -886,10 +886,10 @@ const jsonLd = {
             </article>
 
             <article class="bundle-card popular reveal d1">
-              <div class="bc-badge">Oszczędzasz 15 zł</div>
+              <div class="bc-badge">Oszczędzasz 20 zł</div>
               <div class="bc-qty">Zestaw 2 szt</div>
-              <div class="bc-price">104,99 zł</div>
-              <div class="bc-each">52,49 zł / sztuka</div>
+              <div class="bc-price">139,99 zł</div>
+              <div class="bc-each">69,99 zł / sztuka</div>
               <ul class="bc-feat">
                 <li>Idealnie dla domu z 2 psami</li>
                 <li>Czysta miska pod ręką, nawet jak druga w zmywarce</li>
@@ -903,10 +903,10 @@ const jsonLd = {
             </article>
 
             <article class="bundle-card reveal d2">
-              <div class="bc-badge bc-badge-free">−30 zł + darmowa dostawa</div>
+              <div class="bc-badge bc-badge-free">−40 zł + darmowa dostawa</div>
               <div class="bc-qty">Zestaw 3 szt</div>
-              <div class="bc-price">149,99 zł</div>
-              <div class="bc-each">49,99 zł / sztuka</div>
+              <div class="bc-price">199,99 zł</div>
+              <div class="bc-each">66,66 zł / sztuka</div>
               <ul class="bc-feat">
                 <li>Najniższa cena za sztukę</li>
                 <li>Darmowa dostawa do Paczkomatu InPost</li>
@@ -1189,8 +1189,9 @@ const jsonLd = {
           if (qtyInput && qty) qtyInput.value = qty;
           if (atcPrice && price) atcPrice.textContent = price;
           if (heroPrice && price) heroPrice.textContent = price;
-          if (heroPriceOld && oldPrice) heroPriceOld.textContent = oldPrice;
-          if (heroPriceSave && save) heroPriceSave.textContent = save;
+          // Empty string → ukryj fake-discount UI (single + bundles bez old price)
+          if (heroPriceOld) heroPriceOld.textContent = oldPrice || '';
+          if (heroPriceSave) heroPriceSave.textContent = save || '';
 
           // Notify StickyATCBar of bundle change
           window.dispatchEvent(new CustomEvent('wm-bundle-change', {
