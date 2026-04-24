@@ -16,6 +16,7 @@ import {
 } from '@/lib/mutations';
 import { sendCAPIEvent, buildUserData, generateEventId } from '@/lib/meta-capi';
 import { getStoreConfig } from '@/lib/store-config';
+import { sanitizePaymentsArray } from '@/lib/security';
 const storeConfig = await getStoreConfig(Astro.request);
 
 // --- Types ---
@@ -278,6 +279,15 @@ if (Astro.request.method === 'POST') {
           paymentMetadata.firstName = formValues.firstName;
           paymentMetadata.lastName = formValues.lastName;
           paymentMetadata.customerIp = Astro.request.headers.get('x-forwarded-for')?.split(',')[0] || '';
+          // H2 (Sprint 2): BLIK code is a SINGLE-USE secret consumed by PayU during the
+          // payment call. Vendure plugin needs it on the input to authorize the transaction,
+          // but it MUST NOT be persisted in `order.payments[].metadata` long-term.
+          // Storefront-side mitigation:
+          //   - Always sanitize `payments[].metadata` on the response read path
+          //     (see sanitizePaymentsArray below) so a leaked code never reaches the client.
+          //   - Plugin-side: payu plugin must store BLIK code only transiently (in-memory /
+          //     ephemeral) and never write it to Vendure DB. Verify via agent vendure when
+          //     touching the plugin.
           if (formValues.flowType === 'BLIK' && formValues.blikCode) {
             paymentMetadata.blikCode = formValues.blikCode;
           }
@@ -332,10 +342,11 @@ if (Astro.request.method === 'POST') {
 
           // Check for PayU redirect URI (REDIRECT/PAYPO flows)
           if (shippingType !== 'pobranie') {
-            // Take the LAST payment (order may have earlier failed attempts)
-            const payments = paymentResponse.payments ?? [];
+            // H2 (Sprint 2): sanitize payments[].metadata read path — strips BLIK auth code
+            // and any other forbidden secrets before we touch the data.
+            const payments = sanitizePaymentsArray(paymentResponse.payments ?? []);
             const lastPayment = payments[payments.length - 1];
-            const paymentMeta = lastPayment?.metadata;
+            const paymentMeta = lastPayment?.metadata as { public?: { redirectUri?: string } } | undefined;
             const redirectUri = paymentMeta?.public?.redirectUri;
             if (redirectUri && (formValues.flowType === 'REDIRECT' || formValues.flowType === 'PAYPO')) {
               // Validate redirect URL — only allow exact PayU hostnames.
