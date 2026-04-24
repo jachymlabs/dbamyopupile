@@ -72,3 +72,79 @@ export function assertSameOrigin(request: Request): Response | null {
   console.warn('[security] assertSameOrigin: blocked origin', { origin, allowedOrigin });
   return new Response('Forbidden', { status: 403 });
 }
+
+// ─── Payment metadata sanitization ─────────────────────────────────
+
+/**
+ * Fields that are SAFE to expose in payment.metadata responses (storefront read path).
+ * Anything not in this list is stripped — including any BLIK auth code that may have
+ * leaked back from the Vendure payment plugin.
+ *
+ * BLIK authorization codes (6 digits) are SINGLE-USE secrets — once consumed by PayU
+ * they have no business value, and storing/transmitting them increases the blast radius
+ * if logs leak. Even if the Vendure plugin echoes them back via `addPaymentToOrder`,
+ * we never let them reach the client or downstream consumers.
+ *
+ * Public-only keys (added under `metadata.public` by Vendure plugin):
+ *  - redirectUri      : PayU redirect target for REDIRECT/PAYPO flows
+ *  - statusCode       : PayU response status (e.g. SUCCESS, WARNING_CONTINUE_3DS)
+ *  - extOrderId       : External order ID
+ *  - orderId          : PayU orderId
+ */
+const PUBLIC_PAYMENT_METADATA_KEYS = new Set([
+  'redirectUri',
+  'statusCode',
+  'extOrderId',
+  'orderId',
+  'paymentId',
+  'transactionId',
+]);
+
+const FORBIDDEN_PAYMENT_METADATA_KEYS = new Set([
+  'blikCode',
+  'blikAuthCode',
+  'authCode',
+  'cardNumber',
+  'cvv',
+  'cvc',
+]);
+
+/**
+ * Sanitize a single payment.metadata object — strip secrets, keep only whitelisted public keys.
+ * Returns a NEW object; does not mutate input.
+ */
+export function sanitizePaymentMetadata(metadata: unknown): Record<string, unknown> {
+  if (!metadata || typeof metadata !== 'object') return {};
+  const src = metadata as Record<string, unknown>;
+  const out: Record<string, unknown> = {};
+
+  // Top-level: only allow whitelisted public keys, never forbidden keys.
+  for (const [key, val] of Object.entries(src)) {
+    if (FORBIDDEN_PAYMENT_METADATA_KEYS.has(key)) continue;
+    if (key === 'public' && val && typeof val === 'object') {
+      // Nested public object — also filter
+      const pub = val as Record<string, unknown>;
+      const cleanPub: Record<string, unknown> = {};
+      for (const [pk, pv] of Object.entries(pub)) {
+        if (FORBIDDEN_PAYMENT_METADATA_KEYS.has(pk)) continue;
+        if (PUBLIC_PAYMENT_METADATA_KEYS.has(pk)) cleanPub[pk] = pv;
+      }
+      out.public = cleanPub;
+      continue;
+    }
+    if (PUBLIC_PAYMENT_METADATA_KEYS.has(key)) {
+      out[key] = val;
+    }
+    // Anything else (private, unknown) is dropped silently.
+  }
+  return out;
+}
+
+/**
+ * Sanitize an array of payment objects in-place-friendly (returns new array).
+ * Use on `order.payments` before any logging/serialization to clients.
+ */
+export function sanitizePaymentsArray<T extends { metadata?: unknown }>(payments: T[] | undefined | null): T[] {
+  if (!Array.isArray(payments)) return [];
+  return payments.map((p) => ({ ...p, metadata: sanitizePaymentMetadata(p.metadata) }));
+}

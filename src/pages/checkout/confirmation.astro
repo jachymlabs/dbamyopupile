@@ -77,7 +77,7 @@ if (order && ['PaymentFailed', 'Cancelled'].includes(order.state)) {
       try {
         const code = new URLSearchParams(window.location.search).get('code');
         if (!code) { window.location.reload(); return; }
-        const res = await fetch('/api/payment/status');
+        const res = await fetch('/api/payment/status', { credentials: 'include' });
         const data = await res.json();
         if (data.status === 'COMPLETED') {
           clearInterval(refreshTimer);

@@ -169,12 +169,14 @@ const lines = order?.lines ?? [];
             res = await fetch('/api/cart/remove', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
               body: JSON.stringify({ lineId }),
             });
           } else {
             res = await fetch('/api/cart/adjust', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
               body: JSON.stringify({ lineId, quantity: newQty }),
             });
           }
