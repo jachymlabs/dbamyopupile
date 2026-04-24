@@ -1,6 +1,21 @@
 /**
  * Simple in-memory rate limiter for API routes.
  * No external dependencies. Resets on server restart.
+ *
+ * ⚠️  WARNING — SERVERLESS LIMITATION (C2 / Sprint 1):
+ * On Vercel / Lambda the limiter is PER-INSTANCE — each cold/warm function
+ * instance has its own Map. A burst of N requests across N instances will
+ * NOT be coalesced. Effective protection ≈ (configured limit) × (instances).
+ *
+ * Real protection levers right now:
+ *  - Vercel platform-level DDoS shielding
+ *  - PayU per-merchant velocity rules
+ *  - Vendure session token (one cart per session)
+ *
+ * TODO [Sprint 2 / C2]: replace with Upstash Redis sliding-window limiter
+ * (`@upstash/ratelimit` + `@upstash/redis`) for cross-instance counting.
+ * Trigger: when we observe abuse in logs OR before public launch / paid traffic.
+ * Estimate: ~2h (provision Upstash, env vars, replace function body, deploy).
  */
 const MAX_ENTRIES = 10_000;
 const hits = new Map<string, { count: number; resetAt: number }>();
@@ -15,6 +30,10 @@ setInterval(() => {
 
 /**
  * Check if a request is rate limited.
+ *
+ * NOTE: see file-level warning — this is best-effort per-instance protection.
+ * Do not rely on this as the only abuse mitigation in production.
+ *
  * @returns true if the request should be BLOCKED
  */
 export function isRateLimited(
