@@ -1130,14 +1130,32 @@ const hasErrors = Object.keys(errors).length > 0 || !!globalError;
     saveFormData();
   }) as EventListener);
 
-  // --- Loading state on submit ---
+  // --- Loading state on submit (H10: triple-submit guard) ---
+  // Sequence:
+  //  1. Mark submitting flag synchronously in capture phase — wins races against
+  //     duplicate submit events (Enter key + click, autofill quirk, double-tap).
+  //  2. Disable + spinner BEFORE any async work, so the second invocation finds
+  //     buttons already disabled.
+  //  3. Cancel any subsequent submit while flag is set.
+  let isSubmitting = false;
   if (checkoutForm) {
-    checkoutForm.addEventListener('submit', () => {
-      submitBtns.forEach((b) => {
-        b.disabled = true;
-        b.textContent = 'Przetwarzanie...';
-      });
-    });
+    checkoutForm.addEventListener(
+      'submit',
+      (e: Event) => {
+        if (isSubmitting) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          return;
+        }
+        isSubmitting = true;
+        submitBtns.forEach((b) => {
+          b.disabled = true;
+          b.setAttribute('aria-busy', 'true');
+          b.textContent = 'Przetwarzanie...';
+        });
+      },
+      { capture: true },
+    );
   }
 
   // --- Restore visibility on reload with errors ---
