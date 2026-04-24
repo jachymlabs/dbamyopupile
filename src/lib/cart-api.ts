@@ -1,5 +1,7 @@
 import { setCartState } from './cart-store';
 
+const NETWORK_ERROR_MSG = 'Połączenie nieudane. Sprawdź internet i spróbuj ponownie.';
+
 async function cartFetch(url: string, options?: RequestInit) {
   const res = await fetch(url, {
     ...options,
@@ -14,6 +16,7 @@ async function cartFetch(url: string, options?: RequestInit) {
   return res.json();
 }
 
+/** GET /api/cart — silent error, fetch przy mount nie powinien straszyc usera */
 export async function fetchCart(): Promise<void> {
   setCartState({ loading: true, error: null });
   try {
@@ -24,10 +27,13 @@ export async function fetchCart(): Promise<void> {
     }
     setCartState({ order: data.order, loading: false, error: null });
   } catch {
+    // Cichy fail przy initial fetch - drawer pokaze "pusty koszyk" zamiast bledu.
+    // To OK bo user nie wykonał żadnej akcji której wynik czeka.
     setCartState({ loading: false, error: null });
   }
 }
 
+/** POST /api/cart — user-initiated, MUSI komunikowac blad sieciowy */
 export async function addToCart(variantId: string, quantity: number = 1): Promise<void> {
   setCartState({ loading: true, error: null });
   try {
@@ -41,10 +47,13 @@ export async function addToCart(variantId: string, quantity: number = 1): Promis
     }
     setCartState({ order: data.order, loading: false, isOpen: true, error: null });
   } catch {
-    setCartState({ loading: false, error: null });
+    // M14: previously zjadało blad (`error: null`) - user widział loading off
+    // i myslał ze poszlo OK. Teraz pokazujemy konkretny komunikat.
+    setCartState({ loading: false, error: NETWORK_ERROR_MSG });
   }
 }
 
+/** POST /api/cart/adjust — user changed qty, MUSI komunikowac blad */
 export async function adjustCartItem(lineId: string, quantity: number): Promise<void> {
   setCartState({ loading: true, error: null });
   try {
@@ -58,10 +67,11 @@ export async function adjustCartItem(lineId: string, quantity: number): Promise<
     }
     setCartState({ order: data.order, loading: false, error: null });
   } catch {
-    setCartState({ loading: false, error: null });
+    setCartState({ loading: false, error: NETWORK_ERROR_MSG });
   }
 }
 
+/** POST /api/cart/remove — user-initiated, MUSI komunikowac blad */
 export async function removeFromCart(lineId: string): Promise<void> {
   setCartState({ loading: true, error: null });
   try {
@@ -75,6 +85,6 @@ export async function removeFromCart(lineId: string): Promise<void> {
     }
     setCartState({ order: data.order, loading: false, error: null });
   } catch {
-    setCartState({ loading: false, error: null });
+    setCartState({ loading: false, error: NETWORK_ERROR_MSG });
   }
 }
