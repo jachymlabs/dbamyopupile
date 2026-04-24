@@ -160,9 +160,22 @@ if (Astro.request.method === 'POST') {
       } catch { /* ignore */ }
 
       // 1. Set customer
-      // TODO [M6]: Vendure wymaga emaila. Gdy klient podaje tylko telefon, generujemy
-      // syntetyczny adres. Docelowo: dedykowany flow phone-only checkout.
-      const customerEmail = formValues.email || `tel-${formValues.phone.replace(/\D/g, '')}-${Date.now()}@phone-checkout.internal`;
+      //
+      // H3 (Sprint 2): Vendure Shop API has no phone-based customer lookup
+      // (only logged-in `activeCustomer`), so we cannot dedupe by phoneNumber via
+      // shop-api. Workaround: when only a phone is provided, derive a DETERMINISTIC
+      // synthetic email from the digits (no timestamp). Same phone → same email →
+      // Vendure's email-unique constraint reuses the existing customer record on
+      // the next order automatically.
+      //
+      // TODO: full phone-based dedupe across phone+email combos requires either
+      //  (a) a Vendure custom plugin exposing sanitized `customerByPhone(phone, channelToken)`
+      //      in shop-api with strict rate limiting, OR
+      //  (b) an /api/admin/customer-lookup-by-phone endpoint guarded by a server-side
+      //      admin token + Origin check + rate limit.
+      // Either requires backend work — out of Sprint 2 scope. Track in agent vendure backlog.
+      const phoneDigits = formValues.phone.replace(/\D/g, '');
+      const customerEmail = formValues.email || `tel-${phoneDigits}@phone-checkout.internal`;
       const customerRaw = await shopApiRaw<any>(SET_CUSTOMER_FOR_ORDER, {
         input: {
           firstName: formValues.firstName,
