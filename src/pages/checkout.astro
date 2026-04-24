@@ -1007,33 +1007,56 @@ const hasErrors = Object.keys(errors).length > 0 || !!globalError;
     });
   }
 
-  // --- Postal code → city lookup ---
+  // --- Postal code → city lookup (H4: debounce + per-page-load cache) ---
+  // Without these the input event fires every keystroke and re-hits /api/postal-lookup
+  // (which proxies to a 3rd-party API + is rate-limited). Cache survives back/forward
+  // within the same page-load; debounce coalesces typing bursts.
   const cityContainer = document.getElementById('city')?.parentElement;
-  let lastLookedUpCode = '';
+  const postalCache = new Map<string, string[]>();
+  let lookupDebounce: ReturnType<typeof setTimeout> | undefined;
+  let lookupGeneration = 0;
 
   async function lookupCity(code: string) {
-    if (code === lastLookedUpCode) return;
-    lastLookedUpCode = code;
-
+    if (postalCache.has(code)) {
+      applyCities(postalCache.get(code)!);
+      return;
+    }
+    const myGen = ++lookupGeneration;
     try {
       const res = await fetch(`/api/postal-lookup?code=${encodeURIComponent(code)}`, {
         credentials: 'include',
       });
       const data = await res.json();
       const cities: string[] = data.cities || [];
-
-      if (!cityContainer) return;
-
-      if (cities.length === 0) {
-        restoreCityInput('');
-      } else if (cities.length === 1) {
-        restoreCityInput(cities[0]);
-      } else {
-        replaceCityWithSelect(cities);
-      }
+      // Cache even empty results — saves a roundtrip if user re-edits to the same code.
+      postalCache.set(code, cities);
+      // Stale check: another lookup started while this one was in flight; ignore us.
+      if (myGen !== lookupGeneration) return;
+      applyCities(cities);
     } catch {
       // Silently fail
     }
+  }
+
+  function applyCities(cities: string[]) {
+    if (!cityContainer) return;
+    if (cities.length === 0) {
+      restoreCityInput('');
+    } else if (cities.length === 1) {
+      restoreCityInput(cities[0]);
+    } else {
+      replaceCityWithSelect(cities);
+    }
+  }
+
+  function scheduleLookup(code: string) {
+    clearTimeout(lookupDebounce);
+    // Cache hit fires immediately (no network) — only debounce true network calls.
+    if (postalCache.has(code)) {
+      applyCities(postalCache.get(code)!);
+      return;
+    }
+    lookupDebounce = setTimeout(() => lookupCity(code), 300);
   }
 
   function restoreCityInput(value: string) {
@@ -1094,10 +1117,10 @@ const hasErrors = Object.keys(errors).length > 0 || !!globalError;
     postalInput.addEventListener('input', () => {
       const val = postalInput.value.trim();
       if (/^\d{2}-\d{3}$/.test(val)) {
-        lookupCity(val);
+        scheduleLookup(val);
       }
     });
-    // Trigger on load if already filled
+    // Trigger on load if already filled — bypass debounce (initial state, not typing).
     if (/^\d{2}-\d{3}$/.test(postalInput.value.trim())) {
       lookupCity(postalInput.value.trim());
     }
