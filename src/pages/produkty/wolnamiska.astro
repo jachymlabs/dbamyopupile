@@ -244,6 +244,21 @@ const jsonLd = {
               <input type="hidden" name="quantity" id="wm-qty" value="1" />
 
               <div class="wm-bundle-label">Wybierz zestaw</div>
+              {/*
+                ⚠️ HARDCODED PRICES — must match Vendure Promotion ID 4 (qty=2, -15zł)
+                + Promotion ID 5 (qty=3, -30zł) na channel dbamyopupile.
+
+                Wartości tu (data-price, data-old, data-save, wyświetlane ceny)
+                są ZSYNCHRONIZOWANE RĘCZNIE z promocjami w Vendure Admin.
+                Zmiana w Vendure WYMAGA aktualizacji TUTAJ — inaczej user
+                zobaczy inną cenę w karcie bundle niż w koszyku po dodaniu.
+
+                Decyzja Sprint 1: zostawiamy hardcode (brak dynamic fetch),
+                bo: (1) ceny zmieniają się rzadko, (2) extra GraphQL roundtrip
+                na PDP spowolniłby LCP, (3) jeden produkt = niska szansa rozjazdu.
+
+                TODO [Sprint 3+]: jeśli rozszerzymy katalog → dynamic Promotion lookup.
+              */}
               <div class="wm-bundles" role="radiogroup" aria-label="Wybierz zestaw">
                 <label class="wm-bundle-card active" data-qty="1" data-price="59,99 zł" data-old="89,99 zł" data-save="Oszczędzasz 30 zł">
                   <input type="radio" name="bundle" value="1" checked />
