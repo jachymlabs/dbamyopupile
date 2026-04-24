@@ -84,7 +84,7 @@ if (!code) {
         .then(function(data) {
           if (data.status === 'COMPLETED') {
             showSuccess();
-          } else if (data.status === 'FAILED') {
+          } else if (data.status === 'FAILED' || data.status === 'NOT_FOUND') {
             showError();
           }
           // PENDING — keep polling
