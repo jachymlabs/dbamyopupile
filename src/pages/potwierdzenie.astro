@@ -1,17 +1,13 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
-import Breadcrumbs from '@/components/Breadcrumbs.astro';
 import OrderSummary from '@/components/OrderSummary.astro';
 import ProductCard from '@/components/ProductCard.astro';
-import Button from '@/components/Button.astro';
 import { shopApi } from '@/lib/vendure';
 import { GET_ORDER_BY_CODE, SEARCH_PRODUCTS } from '@/lib/queries';
 // Security note: orderByCode in Vendure Shop API requires active session —
 // it only returns orders belonging to the current customer/session, preventing IDOR.
 // Combined with 16-char alphanumeric codes, brute force is impractical.
-// No additional token/hash is needed for this endpoint.
 
-// Get order code from query params
 const code = Astro.url.searchParams.get('code');
 
 if (!code) {
@@ -20,8 +16,6 @@ if (!code) {
 
 let order: any = null;
 try {
-  // orderByCode requires the request's auth session — Vendure only returns
-  // orders belonging to the current customer/session, preventing IDOR.
   const data = await shopApi<any>(GET_ORDER_BY_CODE, { code }, Astro.request);
   order = data.orderByCode;
 } catch {
@@ -36,7 +30,7 @@ const customer = order.customer;
 const address = order.shippingAddress;
 const shippingMethod = order.shippingLines?.[0]?.shippingMethod?.name;
 
-// Upsell: pobierz produkty, pominac te z zamowienia
+// Upsell
 const orderedProductIds = new Set(
   order.lines?.map((l: any) => l.productVariant?.productId || l.productVariant?.product?.id).filter(Boolean) || []
 );
@@ -46,402 +40,598 @@ try {
   const searchData = await shopApi<any>(SEARCH_PRODUCTS, {
     input: { take: 8, groupByProduct: true },
   }, Astro.request);
-  // Filtruj produkty z zamowienia, potem losowo wybierz 4
   const filtered = (searchData.search?.items || []).filter(
     (item: any) => !orderedProductIds.has(item.productId)
   );
-  // Losowe tasowanie i wybranie max 4
   upsellProducts = filtered.sort(() => Math.random() - 0.5).slice(0, 4);
-} catch {
-  // Silently fail — upsell jest opcjonalny
-}
+} catch {}
 ---
 
-<BaseLayout title="Potwierdzenie zamowienia" noindex>
-  <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-6">
-    <Breadcrumbs items={[
-      { label: 'Strona glowna', href: '/' },
-      { label: 'Potwierdzenie zamowienia' },
-    ]} />
+<BaseLayout title="Dziękujemy za zamówienie" noindex>
+  <div class="ty-page">
+    <div class="ty-wrap">
 
-    {/* A) Reassurance — animowany checkmark */}
-    <div class="text-center mt-6 mb-8">
-      <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-100 mb-4 checkmark-circle">
-        <svg
-          class="checkmark-svg"
-          xmlns="http://www.w3.org/2000/svg"
-          width="40"
-          height="40"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2.5"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <path class="checkmark-path" d="M5 13l4 4L19 7" />
-        </svg>
-      </div>
-      <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Zamowienie potwierdzone!</h1>
-      <p class="mt-2 text-gray-600">
-        Zamowienie nr <span class="font-semibold">{order.code}</span>
-      </p>
-      {customer?.emailAddress && (
-        <p class="mt-1 text-sm text-gray-500">
-          Potwierdzenie wyslemy na <span class="font-medium">{customer.emailAddress}</span>
-        </p>
-      )}
-    </div>
-
-    {/* B) Order tracking bar */}
-    <div class="mb-8">
-      <div class="flex items-center justify-between">
-        {/* Step 1 — active */}
-        <div class="flex flex-col items-center flex-1">
-          <div class="flex h-8 w-8 items-center justify-center rounded-full bg-green-500 text-white text-sm font-semibold">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-          <span class="mt-1.5 text-xs font-medium text-green-700">Potwierdzone</span>
-        </div>
-        {/* Divider */}
-        <div class="flex-1 h-0.5 bg-gray-200 -mt-5 mx-1"></div>
-        {/* Step 2 */}
-        <div class="flex flex-col items-center flex-1">
-          <div class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 text-gray-400 text-sm font-semibold">2</div>
-          <span class="mt-1.5 text-xs text-gray-400">Pakowanie</span>
-        </div>
-        {/* Divider */}
-        <div class="flex-1 h-0.5 bg-gray-200 -mt-5 mx-1"></div>
-        {/* Step 3 */}
-        <div class="flex flex-col items-center flex-1">
-          <div class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 text-gray-400 text-sm font-semibold">3</div>
-          <span class="mt-1.5 text-xs text-gray-400">Wysylka</span>
-        </div>
-        {/* Divider */}
-        <div class="flex-1 h-0.5 bg-gray-200 -mt-5 mx-1"></div>
-        {/* Step 4 */}
-        <div class="flex flex-col items-center flex-1">
-          <div class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 text-gray-400 text-sm font-semibold">4</div>
-          <span class="mt-1.5 text-xs text-gray-400">Dostarczone</span>
-        </div>
-      </div>
-    </div>
-
-    {/* C) 24h Discount code — PLACEHOLDER: kupon i countdown hardcoded.
-         TODO: Generować kod per zamówienie z backendu (Channel custom field lub dedykowana logika). */}
-    <div class="mb-8 rounded-xl bg-amber-50 border border-amber-200 p-6">
-      <h2 class="text-lg font-bold text-gray-900 mb-1">Twoj ekskluzywny kod rabatowy -10%</h2>
-      <p class="text-sm text-amber-700 mb-4">Wazny tylko przez 24 godziny</p>
-      <div class="flex items-center gap-3 mb-4">
-        <!-- TODO: Generate unique per-order discount codes via Vendure Promotion API -->
-        <code id="discount-code" class="flex-1 text-center text-2xl font-bold font-mono tracking-wider bg-white border border-amber-300 rounded-lg py-3 px-4 text-gray-900 select-all">
-          DZIEKUJE10
-        </code>
-        <button
-          id="copy-code-btn"
-          type="button"
-          class="shrink-0 rounded-lg bg-gray-900 px-5 py-3 text-sm font-semibold text-white hover:bg-gray-800 transition-colors min-h-[44px]"
-        >
-          Skopiuj kod
-        </button>
-      </div>
-      <div class="text-center">
-        <p class="text-sm text-amber-800 font-medium">
-          Kod wygasa za: <span id="countdown-timer" class="font-mono font-bold">23:59:59</span>
-        </p>
-      </div>
-    </div>
-
-    {/* TODO [L6]: Upsell placeholder — docelowo: dedykowane rekomendacje per produkt
-        (np. "kupili też", "pasuje do"), a nie losowe produkty z katalogu. */}
-    {upsellProducts.length > 0 && (
-      <div class="mb-8">
-        <h2 class="text-lg font-semibold text-gray-900 mb-1">Moze Ci sie spodobac</h2>
-        <p class="text-sm text-gray-500 mb-4">Zobacz inne produkty</p>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {upsellProducts.map((item: any) => (
-            <ProductCard
-              name={item.productName}
-              slug={item.slug}
-              imageUrl={item.productAsset?.preview}
-              priceWithTax={item.priceWithTax}
-              currencyCode={item.currencyCode}
-            />
-          ))}
-        </div>
-      </div>
-    )}
-
-    {/* D) SMS opt-in slot
-         NOTE: This is a UI placeholder. The submit handler below saves to DOM only (hides form, shows success).
-         No data is sent to any backend. Connect to ESP (Omnisend/Klaviyo) API route before production launch. */}
-    <div class="mb-8 rounded-xl border border-gray-200 p-6 bg-white">
-      <h2 class="text-lg font-semibold text-gray-900 mb-1">Otrzymuj powiadomienia o statusie zamowienia</h2>
-      <p class="text-sm text-gray-500 mb-4">Oraz 15% rabatu na nastepne zakupy</p>
-      <div id="sms-form" class="flex gap-3">
-        <label for="sms-phone-input" class="sr-only">Numer telefonu</label>
-        <input
-          type="tel"
-          id="sms-phone-input"
-          placeholder="+48 ___ ___ ___"
-          class="flex-1 rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-gray-900 focus:ring-1 focus:ring-gray-900 outline-none min-h-[44px]"
-        />
-        <button
-          id="sms-submit-btn"
-          type="button"
-          class="shrink-0 rounded-lg bg-gray-900 px-5 py-3 text-sm font-semibold text-white hover:bg-gray-800 transition-colors min-h-[44px]"
-        >
-          Zapisz sie
-        </button>
-      </div>
-      <div id="sms-success" class="hidden text-center py-3">
-        <p class="text-sm font-medium text-green-700">Dziekujemy! Otrzymasz SMS wkrotce.</p>
-      </div>
-      <p class="mt-3 text-xs text-gray-400">
-        Mozesz zrezygnowac w kazdej chwili.
-        <a href="/polityka-prywatnosci" class="underline hover:text-gray-600">Polityka prywatnosci</a>
-      </p>
-    </div>
-
-    {/* E) Reinforcement — Co dalej? */}
-    <div class="mb-8">
-      <h2 class="text-lg font-semibold text-gray-900 mb-4">Co dalej?</h2>
-      <div class="space-y-4">
-        <div class="flex items-start gap-3">
-          <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-semibold text-gray-600">1</div>
-          <div>
-            <p class="text-sm font-medium text-gray-900">Przygotowujemy Twoje zamowienie</p>
-            <p class="text-xs text-gray-500 mt-0.5">Nasz zespol juz pracuje nad Twoja paczka</p>
-          </div>
-        </div>
-        <div class="flex items-start gap-3">
-          <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-semibold text-gray-600">2</div>
-          <div>
-            <p class="text-sm font-medium text-gray-900">Otrzymasz SMS/email z numerem sledzenia</p>
-            <p class="text-xs text-gray-500 mt-0.5">Powiadomimy Cie gdy przesylka wyruszy w droge</p>
-          </div>
-        </div>
-        <div class="flex items-start gap-3">
-          <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-semibold text-gray-600">3</div>
-          <div>
-            <p class="text-sm font-medium text-gray-900">Przesylka dotrze w 1-2 dni robocze</p>
-            <p class="text-xs text-gray-500 mt-0.5">Standardowy czas dostawy na terenie Polski</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    {/* F) Receipt/summary — accordion na dole */}
-    <div class="mb-8">
-      <details class="rounded-xl border border-gray-200 overflow-hidden">
-        <summary class="flex cursor-pointer items-center justify-between px-5 py-4 bg-gray-50 hover:bg-gray-100 transition-colors font-medium text-gray-900">
-          <span>Szczegoly zamowienia</span>
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 transition-transform duration-200 details-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+      {/* HERO — checkmark + powitanie */}
+      <section class="ty-hero">
+        <div class="ty-checkmark-wrap">
+          <svg class="ty-checkmark-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" aria-hidden="true">
+            <circle class="ty-checkmark-bg" cx="40" cy="40" r="38" fill="#B8D8E8" />
+            <path class="ty-checkmark-path" d="M24 40 L36 52 L58 28" fill="none" stroke="#1E3A5F" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
           </svg>
-        </summary>
-        <div class="p-5 border-t border-gray-200">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            {/* Customer data */}
-            {customer && (
-              <div>
-                <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">Dane klienta</h3>
-                <dl class="text-sm space-y-1.5">
-                  <div>
-                    <dt class="sr-only">Imie i nazwisko</dt>
-                    <dd class="text-gray-700">{customer.firstName} {customer.lastName}</dd>
-                  </div>
-                  <div>
-                    <dt class="sr-only">Email</dt>
-                    <dd class="text-gray-700">{customer.emailAddress}</dd>
-                  </div>
-                  {customer.phoneNumber && (
-                    <div>
-                      <dt class="sr-only">Telefon</dt>
-                      <dd class="text-gray-700">{customer.phoneNumber}</dd>
-                    </div>
-                  )}
-                </dl>
-              </div>
-            )}
-
-            {/* Shipping address */}
-            {address && (
-              <div>
-                <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">Adres dostawy</h3>
-                <dl class="text-sm space-y-1.5">
-                  {address.fullName && (
-                    <div>
-                      <dt class="sr-only">Odbiorca</dt>
-                      <dd class="text-gray-700">{address.fullName}</dd>
-                    </div>
-                  )}
-                  <div>
-                    <dt class="sr-only">Ulica</dt>
-                    <dd class="text-gray-700">{address.streetLine1}</dd>
-                  </div>
-                  <div>
-                    <dt class="sr-only">Miasto</dt>
-                    <dd class="text-gray-700">{address.postalCode} {address.city}</dd>
-                  </div>
-                  {address.phoneNumber && (
-                    <div>
-                      <dt class="sr-only">Telefon</dt>
-                      <dd class="text-gray-700">tel. {address.phoneNumber}</dd>
-                    </div>
-                  )}
-                  {shippingMethod && (
-                    <div class="pt-1.5 border-t border-gray-100">
-                      <dt class="text-gray-500 text-xs">Dostawa</dt>
-                      <dd class="text-gray-700">{shippingMethod}</dd>
-                    </div>
-                  )}
-                </dl>
-              </div>
-            )}
-          </div>
-
-          {/* Order items */}
-          <OrderSummary order={order} />
         </div>
-      </details>
-    </div>
+        <p class="ty-eyebrow">Płatność potwierdzona</p>
+        <h1 class="ty-title">Dziękujemy za zamówienie!</h1>
+        <p class="ty-subtitle">
+          Numer zamówienia: <span class="ty-order-code">{order.code}</span>
+        </p>
+        {customer?.emailAddress && (
+          <p class="ty-email">
+            Potwierdzenie wysłaliśmy na <strong>{customer.emailAddress}</strong>
+          </p>
+        )}
+      </section>
 
-    {/* CTA */}
-    <div class="text-center mb-8">
-      <Button href="/" variant="primary" size="lg">
-        Wroc do sklepu
-      </Button>
+      {/* TRACKING BAR */}
+      <section class="ty-tracking">
+        <div class="ty-track-step ty-track-active">
+          <div class="ty-track-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <span class="ty-track-label">Potwierdzone</span>
+        </div>
+        <div class="ty-track-line"></div>
+        <div class="ty-track-step">
+          <div class="ty-track-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+          </div>
+          <span class="ty-track-label">Pakowanie</span>
+        </div>
+        <div class="ty-track-line"></div>
+        <div class="ty-track-step">
+          <div class="ty-track-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          </div>
+          <span class="ty-track-label">Wysyłka</span>
+        </div>
+        <div class="ty-track-line"></div>
+        <div class="ty-track-step">
+          <div class="ty-track-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </div>
+          <span class="ty-track-label">Dostarczone</span>
+        </div>
+      </section>
+
+      {/* CO DALEJ — 3 kroki z ikonkami */}
+      <section class="ty-section">
+        <h2 class="ty-h2">Co teraz?</h2>
+        <div class="ty-next">
+          <article class="ty-next-item">
+            <div class="ty-next-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+            </div>
+            <h3>Pakujemy Twoje zamówienie</h3>
+            <p>Już dziś przygotowujemy paczkę. Wysyłka tego samego dnia, jeśli zamówiłaś do 14:00.</p>
+          </article>
+
+          <article class="ty-next-item">
+            <div class="ty-next-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            </div>
+            <h3>Dostaniesz numer śledzenia</h3>
+            <p>Mailem z linkiem do InPost. Zobaczysz dokładnie gdzie jest paczka.</p>
+          </article>
+
+          <article class="ty-next-item">
+            <div class="ty-next-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            </div>
+            <h3>Paczka u Ciebie w 24-48h</h3>
+            <p>Paczkomat InPost — 24h. Kurier — do 48h. Przy 3 sztukach dostawa za 0 zł.</p>
+          </article>
+        </div>
+      </section>
+
+      {/* UPSELL */}
+      {upsellProducts.length > 0 && (
+        <section class="ty-section">
+          <h2 class="ty-h2">Może Ci się spodobać</h2>
+          <p class="ty-lede">Inne produkty z naszego sklepu</p>
+          <div class="ty-upsell-grid">
+            {upsellProducts.map((item: any) => (
+              <ProductCard
+                name={item.productName}
+                slug={item.slug}
+                imageUrl={item.productAsset?.preview}
+                priceWithTax={item.priceWithTax}
+                currencyCode={item.currencyCode}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* DETAILS — accordion */}
+      <section class="ty-section">
+        <details class="ty-details">
+          <summary class="ty-details-summary">
+            <span>Szczegóły zamówienia</span>
+            <svg class="ty-details-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+          </summary>
+          <div class="ty-details-body">
+            <div class="ty-details-grid">
+              {customer && (
+                <div class="ty-details-block">
+                  <h3>Dane klienta</h3>
+                  <p>{customer.firstName} {customer.lastName}</p>
+                  <p>{customer.emailAddress}</p>
+                  {customer.phoneNumber && <p>{customer.phoneNumber}</p>}
+                </div>
+              )}
+
+              {address && (
+                <div class="ty-details-block">
+                  <h3>Adres dostawy</h3>
+                  {address.fullName && <p>{address.fullName}</p>}
+                  <p>{address.streetLine1}</p>
+                  <p>{address.postalCode} {address.city}</p>
+                  {address.phoneNumber && <p class="ty-details-meta">tel. {address.phoneNumber}</p>}
+                  {shippingMethod && (
+                    <p class="ty-details-shipping">
+                      <span>Dostawa:</span> {shippingMethod}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div class="ty-details-summary-box">
+              <OrderSummary order={order} />
+            </div>
+          </div>
+        </details>
+      </section>
+
+      {/* CTA */}
+      <section class="ty-cta">
+        <a href="/" class="ty-cta-btn">
+          Wróć do sklepu
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+        <p class="ty-cta-meta">Masz pytania? Napisz na <a href="mailto:sklep@dbamyopupile.pl">sklep@dbamyopupile.pl</a> lub zadzwoń <a href="tel:+48577723506">577 723 506</a>.</p>
+      </section>
+
     </div>
   </div>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" slot="head" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin slot="head" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" slot="head" />
 </BaseLayout>
 
-<style>
-  /* Animated checkmark */
-  .checkmark-circle {
-    animation: scaleIn 0.4s ease-out;
+<style is:global>
+  :root {
+    --ty-powder: #B8D8E8;
+    --ty-navy: #1E3A5F;
+    --ty-ivory: #FAF7F2;
+    --ty-ivory-2: #F2EDE3;
+    --ty-white: #FFFFFF;
+    --ty-ink: #1A1A1A;
+    --ty-ink-2: #5A5A5A;
+    --ty-rule: #E8E3D8;
+    --ty-shadow-soft: 0 2px 12px rgba(30, 58, 95, 0.06);
+    --ty-shadow-lift: 0 6px 24px rgba(30, 58, 95, 0.10);
+    --ty-radius: 16px;
+    --ty-ease: cubic-bezier(0.4, 0, 0.2, 1);
+    --ty-f-display: 'Fraunces', Georgia, serif;
+    --ty-f-body: 'Inter', system-ui, sans-serif;
   }
 
-  .checkmark-svg {
-    color: #16a34a;
+  .ty-page {
+    background: var(--ty-ivory);
+    min-height: 100vh;
+    font-family: var(--ty-f-body);
+    color: var(--ty-ink);
+    padding: 32px 16px 64px;
+  }
+  @media (min-width: 768px) {
+    .ty-page { padding: 56px 24px 96px; }
   }
 
-  .checkmark-path {
-    stroke-dasharray: 24;
-    stroke-dashoffset: 24;
-    animation: drawCheck 0.5s ease-out 0.3s forwards;
+  .ty-wrap {
+    max-width: 760px;
+    margin: 0 auto;
   }
 
-  @keyframes scaleIn {
-    0% {
-      transform: scale(0);
-      opacity: 0;
-    }
-    50% {
-      transform: scale(1.15);
-    }
-    100% {
-      transform: scale(1);
-      opacity: 1;
-    }
+  /* HERO */
+  .ty-hero {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+  @media (min-width: 768px) {
+    .ty-hero { margin-bottom: 64px; }
   }
 
-  @keyframes drawCheck {
-    to {
-      stroke-dashoffset: 0;
-    }
+  .ty-checkmark-wrap {
+    display: inline-block;
+    margin: 0 auto 24px;
+    animation: tyCheckScale 0.5s var(--ty-ease);
+  }
+  .ty-checkmark-svg {
+    width: 88px;
+    height: 88px;
+    filter: drop-shadow(0 4px 12px rgba(184, 216, 232, 0.4));
+  }
+  .ty-checkmark-bg {
+    transform-origin: center;
+    animation: tyCheckBg 0.4s var(--ty-ease);
+  }
+  .ty-checkmark-path {
+    stroke-dasharray: 60;
+    stroke-dashoffset: 60;
+    animation: tyCheckDraw 0.5s ease-out 0.3s forwards;
   }
 
-  /* Details chevron rotation */
-  details[open] .details-chevron {
+  @keyframes tyCheckScale {
+    0% { transform: scale(0); opacity: 0; }
+    60% { transform: scale(1.1); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  @keyframes tyCheckBg {
+    0% { transform: scale(0); }
+    100% { transform: scale(1); }
+  }
+  @keyframes tyCheckDraw {
+    to { stroke-dashoffset: 0; }
+  }
+
+  .ty-eyebrow {
+    font-family: var(--ty-f-body);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ty-ink-2);
+    margin: 0 0 12px;
+  }
+
+  .ty-title {
+    font-family: var(--ty-f-display);
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(32px, 6vw, 48px);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--ty-navy);
+    margin: 0 0 16px;
+  }
+
+  .ty-subtitle {
+    font-size: 15px;
+    color: var(--ty-ink-2);
+    margin: 0 0 8px;
+  }
+  .ty-order-code {
+    font-family: var(--ty-f-body);
+    font-weight: 700;
+    color: var(--ty-navy);
+    letter-spacing: 0.04em;
+  }
+
+  .ty-email {
+    font-size: 14px;
+    color: var(--ty-ink-2);
+    margin: 8px 0 0;
+  }
+  .ty-email strong {
+    color: var(--ty-ink);
+    font-weight: 600;
+  }
+
+  /* TRACKING */
+  .ty-tracking {
+    display: grid;
+    grid-template-columns: auto 1fr auto 1fr auto 1fr auto;
+    align-items: center;
+    gap: 8px;
+    background: var(--ty-white);
+    border: 1px solid var(--ty-rule);
+    border-radius: var(--ty-radius);
+    padding: 24px 16px;
+    margin-bottom: 56px;
+    box-shadow: var(--ty-shadow-soft);
+  }
+  @media (min-width: 768px) {
+    .ty-tracking { padding: 28px 32px; gap: 16px; }
+  }
+
+  .ty-track-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .ty-track-icon {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--ty-ivory-2);
+    color: var(--ty-ink-2);
+    border: 2px solid var(--ty-rule);
+    transition: all 300ms var(--ty-ease);
+  }
+  .ty-track-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .ty-track-active .ty-track-icon {
+    background: var(--ty-navy);
+    border-color: var(--ty-navy);
+    color: var(--ty-white);
+    box-shadow: 0 4px 12px rgba(30, 58, 95, 0.25);
+  }
+
+  .ty-track-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ty-ink-2);
+    text-align: center;
+    line-height: 1.2;
+  }
+  .ty-track-active .ty-track-label {
+    color: var(--ty-navy);
+  }
+
+  .ty-track-line {
+    height: 2px;
+    background: var(--ty-rule);
+    border-radius: 2px;
+    margin-top: -28px;
+  }
+
+  /* SECTIONS */
+  .ty-section {
+    margin-bottom: 56px;
+  }
+  @media (min-width: 768px) {
+    .ty-section { margin-bottom: 72px; }
+  }
+
+  .ty-h2 {
+    font-family: var(--ty-f-display);
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(24px, 3.5vw, 32px);
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+    color: var(--ty-navy);
+    margin: 0 0 8px;
+    text-align: center;
+  }
+
+  .ty-lede {
+    font-size: 15px;
+    color: var(--ty-ink-2);
+    text-align: center;
+    margin: 0 0 28px;
+  }
+
+  /* CO TERAZ — 3 kroki */
+  .ty-next {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-top: 28px;
+  }
+  @media (min-width: 768px) {
+    .ty-next { grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  }
+
+  .ty-next-item {
+    background: var(--ty-white);
+    border: 1px solid var(--ty-rule);
+    border-radius: var(--ty-radius);
+    padding: 24px;
+    text-align: left;
+    transition: all 300ms var(--ty-ease);
+  }
+  .ty-next-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--ty-shadow-lift);
+    border-color: var(--ty-powder);
+  }
+
+  .ty-next-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    background: var(--ty-powder);
+    color: var(--ty-navy);
+    margin-bottom: 16px;
+  }
+  .ty-next-icon svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .ty-next-item h3 {
+    font-family: var(--ty-f-body);
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: -0.005em;
+    color: var(--ty-ink);
+    margin: 0 0 8px;
+    line-height: 1.3;
+  }
+  .ty-next-item p {
+    font-size: 14px;
+    color: var(--ty-ink-2);
+    line-height: 1.55;
+    margin: 0;
+  }
+
+  /* UPSELL */
+  .ty-upsell-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+  @media (min-width: 768px) {
+    .ty-upsell-grid { grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  }
+
+  /* DETAILS */
+  .ty-details {
+    background: var(--ty-white);
+    border: 1px solid var(--ty-rule);
+    border-radius: var(--ty-radius);
+    overflow: hidden;
+  }
+  .ty-details-summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 24px;
+    font-family: var(--ty-f-body);
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--ty-navy);
+    background: var(--ty-ivory-2);
+    transition: background 200ms var(--ty-ease);
+  }
+  .ty-details-summary::-webkit-details-marker {
+    display: none;
+  }
+  .ty-details-summary:hover {
+    background: var(--ty-powder);
+  }
+  .ty-details-chevron {
+    width: 18px;
+    height: 18px;
+    color: var(--ty-navy);
+    transition: transform 200ms var(--ty-ease);
+  }
+  .ty-details[open] .ty-details-chevron {
     transform: rotate(180deg);
   }
 
-  details summary::-webkit-details-marker {
-    display: none;
+  .ty-details-body {
+    padding: 24px;
+    border-top: 1px solid var(--ty-rule);
   }
-  details summary {
-    list-style: none;
+
+  .ty-details-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+    margin-bottom: 28px;
+  }
+  @media (min-width: 640px) {
+    .ty-details-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
+  }
+
+  .ty-details-block h3 {
+    font-family: var(--ty-f-body);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ty-ink-2);
+    margin: 0 0 12px;
+  }
+  .ty-details-block p {
+    font-size: 14px;
+    color: var(--ty-ink);
+    margin: 0 0 4px;
+    line-height: 1.5;
+  }
+  .ty-details-meta {
+    color: var(--ty-ink-2) !important;
+    font-size: 13px !important;
+  }
+  .ty-details-shipping {
+    margin-top: 8px !important;
+    padding-top: 8px;
+    border-top: 1px solid var(--ty-rule);
+    font-size: 13px !important;
+    color: var(--ty-ink-2) !important;
+  }
+  .ty-details-shipping span {
+    font-weight: 600;
+  }
+
+  .ty-details-summary-box {
+    border-top: 1px solid var(--ty-rule);
+    padding-top: 24px;
+  }
+
+  /* CTA */
+  .ty-cta {
+    text-align: center;
+    padding: 32px 0 0;
+  }
+  .ty-cta-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--ty-navy);
+    color: var(--ty-white);
+    font-family: var(--ty-f-body);
+    font-weight: 600;
+    font-size: 15px;
+    padding: 16px 32px;
+    border-radius: 100px;
+    text-decoration: none;
+    transition: all 300ms var(--ty-ease);
+    box-shadow: 0 4px 16px rgba(30, 58, 95, 0.2);
+  }
+  .ty-cta-btn:hover {
+    background: #15294A;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(30, 58, 95, 0.3);
+  }
+  .ty-cta-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .ty-cta-meta {
+    margin: 24px auto 0;
+    font-size: 13px;
+    color: var(--ty-ink-2);
+    max-width: 480px;
+    line-height: 1.6;
+  }
+  .ty-cta-meta a {
+    color: var(--ty-navy);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .ty-cta-meta a:hover {
+    text-decoration: underline;
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .ty-checkmark-wrap,
+    .ty-checkmark-bg,
+    .ty-checkmark-path {
+      animation: none !important;
+    }
+    .ty-checkmark-path {
+      stroke-dashoffset: 0 !important;
+    }
   }
 </style>
-
-<script is:inline>
-  // Copy discount code
-  (function() {
-    var copyBtn = document.getElementById('copy-code-btn');
-    var codeEl = document.getElementById('discount-code');
-    if (copyBtn && codeEl) {
-      copyBtn.addEventListener('click', function() {
-        var code = codeEl.textContent.trim();
-        navigator.clipboard.writeText(code).then(function() {
-          copyBtn.textContent = 'Skopiowano!';
-          setTimeout(function() {
-            copyBtn.textContent = 'Skopiuj kod';
-          }, 2000);
-        }).catch(function() {
-          // Fallback: select text
-          var range = document.createRange();
-          range.selectNodeContents(codeEl);
-          var sel = window.getSelection();
-          sel.removeAllRanges();
-          sel.addRange(range);
-        });
-      });
-    }
-  })();
-
-  // 24h Countdown timer
-  (function() {
-    var STORAGE_KEY = 'thankyou-countdown-start';
-    var timerEl = document.getElementById('countdown-timer');
-    if (!timerEl) return;
-
-    var startTime = localStorage.getItem(STORAGE_KEY);
-    if (!startTime) {
-      startTime = Date.now().toString();
-      localStorage.setItem(STORAGE_KEY, startTime);
-    }
-    var endTime = parseInt(startTime) + 24 * 60 * 60 * 1000;
-
-    function update() {
-      var remaining = endTime - Date.now();
-      if (remaining <= 0) {
-        timerEl.textContent = '00:00:00';
-        return;
-      }
-      var h = Math.floor(remaining / 3600000);
-      var m = Math.floor((remaining % 3600000) / 60000);
-      var s = Math.floor((remaining % 60000) / 1000);
-      timerEl.textContent =
-        String(h).padStart(2, '0') + ':' +
-        String(m).padStart(2, '0') + ':' +
-        String(s).padStart(2, '0');
-    }
-    update();
-    const timerId = setInterval(update, 1000);
-    // Cleanup on Astro View Transition navigation
-    document.addEventListener('astro:before-swap', () => clearInterval(timerId), { once: true });
-  })();
-
-  // SMS opt-in (frontend only — UI placeholder, no backend call)
-  // TODO: Connect to ESP (Omnisend/Klaviyo) API route before production launch.
-  (function() {
-    var submitBtn = document.getElementById('sms-submit-btn');
-    var phoneInput = document.getElementById('sms-phone-input');
-    var form = document.getElementById('sms-form');
-    var success = document.getElementById('sms-success');
-    if (submitBtn && phoneInput && form && success) {
-      submitBtn.addEventListener('click', function() {
-        var phone = phoneInput.value.trim();
-        if (phone.length < 9) {
-          phoneInput.focus();
-          return;
-        }
-        form.classList.add('hidden');
-        success.classList.remove('hidden');
-      });
-    }
-  })();
-</script>
