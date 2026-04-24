@@ -1,9 +1,8 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import OrderSummary from '@/components/OrderSummary.astro';
-import ProductCard from '@/components/ProductCard.astro';
 import { shopApi } from '@/lib/vendure';
-import { GET_ORDER_BY_CODE, SEARCH_PRODUCTS } from '@/lib/queries';
+import { GET_ORDER_BY_CODE } from '@/lib/queries';
 // Security note: orderByCode in Vendure Shop API requires active session —
 // it only returns orders belonging to the current customer/session, preventing IDOR.
 // Combined with 16-char alphanumeric codes, brute force is impractical.
@@ -29,22 +28,6 @@ if (!order) {
 const customer = order.customer;
 const address = order.shippingAddress;
 const shippingMethod = order.shippingLines?.[0]?.shippingMethod?.name;
-
-// Upsell
-const orderedProductIds = new Set(
-  order.lines?.map((l: any) => l.productVariant?.productId || l.productVariant?.product?.id).filter(Boolean) || []
-);
-
-let upsellProducts: any[] = [];
-try {
-  const searchData = await shopApi<any>(SEARCH_PRODUCTS, {
-    input: { take: 8, groupByProduct: true },
-  }, Astro.request);
-  const filtered = (searchData.search?.items || []).filter(
-    (item: any) => !orderedProductIds.has(item.productId)
-  );
-  upsellProducts = filtered.sort(() => Math.random() - 0.5).slice(0, 4);
-} catch {}
 ---
 
 <BaseLayout title="Dziękujemy za zamówienie" noindex>
@@ -131,25 +114,6 @@ try {
           </article>
         </div>
       </section>
-
-      {/* UPSELL */}
-      {upsellProducts.length > 0 && (
-        <section class="ty-section">
-          <h2 class="ty-h2">Może Ci się spodobać</h2>
-          <p class="ty-lede">Inne produkty z naszego sklepu</p>
-          <div class="ty-upsell-grid">
-            {upsellProducts.map((item: any) => (
-              <ProductCard
-                name={item.productName}
-                slug={item.slug}
-                imageUrl={item.productAsset?.preview}
-                priceWithTax={item.priceWithTax}
-                currencyCode={item.currencyCode}
-              />
-            ))}
-          </div>
-        </section>
-      )}
 
       {/* DETAILS — accordion */}
       <section class="ty-section">
