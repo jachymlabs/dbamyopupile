@@ -1058,11 +1058,11 @@ const jsonLd = {
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" slot="head" />
 
     {/* LCP preload — pierwsze zdjęcie galerii (najszybszy widoczny element) */}
-    {mainImage && (
+    {galleryImages[0] && (
       <link
         rel="preload"
         as="image"
-        href={buildAssetUrl(mainImage.preview, 'large')}
+        href={galleryImages[0].src}
         fetchpriority="high"
         slot="head"
       />
