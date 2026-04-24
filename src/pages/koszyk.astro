@@ -10,6 +10,18 @@ import type { VendureOrder } from '@/types/vendure';
 import { buildAssetUrl } from '@/lib/utils';
 
 // Handle POST actions (adjust quantity, remove)
+//
+// C3 (Sprint 1): legacy form POST flow — obsługuje TYLKO `action=adjust`
+// i `action=remove`. NIE ma tutaj `action=add`, więc auto-bonus sync
+// (WolnaMiska → Ebook) zachodzi wyłącznie przez /api/cart (POST), nie tędy.
+//
+// Ten kod redirectuje z powrotem do /koszyk, więc UX no-JS (form fallback)
+// pozostaje spójny. Auto-bonus jest re-evaluowany przy każdej mutacji
+// koszyka po stronie /api/cart/*.
+//
+// CSRF: ten endpoint to klasyczny <form method="POST"> renderowany
+// w tym samym dokumencie — chroniony SameSite=Lax cookie + brak narażenia
+// na cross-origin form submissions zmieniających stan poza koszykiem.
 if (Astro.request.method === 'POST') {
   let lastToken: string | undefined;
   try {

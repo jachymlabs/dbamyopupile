@@ -6,6 +6,7 @@ import {
   ORDER_FRAGMENT,
 } from '@/lib/vendure-api';
 import { isRateLimited } from '@/lib/rate-limit';
+import { assertSameOrigin } from '@/lib/security';
 
 const REMOVE = `mutation Remove($lineId: ID!) {
   removeOrderLine(orderLineId: $lineId) {
@@ -22,6 +23,10 @@ const TRIGGER_VARIANT_ID = '21'; // WolnaMiska
 const BONUS_VARIANT_ID = '23';   // Ebook gratis
 
 export const POST: APIRoute = async ({ request }) => {
+  // CSRF: secondary defense (primary is SameSite=Lax cookie).
+  const blocked = assertSameOrigin(request);
+  if (blocked) return blocked;
+
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown';
   if (isRateLimited(ip, 'cart-remove', 30, 60_000)) {
     return new Response(JSON.stringify({ error: 'Too many requests' }), { status: 429 });

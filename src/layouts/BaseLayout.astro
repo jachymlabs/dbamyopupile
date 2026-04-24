@@ -56,6 +56,44 @@ if (hasConsent && config.metaPixelId) {
     user_data: userData,
   }, config.metaDatasetId);
 }
+
+// ============================================================
+// H9 (Sprint 1): Content Security Policy — REPORT-ONLY
+// ============================================================
+// Pierwszy deploy: tylko report (nie blokuje), żeby zobaczyć jakie
+// zasoby aplikacja rzeczywiście ładuje. Patryk sprawdza w DevTools console
+// po 24h i przełączamy na enforced osobnym PR.
+//
+// Brak `report-uri` — nie mamy endpointu raportującego, więc violations
+// będą widoczne tylko w przeglądarce (console: "Content Security Policy
+// (Report Only): Refused to ..."). To wystarczy do diagnostyki.
+//
+// Hosty wpisane na podstawie obecnego stanu:
+//   - script: connect.facebook.net (pixel), geowidget.inpost.pl (geowidget SDK)
+//   - style/font: fonts.googleapis.com / fonts.gstatic.com
+//   - img: data:, https: (Vendure assets, Meta tracking pixel beacons)
+//   - frame: secure.payu.com (PayU widgets), geowidget.inpost.pl (mapa)
+//   - form-action: secure.payu.com (PayU redirect/PAYPO)
+//   - connect: facebook (CAPI/pixel beacon), inpost API, Vendure asset host
+//
+// 'unsafe-inline' w script-src i style-src konieczne — używamy
+// <script is:inline define:vars={...}> (checkout, layout) i Tailwind
+// generuje arbitrary inline styles. Future: nonce-based + remove unsafe.
+const csp = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' https://connect.facebook.net https://geowidget.inpost.pl",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' https://fonts.gstatic.com data:",
+  "img-src 'self' data: blob: https:",
+  "connect-src 'self' https://connect.facebook.net https://www.facebook.com https://geowidget.inpost.pl https://api-shipx-pl.easypack24.net",
+  "frame-src 'self' https://secure.payu.com https://secure.snd.payu.com https://merch-prod.snd.payu.com https://geowidget.inpost.pl",
+  "form-action 'self' https://secure.payu.com https://secure.snd.payu.com",
+  "frame-ancestors 'none'",
+  "base-uri 'self'",
+  "object-src 'none'",
+].join('; ');
+
+Astro.response.headers.set('Content-Security-Policy-Report-Only', csp);
 ---
 
 <!doctype html>

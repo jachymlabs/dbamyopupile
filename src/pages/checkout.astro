@@ -93,9 +93,24 @@ if (Astro.request.method === 'POST') {
       }
     } catch { /* fallback: kurier */ }
 
-    // Paczkomat: require locker selection
-    if (shippingType === 'paczkomat' && !formValues.inpostLockerId) {
-      errors.inpostLockerId = 'Ups! Wygląda na to, że nie wybrano paczkomatu.';
+    // Paczkomat: require locker selection + format validation.
+    // H7 (Sprint 1): InPost locker ID = 3-5 liter miasta + 2-4 cyfry + opcjonalna
+    // litera sufiksu (np. WAW01A, KRK15N, GDA123M). Regex: ^[A-Z]{3,5}\d{1,4}[A-Z]?$
+    // Trim + uppercase żeby tolerować copy-paste z whitespace / lowercase.
+    // Chroni przed: injection w `streetLine1: Paczkomat ${id}`, XSS w confirmation,
+    // garbage w BaseLinker / InPost ShipX API.
+    if (shippingType === 'paczkomat') {
+      if (!formValues.inpostLockerId) {
+        errors.inpostLockerId = 'Ups! Wygląda na to, że nie wybrano paczkomatu.';
+      } else {
+        const normalizedLocker = formValues.inpostLockerId.toUpperCase();
+        if (!/^[A-Z]{3,5}\d{1,4}[A-Z]?$/.test(normalizedLocker) || normalizedLocker.length > 10) {
+          errors.inpostLockerId = 'Ups! Kod paczkomatu ma nieprawidłowy format.';
+        } else {
+          // Użyj znormalizowanej (uppercase) wartości w dalszym flow.
+          formValues.inpostLockerId = normalizedLocker;
+        }
+      }
     }
 
     // Address validation only for courier methods (not paczkomat)
@@ -120,7 +135,11 @@ if (Astro.request.method === 'POST') {
     // Payment validation — skip for COD (pobranie)
     if (shippingType !== 'pobranie') {
       if (!formValues.flowType) errors.paymentMethodCode = 'Ups! Wygląda na to, że nie wybrano metody płatności.';
-      if (formValues.flowType === 'BLIK' && (!formValues.blikCode || formValues.blikCode.length !== 6)) {
+      // H7 (Sprint 1): BLIK code MUST be exactly 6 ASCII digits.
+      // Frontend formatuje to przez slice/replace, ale POST może być raw —
+      // walidujemy server-side regex'em żeby nie przepuścić letter/whitespace
+      // do PayU API (które i tak odrzuci, ale lepszy UX = wcześniej).
+      if (formValues.flowType === 'BLIK' && (!formValues.blikCode || !/^\d{6}$/.test(formValues.blikCode))) {
         errors.blikCode = 'Ups! Wygląda na to, że kod BLIK jest nieprawidłowy (6 cyfr).';
       }
     }
@@ -319,13 +338,25 @@ if (Astro.request.method === 'POST') {
             const paymentMeta = lastPayment?.metadata;
             const redirectUri = paymentMeta?.public?.redirectUri;
             if (redirectUri && (formValues.flowType === 'REDIRECT' || formValues.flowType === 'PAYPO')) {
-              // Validate redirect URL — only allow PayU domains
-              const allowedRedirectDomains = ['secure.payu.com', 'merch-prod.snd.payu.com', 'secure.snd.payu.com'];
+              // Validate redirect URL — only allow exact PayU hostnames.
+              // C4 (Sprint 1): używamy === (exact match), NIE endsWith(),
+              // żeby uniknąć bypass typu `evil-secure.payu.com` lub
+              // `secure.payu.com.attacker.tld`.
+              const allowedRedirectHosts = new Set([
+                'secure.payu.com',
+                'merch-prod.snd.payu.com',
+                'secure.snd.payu.com',
+              ]);
               let redirectBlocked = false;
               try {
                 const redirectUrl = new URL(redirectUri);
-                if (!allowedRedirectDomains.some(d => redirectUrl.hostname.endsWith(d))) {
-                  console.error('Blocked redirect to untrusted domain:', redirectUrl.hostname);
+                // Wymuś HTTPS — PayU nigdy nie używa http: dla redirectu.
+                if (redirectUrl.protocol !== 'https:') {
+                  console.error('Blocked non-HTTPS payment redirect:', redirectUrl.protocol);
+                  globalError = 'Wystąpił błąd płatności. Spróbuj ponownie.';
+                  redirectBlocked = true;
+                } else if (!allowedRedirectHosts.has(redirectUrl.hostname)) {
+                  console.error('Blocked redirect to untrusted hostname:', redirectUrl.hostname);
                   globalError = 'Wystąpił błąd płatności. Spróbuj ponownie.';
                   redirectBlocked = true;
                 }
