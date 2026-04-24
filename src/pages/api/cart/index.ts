@@ -6,6 +6,7 @@ import {
   ORDER_FRAGMENT,
 } from '@/lib/vendure-api';
 import { isRateLimited } from '@/lib/rate-limit';
+import { assertSameOrigin } from '@/lib/security';
 import { sendCAPIEvent, buildUserData, generateEventId } from '@/lib/meta-capi';
 import { getStoreConfig } from '@/lib/store-config';
 
@@ -39,6 +40,10 @@ export const GET: APIRoute = async ({ request }) => {
 };
 
 export const POST: APIRoute = async ({ request }) => {
+  // CSRF: secondary defense (primary is SameSite=Lax cookie).
+  const blocked = assertSameOrigin(request);
+  if (blocked) return blocked;
+
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown';
   if (isRateLimited(ip, 'cart-add', 30, 60_000)) {
     return new Response(JSON.stringify({ error: 'Too many requests' }), { status: 429 });

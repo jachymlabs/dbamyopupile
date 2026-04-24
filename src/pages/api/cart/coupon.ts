@@ -6,6 +6,7 @@ import {
   ORDER_FRAGMENT,
 } from '@/lib/vendure-api';
 import { isRateLimited } from '@/lib/rate-limit';
+import { assertSameOrigin } from '@/lib/security';
 
 const APPLY_COUPON = `mutation ApplyCouponCode($couponCode: String!) {
   applyCouponCode(couponCode: $couponCode) {
@@ -26,6 +27,10 @@ const REMOVE_COUPON = `mutation RemoveCouponCode($couponCode: String!) {
 
 /** POST: Apply coupon code */
 export const POST: APIRoute = async ({ request }) => {
+  // CSRF: secondary defense (primary is SameSite=Lax cookie).
+  const blocked = assertSameOrigin(request);
+  if (blocked) return blocked;
+
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown';
   if (isRateLimited(ip, 'coupon-apply', 10, 60_000)) {
     return new Response(JSON.stringify({ error: 'Too many requests' }), { status: 429 });
@@ -65,6 +70,10 @@ export const POST: APIRoute = async ({ request }) => {
 
 /** DELETE: Remove coupon code */
 export const DELETE: APIRoute = async ({ request }) => {
+  // CSRF: secondary defense (primary is SameSite=Lax cookie).
+  const blocked = assertSameOrigin(request);
+  if (blocked) return blocked;
+
   const token = getToken(request);
   let body: any;
   try {
