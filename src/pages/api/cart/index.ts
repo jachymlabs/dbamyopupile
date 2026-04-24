@@ -26,6 +26,43 @@ const TRANSITION_TO_ADDING_ITEMS = `mutation { transitionOrderToState(state: "Ad
 const TRIGGER_VARIANT_ID = '21'; // WolnaMiska
 const BONUS_VARIANT_ID = '23';   // Ebook 30 przepisów
 
+const REMOVE_LINE = `mutation RemoveLine($lineId: ID!) {
+  removeOrderLine(orderLineId: $lineId) { __typename ... on Order { id } }
+}`;
+const ADJUST_LINE = `mutation AdjustLine($lineId: ID!, $quantity: Int!) {
+  adjustOrderLine(orderLineId: $lineId, quantity: $quantity) {
+    __typename ... on Order { id }
+  }
+}`;
+
+// H1 (Sprint 2): per-token in-flight lock to serialize concurrent POST /api/cart
+// for the SAME session. Two rapid double-clicks (race window ~1ms) used to both
+// see `!hasBonus` and both add an ebook line — resulting in two free ebooks.
+//
+// Limitation: this Map is PER-INSTANCE on Vercel (serverless). Cross-instance
+// races are still theoretically possible but very unlikely in practice (Vercel
+// tends to route same-session requests through the same warm lambda).
+// Belt-and-suspenders: after adding the bonus we also DEDUPLICATE bonus lines
+// in the resulting order — that check is idempotent and corrects any stragglers
+// regardless of where they were created.
+const inFlightByToken = new Map<string, Promise<void>>();
+
+async function withTokenLock<T>(token: string | undefined, fn: () => Promise<T>): Promise<T> {
+  if (!token) return fn();
+  const prev = inFlightByToken.get(token);
+  let release!: () => void;
+  const next = new Promise<void>((resolve) => { release = resolve; });
+  inFlightByToken.set(token, prev ? prev.then(() => next) : next);
+  try {
+    if (prev) { try { await prev; } catch { /* ignore upstream */ } }
+    return await fn();
+  } finally {
+    release();
+    // Cleanup if we're still the head of the chain
+    if (inFlightByToken.get(token) === next) inFlightByToken.delete(token);
+  }
+}
+
 export const GET: APIRoute = async ({ request }) => {
   try {
     const token = getToken(request);
@@ -69,6 +106,22 @@ export const POST: APIRoute = async ({ request }) => {
     return buildResponse({ order: null, error: 'Quantity must be between 1 and 99' });
   }
 
+  // H1 (Sprint 2): serialize concurrent adds for the SAME session token to prevent
+  // double-add races (e.g. user double-clicks "Dodaj do koszyka").
+  return withTokenLock(token, () => addToCartHandler({ token, variantId, qty, request }));
+};
+
+async function addToCartHandler({
+  token,
+  variantId,
+  qty,
+  request,
+}: {
+  token: string | undefined;
+  variantId: string;
+  qty: number;
+  request: Request;
+}): Promise<Response> {
   try {
     let { data, newToken } = await vendureQuery(
       ADD_TO_CART,
@@ -115,6 +168,41 @@ export const POST: APIRoute = async ({ request }) => {
           }
         } catch { /* if bonus fails, keep original order */ }
       }
+
+      // H1 (Sprint 2) — IDEMPOTENT POST-CHECK: even with the per-token lock above,
+      // a cross-instance race could theoretically end with >1 bonus line OR a bonus
+      // line with quantity > 1. Normalize to exactly ONE bonus line of qty 1 whenever
+      // a trigger is present. Cheap (only fires when trigger present), self-healing.
+      if (hasTrigger) {
+        const bonusLines = (result.lines ?? []).filter(
+          (l: any) => l.productVariant?.id === BONUS_VARIANT_ID,
+        );
+        if (bonusLines.length > 1) {
+          // Keep first, remove the rest.
+          for (let i = 1; i < bonusLines.length; i++) {
+            try {
+              const r = await vendureQuery(REMOVE_LINE, { lineId: bonusLines[i].id }, activeToken);
+              activeToken = r.newToken || activeToken;
+              if (r.data?.removeOrderLine?.__typename === 'Order') {
+                // Refresh result to mirror the new state
+                result = (await vendureQuery(GET_ACTIVE_ORDER, {}, activeToken)).data?.activeOrder ?? result;
+              }
+            } catch { /* best-effort cleanup */ }
+          }
+        } else if (bonusLines.length === 1 && bonusLines[0].quantity > 1) {
+          try {
+            const r = await vendureQuery(
+              ADJUST_LINE,
+              { lineId: bonusLines[0].id, quantity: 1 },
+              activeToken,
+            );
+            activeToken = r.newToken || activeToken;
+            if (r.data?.adjustOrderLine?.__typename === 'Order') {
+              result = (await vendureQuery(GET_ACTIVE_ORDER, {}, activeToken)).data?.activeOrder ?? result;
+            }
+          } catch { /* best-effort */ }
+        }
+      }
     }
 
     // Ochrona: jeśli user próbuje dodać ebook bezpośrednio bez WolnaMiski,
@@ -148,13 +236,13 @@ export const POST: APIRoute = async ({ request }) => {
           },
         }, storeConfig.metaDatasetId);
       }
-      return buildResponse({ order: result }, newToken);
+      return buildResponse({ order: result }, activeToken);
     }
-    return buildResponse({ order: null, error: result?.message }, newToken);
+    return buildResponse({ order: null, error: result?.message }, activeToken);
   } catch (e: any) {
-    return new Response(JSON.stringify({ error: e.message }), {
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });
   }
-};
+}
