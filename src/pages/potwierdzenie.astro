@@ -115,13 +115,10 @@ const shippingMethod = order.shippingLines?.[0]?.shippingMethod?.name;
         </div>
       </section>
 
-      {/* DETAILS — accordion */}
+      {/* DETAILS — zawsze otwarte (nie accordion) */}
       <section class="ty-section">
-        <details class="ty-details">
-          <summary class="ty-details-summary">
-            <span>Szczegóły zamówienia</span>
-            <svg class="ty-details-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
-          </summary>
+        <h2 class="ty-h2">Szczegóły zamówienia</h2>
+        <div class="ty-details">
           <div class="ty-details-body">
             <div class="ty-details-grid">
               {customer && (
@@ -153,7 +150,7 @@ const shippingMethod = order.shippingLines?.[0]?.shippingMethod?.name;
               <OrderSummary order={order} />
             </div>
           </div>
-        </details>
+        </div>
       </section>
 
       {/* CTA */}
@@ -460,40 +457,14 @@ const shippingMethod = order.shippingLines?.[0]?.shippingMethod?.name;
     border: 1px solid var(--ty-rule);
     border-radius: var(--ty-radius);
     overflow: hidden;
-  }
-  .ty-details-summary {
-    list-style: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 18px 24px;
-    font-family: var(--ty-f-body);
-    font-weight: 600;
-    font-size: 15px;
-    color: var(--ty-navy);
-    background: var(--ty-ivory-2);
-    transition: background 200ms var(--ty-ease);
-  }
-  .ty-details-summary::-webkit-details-marker {
-    display: none;
-  }
-  .ty-details-summary:hover {
-    background: var(--ty-powder);
-  }
-  .ty-details-chevron {
-    width: 18px;
-    height: 18px;
-    color: var(--ty-navy);
-    transition: transform 200ms var(--ty-ease);
-  }
-  .ty-details[open] .ty-details-chevron {
-    transform: rotate(180deg);
+    margin-top: 28px;
   }
 
   .ty-details-body {
     padding: 24px;
-    border-top: 1px solid var(--ty-rule);
+  }
+  @media (min-width: 768px) {
+    .ty-details-body { padding: 32px; }
   }
 
   .ty-details-grid {
