@@ -319,13 +319,25 @@ if (Astro.request.method === 'POST') {
             const paymentMeta = lastPayment?.metadata;
             const redirectUri = paymentMeta?.public?.redirectUri;
             if (redirectUri && (formValues.flowType === 'REDIRECT' || formValues.flowType === 'PAYPO')) {
-              // Validate redirect URL — only allow PayU domains
-              const allowedRedirectDomains = ['secure.payu.com', 'merch-prod.snd.payu.com', 'secure.snd.payu.com'];
+              // Validate redirect URL — only allow exact PayU hostnames.
+              // C4 (Sprint 1): używamy === (exact match), NIE endsWith(),
+              // żeby uniknąć bypass typu `evil-secure.payu.com` lub
+              // `secure.payu.com.attacker.tld`.
+              const allowedRedirectHosts = new Set([
+                'secure.payu.com',
+                'merch-prod.snd.payu.com',
+                'secure.snd.payu.com',
+              ]);
               let redirectBlocked = false;
               try {
                 const redirectUrl = new URL(redirectUri);
-                if (!allowedRedirectDomains.some(d => redirectUrl.hostname.endsWith(d))) {
-                  console.error('Blocked redirect to untrusted domain:', redirectUrl.hostname);
+                // Wymuś HTTPS — PayU nigdy nie używa http: dla redirectu.
+                if (redirectUrl.protocol !== 'https:') {
+                  console.error('Blocked non-HTTPS payment redirect:', redirectUrl.protocol);
+                  globalError = 'Wystąpił błąd płatności. Spróbuj ponownie.';
+                  redirectBlocked = true;
+                } else if (!allowedRedirectHosts.has(redirectUrl.hostname)) {
+                  console.error('Blocked redirect to untrusted hostname:', redirectUrl.hostname);
                   globalError = 'Wystąpił błąd płatności. Spróbuj ponownie.';
                   redirectBlocked = true;
                 }
