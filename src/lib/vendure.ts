@@ -69,9 +69,30 @@ export async function shopApiRaw<T>(
   const json = await response.json() as { data: T; errors?: unknown[] };
 
   if (json.errors) {
-    const gqlError = (json.errors as any[])[0]?.message || 'GraphQL Error';
-    // Don't expose internal Vendure error details to callers
-    throw new Error(gqlError.length > 200 ? 'GraphQL Error' : gqlError);
+    // H8 (Sprint 2): NEVER leak raw Vendure / GraphQL error text to the caller —
+    // it has historically contained stack traces, internal field names, and even
+    // SQL fragments depending on Vendure's debug level. Log the full payload
+    // server-side and throw an opaque message that's safe to bubble up to UI.
+    const raw = json.errors;
+    if (import.meta.env.DEV || process.env.NODE_ENV !== 'production') {
+      console.error('[vendure] GraphQL error:', JSON.stringify(raw).slice(0, 2000));
+    } else {
+      // In prod, still log but truncate aggressively to avoid log bloat / PII spillover.
+      try {
+        const first = (raw as any[])[0];
+        console.error('[vendure] GraphQL error:', {
+          message: typeof first?.message === 'string' ? first.message.slice(0, 200) : 'unknown',
+          path: first?.path,
+          extensions: first?.extensions?.code,
+        });
+      } catch {
+        console.error('[vendure] GraphQL error: <unserializable>');
+      }
+    }
+    // Generic, user-safe error. Callers may catch and display their own message.
+    const err = new Error('Vendure request failed');
+    (err as any).isVendureError = true;
+    throw err;
   }
 
   // Extract new auth token from Vendure response
