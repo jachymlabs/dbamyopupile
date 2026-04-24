@@ -399,8 +399,8 @@ if (Astro.request.method === 'POST') {
             return redirectWithToken(`/checkout/blik-waiting?code=${paymentResponse.code}`, customerRaw.authToken);
           }
 
-          // COD or fallback — redirect to upsell interstitial (then confirmation)
-          return redirectWithToken(`/upsell?code=${paymentResponse.code}`, customerRaw.authToken);
+          // COD or fallback — direct to confirmation (upsell interstitial disabled)
+          return redirectWithToken(`/potwierdzenie?code=${paymentResponse.code}`, customerRaw.authToken);
         }
       }
     }
