@@ -5,7 +5,7 @@ import {
   buildResponse,
   ORDER_FRAGMENT,
 } from '@/lib/vendure-api';
-import { isRateLimited } from '@/lib/rate-limit';
+import { isRateLimitedAsync } from '@/lib/rate-limit';
 import { assertSameOrigin } from '@/lib/security';
 
 const APPLY_COUPON = `mutation ApplyCouponCode($couponCode: String!) {
@@ -32,7 +32,7 @@ export const POST: APIRoute = async ({ request }) => {
   if (blocked) return blocked;
 
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown';
-  if (isRateLimited(ip, 'coupon-apply', 10, 60_000)) {
+  if (await isRateLimitedAsync(ip, 'coupon-apply', 10, 60_000)) {
     return new Response(JSON.stringify({ error: 'Too many requests' }), { status: 429 });
   }
 

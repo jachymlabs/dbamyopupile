@@ -4,7 +4,7 @@ import {
   vendureQuery,
   buildResponse,
 } from '@/lib/vendure-api';
-import { isRateLimited } from '@/lib/rate-limit';
+import { isRateLimitedAsync } from '@/lib/rate-limit';
 
 const ACTIVE_ORDER_PAYMENTS = `query {
   activeOrder {
@@ -38,7 +38,7 @@ const ORDER_BY_CODE_PAYMENTS = `query OrderByCode($code: String!) {
 
 export const GET: APIRoute = async ({ request }) => {
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown';
-  if (isRateLimited(ip, 'payment-status', 30, 60_000)) {
+  if (await isRateLimitedAsync(ip, 'payment-status', 30, 60_000)) {
     return new Response(JSON.stringify({ status: 'RATE_LIMITED' }), { status: 429 });
   }
 

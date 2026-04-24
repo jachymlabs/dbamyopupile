@@ -1,9 +1,9 @@
 import type { APIRoute } from 'astro';
-import { isRateLimited } from '@/lib/rate-limit';
+import { isRateLimitedAsync } from '@/lib/rate-limit';
 
 export const GET: APIRoute = async ({ request, url }) => {
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown';
-  if (isRateLimited(ip, 'postal-lookup', 20, 60_000)) {
+  if (await isRateLimitedAsync(ip, 'postal-lookup', 20, 60_000)) {
     return new Response(JSON.stringify({ cities: [] }), {
       status: 429,
       headers: { 'Content-Type': 'application/json' },
