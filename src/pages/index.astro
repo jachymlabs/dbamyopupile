@@ -16,7 +16,7 @@ try {
 }
 
 const firstVariant = product?.variants?.[0];
-const priceWithTax = firstVariant?.priceWithTax ?? 5999;
+const priceWithTax = firstVariant?.priceWithTax ?? 7999;
 const priceFormatted = new Intl.NumberFormat('pl-PL', {
   style: 'currency',
   currency: 'PLN',
@@ -181,10 +181,8 @@ const heroImageUrl = mainImage ? buildAssetUrl(mainImage.preview, 'large') : '/p
             <div class="home-pc-priceblock">
               <div class="home-pc-price-row">
                 <span class="home-pc-price">{priceFormatted}</span>
-                <span class="home-pc-price-old">89,99 zł</span>
-                <span class="home-pc-save">Oszczędzasz 30 zł</span>
               </div>
-              <p class="home-pc-omnibus">Najniższa cena z 30 dni przed obniżką: 59,99 zł</p>
+              <p class="home-pc-omnibus">Najniższa cena z 30 dni przed obniżką: 79,99 zł</p>
             </div>
 
             <a href="/produkty/wolnamiska" class="btn btn-primary">

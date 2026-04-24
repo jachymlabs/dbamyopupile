@@ -98,7 +98,9 @@
       .wm-price-row{display:flex;align-items:baseline;flex-wrap:wrap;gap:14px}
       .wm-price{font-family:var(--h-f-display);font-weight:700;font-size:clamp(30px, 3.5vw, 40px);line-height:1;letter-spacing:-0.025em;color:var(--h-navy)}
       .wm-price-old{font-family:var(--h-f-body);font-weight:500;font-size:18px;color:var(--h-ink-3);text-decoration:line-through}
+      .wm-price-old:empty{display:none}
       .wm-price-save{font-family:var(--h-f-body);font-weight:700;font-size:11.5px;letter-spacing:0.05em;text-transform:uppercase;color:#ffffff;background:var(--h-navy);padding:5px 10px;border-radius:6px}
+      .wm-price-save:empty{display:none}
       .wm-omnibus{font-family:var(--h-f-body);font-weight:400;font-size:11px;color:var(--h-ink-3);margin-top:8px;line-height:1.4}
 
       /* USP bullets */
