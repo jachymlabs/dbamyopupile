@@ -444,6 +444,30 @@ if (!order || !order.lines?.length) {
   return Astro.redirect('/koszyk');
 }
 
+// H11 (Sprint 2): InitiateCheckout — server CAPI + browser Pixel share the SAME
+// event_id so Meta deduplicates the pair. Without this, both events count
+// independently and inflate the InitiateCheckout metric ~2x.
+const initiateCheckoutEventId = generateEventId();
+const icCookies = Astro.request.headers.get('cookie') || '';
+if (icCookies.includes('cookie_consent=accepted')) {
+  const icUserData = await buildUserData(Astro.request);
+  sendCAPIEvent({
+    event_name: 'InitiateCheckout',
+    event_time: Math.floor(Date.now() / 1000),
+    event_id: initiateCheckoutEventId,
+    event_source_url: Astro.url.href,
+    action_source: 'website',
+    user_data: icUserData,
+    custom_data: {
+      value: order ? order.totalWithTax / 100 : 0,
+      currency: 'PLN',
+      num_items: order ? order.totalQuantity : 0,
+      content_type: 'product',
+      content_ids: order?.lines?.map((l: any) => l.productVariant?.sku).filter(Boolean) || [],
+    },
+  }, storeConfig.metaDatasetId);
+}
+
 // InitiateCheckout pixel data
 const checkoutValue = order ? order.totalWithTax / 100 : 0;
 const checkoutNumItems = order ? order.totalQuantity : 0;
@@ -850,17 +874,21 @@ const hasErrors = Object.keys(errors).length > 0 || !!globalError;
 {/* InPost Geowidget SDK */}
 <script is:inline src="https://geowidget.inpost.pl/inpost-geowidget.js" defer></script>
 
-{/* InitiateCheckout pixel event */}
+{/* InitiateCheckout pixel event — eventID matches CAPI for dedupe (H11) */}
 <script
   is:inline
-  define:vars={{ icValue: checkoutValue, icNumItems: checkoutNumItems }}
+  define:vars={{
+    icValue: checkoutValue,
+    icNumItems: checkoutNumItems,
+    icEventId: initiateCheckoutEventId,
+  }}
 >
   if (typeof fbq !== 'undefined') {
     fbq('track', 'InitiateCheckout', {
       value: icValue,
       currency: 'PLN',
       num_items: icNumItems,
-    });
+    }, { eventID: icEventId });
   }
 </script>
 
