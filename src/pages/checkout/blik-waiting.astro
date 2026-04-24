@@ -79,7 +79,7 @@ if (!code) {
 
     function checkStatus() {
       if (done) return;
-      fetch('/api/payment/status?code=' + orderCode)
+      fetch('/api/payment/status?code=' + orderCode, { credentials: 'include' })
         .then(function(r) { return r.json(); })
         .then(function(data) {
           if (data.status === 'COMPLETED') {

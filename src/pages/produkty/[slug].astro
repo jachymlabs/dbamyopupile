@@ -447,7 +447,7 @@ const firstVariant = product?.variants?.[0];
           const res = await fetch('/api/cart', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            credentials: 'same-origin',
+            credentials: 'include',
             body: JSON.stringify({ variantId, quantity }),
           });
 

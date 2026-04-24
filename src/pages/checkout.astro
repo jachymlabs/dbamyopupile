@@ -1003,7 +1003,9 @@ const hasErrors = Object.keys(errors).length > 0 || !!globalError;
     lastLookedUpCode = code;
 
     try {
-      const res = await fetch(`/api/postal-lookup?code=${encodeURIComponent(code)}`);
+      const res = await fetch(`/api/postal-lookup?code=${encodeURIComponent(code)}`, {
+        credentials: 'include',
+      });
       const data = await res.json();
       const cities: string[] = data.cities || [];
 

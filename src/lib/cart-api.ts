@@ -4,7 +4,11 @@ async function cartFetch(url: string, options?: RequestInit) {
   const res = await fetch(url, {
     ...options,
     headers: { 'Content-Type': 'application/json', ...options?.headers },
-    credentials: 'same-origin',
+    // H6 (Sprint 2): use 'include' (not 'same-origin') so the vendure-auth-token
+    // cookie is reliably sent in Safari + ITP contexts even if PUBLIC_COOKIE_DOMAIN
+    // ever puts the storefront and API on different subdomains. Endpoints stay
+    // CSRF-protected via Origin check + SameSite=Lax cookie.
+    credentials: 'include',
   });
   if (!res.ok) throw new Error('Cart API error');
   return res.json();
