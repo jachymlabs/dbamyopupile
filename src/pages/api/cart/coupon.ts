@@ -5,8 +5,8 @@ import {
   buildResponse,
   ORDER_FRAGMENT,
 } from '@/lib/vendure-api';
-import { isRateLimitedAsync } from '@/lib/rate-limit';
 import { assertSameOrigin } from '@/lib/security';
+import { withCartGuards, parseCartBody } from '@/lib/cart-helpers';
 
 const APPLY_COUPON = `mutation ApplyCouponCode($couponCode: String!) {
   applyCouponCode(couponCode: $couponCode) {
@@ -25,74 +25,61 @@ const REMOVE_COUPON = `mutation RemoveCouponCode($couponCode: String!) {
   }
 }`;
 
+function validateCouponCode(value: unknown): { code: string } | { error: Response } {
+  if (!value || typeof value !== 'string') {
+    return { error: buildResponse({ order: null, error: 'Kod rabatowy jest wymagany' }) };
+  }
+  if (value.length > 50) {
+    return { error: buildResponse({ order: null, error: 'Kod rabatowy jest za dlugi' }) };
+  }
+  return { code: value.trim() };
+}
+
 /** POST: Apply coupon code */
-export const POST: APIRoute = async ({ request }) => {
-  // CSRF: secondary defense (primary is SameSite=Lax cookie).
-  const blocked = assertSameOrigin(request);
-  if (blocked) return blocked;
+export const POST: APIRoute = withCartGuards(
+  { rateLimitKey: 'coupon-apply', rateLimitMax: 10 },
+  async ({ request }) => {
+    const token = getToken(request);
+    const parsed = await parseCartBody<{ couponCode?: unknown }>(request);
+    if ('error' in parsed) return parsed.error;
 
-  const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown';
-  if (await isRateLimitedAsync(ip, 'coupon-apply', 10, 60_000)) {
-    return new Response(JSON.stringify({ error: 'Too many requests' }), { status: 429 });
-  }
+    const validated = validateCouponCode(parsed.data.couponCode);
+    if ('error' in validated) return validated.error;
 
-  const token = getToken(request);
-  let body: any;
-  try {
-    body = await request.json();
-  } catch {
-    return buildResponse({ order: null, error: 'Invalid request body' });
-  }
-  const { couponCode } = body;
+    const { data, newToken } = await vendureQuery(
+      APPLY_COUPON,
+      { couponCode: validated.code },
+      token,
+    );
 
-  if (!couponCode || typeof couponCode !== 'string') {
-    return buildResponse({ order: null, error: 'Kod rabatowy jest wymagany' });
-  }
-  if (couponCode.length > 50) {
-    return buildResponse({ order: null, error: 'Kod rabatowy jest za dlugi' });
-  }
+    const result = data?.applyCouponCode;
+    if (result?.__typename === 'Order') {
+      return buildResponse({ order: result }, newToken);
+    }
+    return buildResponse(
+      { order: null, error: result?.message || 'Nieprawidlowy kod rabatowy' },
+      newToken,
+    );
+  },
+);
 
-  const { data, newToken } = await vendureQuery(
-    APPLY_COUPON,
-    { couponCode: couponCode.trim() },
-    token,
-  );
-
-  const result = data?.applyCouponCode;
-  if (result?.__typename === 'Order') {
-    return buildResponse({ order: result }, newToken);
-  }
-  return buildResponse(
-    { order: null, error: result?.message || 'Nieprawidlowy kod rabatowy' },
-    newToken,
-  );
-};
-
-/** DELETE: Remove coupon code */
+/** DELETE: Remove coupon code (bez rate-limit — to czysta cleanup operacja
+ * po stronie usera; brak ataku surface, brak side effects poza odjęciem rabatu). */
 export const DELETE: APIRoute = async ({ request }) => {
   // CSRF: secondary defense (primary is SameSite=Lax cookie).
   const blocked = assertSameOrigin(request);
   if (blocked) return blocked;
 
   const token = getToken(request);
-  let body: any;
-  try {
-    body = await request.json();
-  } catch {
-    return buildResponse({ order: null, error: 'Invalid request body' });
-  }
-  const { couponCode } = body;
+  const parsed = await parseCartBody<{ couponCode?: unknown }>(request);
+  if ('error' in parsed) return parsed.error;
 
-  if (!couponCode || typeof couponCode !== 'string') {
-    return buildResponse({ order: null, error: 'Kod rabatowy jest wymagany' });
-  }
-  if (couponCode.length > 50) {
-    return buildResponse({ order: null, error: 'Kod rabatowy jest za dlugi' });
-  }
+  const validated = validateCouponCode(parsed.data.couponCode);
+  if ('error' in validated) return validated.error;
 
   const { data, newToken } = await vendureQuery(
     REMOVE_COUPON,
-    { couponCode: couponCode.trim() },
+    { couponCode: validated.code },
     token,
   );
 

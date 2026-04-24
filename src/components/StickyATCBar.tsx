@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { addToCart } from '../lib/cart-api';
+import { getCartState } from '../lib/cart-store';
 
 interface Props {
   productName: string;
@@ -25,6 +26,7 @@ export default function StickyATCBar({
   const [visible, setVisible] = useState(false);
   const [adding, setAdding] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [bundleQty, setBundleQty] = useState(1);
   const [overridePrice, setOverridePrice] = useState<string | null>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -79,8 +81,17 @@ export default function StickyATCBar({
 
   const handleAdd = async () => {
     setAdding(true);
+    setError(null);
     await addToCart(variantId, bundleQty);
     setAdding(false);
+    // M14: addToCart cichło na network fail (cart-api error: null) i pokazywaliśmy
+    // "Dodano" mimo niepowodzenia. Teraz sprawdzamy cart-store.error po await.
+    const cartErr = getCartState().error;
+    if (cartErr) {
+      setError(cartErr);
+      setTimeout(() => setError(null), 4000);
+      return;
+    }
     setSuccess(true);
     setTimeout(() => setSuccess(false), 1800);
   };
@@ -146,7 +157,7 @@ export default function StickyATCBar({
           disabled={adding || success}
           className="shrink-0 inline-flex items-center justify-center gap-2 transition-all"
           style={{
-            background: success ? '#16A34A' : '#1E3A5F',
+            background: error ? '#DC2626' : success ? '#16A34A' : '#1E3A5F',
             color: '#ffffff',
             fontFamily: 'Inter, system-ui, sans-serif',
             fontWeight: 700,
@@ -160,10 +171,21 @@ export default function StickyATCBar({
             cursor: adding ? 'wait' : 'pointer',
             border: 'none',
           }}
-          onMouseEnter={(e) => { if (!adding && !success) (e.currentTarget as HTMLButtonElement).style.background = '#152C48'; }}
-          onMouseLeave={(e) => { if (!adding && !success) (e.currentTarget as HTMLButtonElement).style.background = '#1E3A5F'; }}
+          onMouseEnter={(e) => { if (!adding && !success && !error) (e.currentTarget as HTMLButtonElement).style.background = '#152C48'; }}
+          onMouseLeave={(e) => { if (!adding && !success && !error) (e.currentTarget as HTMLButtonElement).style.background = '#1E3A5F'; }}
+          aria-label={error ? error : undefined}
+          title={error || undefined}
         >
-          {success ? (
+          {error ? (
+            <>
+              <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              <span>Błąd — spróbuj ponownie</span>
+            </>
+          ) : success ? (
             <>
               <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="20 6 9 17 4 12" />

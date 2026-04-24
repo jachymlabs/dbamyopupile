@@ -9,6 +9,7 @@ import { isRateLimitedAsync } from '@/lib/rate-limit';
 import { assertSameOrigin } from '@/lib/security';
 import { sendCAPIEvent, buildUserData, generateEventId } from '@/lib/meta-capi';
 import { getStoreConfig } from '@/lib/store-config';
+import { TRIGGER_VARIANT_ID, BONUS_VARIANT_ID } from '@/lib/cart-helpers';
 
 const GET_ACTIVE_ORDER = `query { activeOrder { ${ORDER_FRAGMENT} } }`;
 
@@ -22,9 +23,9 @@ const ADD_TO_CART = `mutation AddToCart($variantId: ID!, $quantity: Int!) {
 
 const TRANSITION_TO_ADDING_ITEMS = `mutation { transitionOrderToState(state: "AddingItems") { __typename ... on Order { id state } ... on OrderStateTransitionError { errorCode message } } }`;
 
-// Auto-add config: WolnaMiska variant 21 → dorzuć Ebook variant 23 (cena 0 dzięki promocji)
-const TRIGGER_VARIANT_ID = '21'; // WolnaMiska
-const BONUS_VARIANT_ID = '23';   // Ebook 30 przepisów
+// Variant ID stałe (TRIGGER_VARIANT_ID = WolnaMiska, BONUS_VARIANT_ID = Ebook)
+// importowane z @/lib/cart-helpers — single source of truth (były duplikowane
+// w index.ts + remove.ts przed Sprint 3 refactor).
 
 const REMOVE_LINE = `mutation RemoveLine($lineId: ID!) {
   removeOrderLine(orderLineId: $lineId) { __typename ... on Order { id } }
