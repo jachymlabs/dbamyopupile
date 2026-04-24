@@ -15,6 +15,8 @@ const ADJUST = `mutation Adjust($lineId: ID!, $quantity: Int!) {
   }
 }`;
 
+const TRANSITION_TO_ADDING_ITEMS = `mutation { transitionOrderToState(state: "AddingItems") { __typename ... on Order { id state } ... on OrderStateTransitionError { errorCode message } } }`;
+
 export const POST: APIRoute = async ({ request }) => {
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown';
   if (isRateLimited(ip, 'cart-adjust', 30, 60_000)) {
@@ -42,15 +44,28 @@ export const POST: APIRoute = async ({ request }) => {
     return buildResponse({ order: null, error: 'Quantity must be between 1 and 99' });
   }
 
-  const { data, newToken } = await vendureQuery(
+  let { data, newToken } = await vendureQuery(
     ADJUST,
     { lineId, quantity: qty },
     token,
   );
 
-  const result = data?.adjustOrderLine;
-  if (result?.__typename === 'Order') {
-    return buildResponse({ order: result }, newToken);
+  let result = data?.adjustOrderLine;
+  let activeToken = newToken || token;
+
+  // Order utknal w stanie != AddingItems (np. po nieudanym checkout) — wymus reset i retry
+  if (result?.__typename === 'OrderModificationError') {
+    const reset = await vendureQuery(TRANSITION_TO_ADDING_ITEMS, {}, activeToken);
+    activeToken = reset.newToken || activeToken;
+    if (reset.data?.transitionOrderToState?.__typename === 'Order') {
+      const retry = await vendureQuery(ADJUST, { lineId, quantity: qty }, activeToken);
+      activeToken = retry.newToken || activeToken;
+      result = retry.data?.adjustOrderLine;
+    }
   }
-  return buildResponse({ order: null, error: result?.message }, newToken);
+
+  if (result?.__typename === 'Order') {
+    return buildResponse({ order: result }, activeToken);
+  }
+  return buildResponse({ order: null, error: result?.message }, activeToken);
 };

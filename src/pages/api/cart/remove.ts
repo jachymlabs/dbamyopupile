@@ -15,6 +15,8 @@ const REMOVE = `mutation Remove($lineId: ID!) {
   }
 }`;
 
+const TRANSITION_TO_ADDING_ITEMS = `mutation { transitionOrderToState(state: "AddingItems") { __typename ... on Order { id state } ... on OrderStateTransitionError { errorCode message } } }`;
+
 // Auto-bonus: usuwamy ebooka jeśli WolnaMiska zniknęła z koszyka
 const TRIGGER_VARIANT_ID = '21'; // WolnaMiska
 const BONUS_VARIANT_ID = '23';   // Ebook gratis
@@ -42,12 +44,23 @@ export const POST: APIRoute = async ({ request }) => {
     return buildResponse({ order: null, error: 'Invalid lineId' });
   }
 
-  const { data, newToken } = await vendureQuery(REMOVE, { lineId }, token);
+  let { data, newToken } = await vendureQuery(REMOVE, { lineId }, token);
 
   let result = data?.removeOrderLine;
   // Zachowaj oryginalny token jako fallback, żeby drugi call nie trafił
   // do nowej sesji (ebook usuwany z innego koszyka)
   let activeToken = newToken || token;
+
+  // Order utknal w stanie != AddingItems (np. po nieudanym checkout) — wymus reset i retry
+  if (result?.__typename === 'OrderModificationError') {
+    const reset = await vendureQuery(TRANSITION_TO_ADDING_ITEMS, {}, activeToken);
+    activeToken = reset.newToken || activeToken;
+    if (reset.data?.transitionOrderToState?.__typename === 'Order') {
+      const retry = await vendureQuery(REMOVE, { lineId }, activeToken);
+      activeToken = retry.newToken || activeToken;
+      result = retry.data?.removeOrderLine;
+    }
+  }
 
   // Auto-remove ebook gdy WolnaMiska zniknęła
   if (result?.__typename === 'Order') {

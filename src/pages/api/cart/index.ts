@@ -19,6 +19,8 @@ const ADD_TO_CART = `mutation AddToCart($variantId: ID!, $quantity: Int!) {
   }
 }`;
 
+const TRANSITION_TO_ADDING_ITEMS = `mutation { transitionOrderToState(state: "AddingItems") { __typename ... on Order { id state } ... on OrderStateTransitionError { errorCode message } } }`;
+
 // Auto-add config: WolnaMiska variant 21 → dorzuć Ebook variant 23 (cena 0 dzięki promocji)
 const TRIGGER_VARIANT_ID = '21'; // WolnaMiska
 const BONUS_VARIANT_ID = '23';   // Ebook 30 przepisów
@@ -63,7 +65,7 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   try {
-    const { data, newToken } = await vendureQuery(
+    let { data, newToken } = await vendureQuery(
       ADD_TO_CART,
       { variantId, quantity: qty },
       token,
@@ -74,6 +76,17 @@ export const POST: APIRoute = async ({ request }) => {
     // Zachowujemy oryginalny token jako fallback — inaczej drugi call
     // trafia do NOWEJ anonimowej sesji i koszyk zawiera tylko bonus item.
     let activeToken = newToken || token;
+
+    // Order utknal w stanie != AddingItems (np. po nieudanym checkout) — wymus reset i retry
+    if (result?.__typename === 'OrderModificationError') {
+      const reset = await vendureQuery(TRANSITION_TO_ADDING_ITEMS, {}, activeToken);
+      activeToken = reset.newToken || activeToken;
+      if (reset.data?.transitionOrderToState?.__typename === 'Order') {
+        const retry = await vendureQuery(ADD_TO_CART, { variantId, quantity: qty }, activeToken);
+        activeToken = retry.newToken || activeToken;
+        result = retry.data?.addItemToOrder;
+      }
+    }
 
     // Auto-add Ebook gdy w koszyku jest WolnaMiska i ebooka jeszcze nie ma
     if (result?.__typename === 'Order') {
