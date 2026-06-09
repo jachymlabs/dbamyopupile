@@ -140,40 +140,12 @@
       .wm-bundle-card.popular{border-color:oklch(0.30 0.06 255 / 0.35)}
       .wm-bundle-card.popular.active{border-color:var(--h-navy)}
 
-      /* Bryza — zestawy: inline badge'e w nazwie (NIE absolutne jak .wm-bundle-badge) */
-      .wm-bundle-tag{display:inline-block;margin-left:8px;background:oklch(0.85 0.055 235 / 0.30);color:var(--h-navy);font-family:var(--h-f-body);font-weight:700;font-size:10px;letter-spacing:0.04em;text-transform:uppercase;padding:3px 8px;border-radius:999px;line-height:1.3;white-space:nowrap;vertical-align:middle}
-      .wm-bundle-reco{border-color:oklch(0.30 0.06 255 / 0.40)}
-      .wm-bundle-old{font-family:var(--h-f-body);font-weight:500;font-size:13px;color:var(--h-ink-3);text-decoration:line-through;line-height:1.1;white-space:nowrap}
-      .wm-bundle-save{font-family:var(--h-f-body);font-weight:700;font-size:11.5px;color:oklch(0.52 0.13 150);line-height:1.2;white-space:nowrap}
-
       @media(max-width:520px){
         .wm-bundle-card{padding:14px 14px;gap:11px}
         .wm-bundle-name{font-size:15.5px}
         .wm-bundle-meta{font-size:12.5px}
         .wm-bundle-price{font-size:18px}
         .wm-bundle-perunit{font-size:11.5px}
-        .wm-bundle-tag{font-size:9px;padding:2px 6px;margin-left:6px}
-        .wm-bundle-old{font-size:12px}
-      }
-
-      /* Bryza — selektory koloru per sztuka */
-      .wm-color-picker{display:flex;flex-direction:column;gap:8px;margin-top:2px}
-      .wm-color-picker:empty{display:none}
-      .wm-color-head{font-family:var(--h-f-body);font-weight:600;font-size:13px;letter-spacing:0.03em;text-transform:uppercase;color:var(--h-ink);margin-bottom:2px}
-      .wm-color-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;background:var(--h-white);border:1.5px solid var(--h-rule);border-radius:12px}
-      .wm-color-label{font-family:var(--h-f-body);font-weight:600;font-size:14px;color:var(--h-ink);white-space:nowrap}
-      .wm-color-opts{display:flex;gap:8px}
-      .wm-color-btn{display:inline-flex;align-items:center;gap:7px;padding:8px 14px;background:var(--h-white);border:1.5px solid var(--h-rule);border-radius:10px;font-family:var(--h-f-body);font-weight:600;font-size:13.5px;color:var(--h-ink);cursor:pointer;transition:all 160ms var(--h-ease)}
-      .wm-color-btn:hover{border-color:oklch(0.30 0.06 255 / 0.5)}
-      .wm-color-btn.active{border-color:var(--h-navy);background:linear-gradient(180deg, oklch(0.85 0.055 235 / 0.22) 0%, oklch(0.85 0.055 235 / 0.10) 100%);color:var(--h-navy)}
-      .wm-color-dot{flex-shrink:0;width:16px;height:16px;border-radius:50%;border:1.5px solid oklch(0 0 0 / 0.18)}
-      .wm-color-dot--green{background:oklch(0.62 0.13 150)}
-      .wm-color-dot--black{background:oklch(0.22 0 0)}
-
-      @media(max-width:520px){
-        .wm-color-row{flex-direction:column;align-items:stretch;gap:8px;padding:10px 12px}
-        .wm-color-opts{width:100%}
-        .wm-color-btn{flex:1;justify-content:center}
       }
 
       /* ATC button — solid Deep Navy, only darker on hover */
