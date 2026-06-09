@@ -128,6 +128,8 @@ type Bundle = {
   perUnit: string;
   badges: string[];
   recommended?: boolean;
+  cornerBadge?: string; // rogowy badge nad kartą (Goli-style)
+  freeShipping?: boolean; // osobna linia "Darmowa dostawa" z checkmarkiem
 };
 // Cena z Vendure — format PLN (dynamiczna). MUSI być przed `bundles` (const = TDZ, nie hoistuje się).
 const formatPLN = (cents: number) =>
@@ -154,8 +156,10 @@ const bundles: Bundle[] = [
     oldPrice: formatPLN(unitPrice * 3),
     save: `Oszczędzasz ${formatPLN(unitPrice * 3 - 11900)}`,
     perUnit: `${formatPLN(Math.round(11900 / 3))} / szt`,
-    badges: ['Darmowa dostawa'],
+    badges: [],
     recommended: true,
+    cornerBadge: 'NAJPOPULARNIEJSZE',
+    freeShipping: true,
   },
   {
     key: 'b3',
@@ -167,7 +171,9 @@ const bundles: Bundle[] = [
     oldPrice: formatPLN(unitPrice * 5),
     save: `Oszczędzasz ${formatPLN(unitPrice * 5 - 17900)}`,
     perUnit: `${formatPLN(Math.round(17900 / 5))} / szt`,
-    badges: ['Darmowa dostawa', 'Najtaniej za sztukę'],
+    badges: [],
+    cornerBadge: 'NAJTANIEJ ZA SZTUKĘ',
+    freeShipping: true,
   },
 ];
 
@@ -326,12 +332,13 @@ const jsonLd = {
               <div class="wm-bundles" id="wm-bundle-list" role="radiogroup" aria-label="Wybierz zestaw">
                 {bundles.map((b, i) => (
                   <label
-                    class:list={['wm-bundle-card', i === 1 && 'active', b.recommended && 'wm-bundle-reco']}
+                    class:list={['wm-bundle-card', i === 1 && 'active', b.recommended && 'wm-bundle-reco', b.cornerBadge && 'has-corner']}
                     data-bundle={b.key}
                     data-units={String(b.units)}
                     data-coupon={b.coupon || ''}
                     data-total={String(b.total)}
                   >
+                    {b.cornerBadge && <span class="wm-bundle-corner">{b.cornerBadge}</span>}
                     <input
                       type="radio"
                       name="bundle-choice"
@@ -342,16 +349,21 @@ const jsonLd = {
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                     </div>
                     <div class="wm-bundle-main">
-                      <div class="wm-bundle-name">
-                        {b.title}
-                        {b.badges.map((bd) => <span class="wm-bundle-tag">{bd}</span>)}
+                      <div class="wm-bundle-name">{b.title}</div>
+                      <div class="wm-bundle-meta">
+                        {b.oldPrice && <span class="wm-bundle-old">{b.oldPrice}</span>}
+                        <span class="wm-bundle-perunit-inline">{b.perUnit}</span>
                       </div>
-                      <div class="wm-bundle-meta">{b.perUnit}</div>
+                      {b.save && <div class="wm-bundle-save">{b.save}</div>}
+                      {b.freeShipping && (
+                        <div class="wm-bundle-freeship">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                          <span>Darmowa dostawa</span>
+                        </div>
+                      )}
                     </div>
                     <div class="wm-bundle-pricing">
-                      {b.oldPrice && <div class="wm-bundle-old">{b.oldPrice}</div>}
                       <div class="wm-bundle-price">{b.priceLabel}</div>
-                      {b.save && <div class="wm-bundle-save">{b.save}</div>}
                     </div>
                   </label>
                 ))}
@@ -1213,20 +1225,27 @@ const jsonLd = {
         for (let i = 0; i < units; i++) next[i] = colors[i] || 'green';
         colors = next;
 
+        picker.innerHTML = '';
+
         if (units <= 1) {
-          // Pojedynczy: jeden wybór, bez numeracji "Sztuka N"
-          picker.innerHTML = '';
+          // Pojedynczy: nagłówek "Wybierz kolor" + jeden rząd swatchy, bez numeracji
+          const head = document.createElement('div');
+          head.className = 'wm-color-head';
+          head.innerHTML = '<span>Wybierz kolor</span>';
+          picker.appendChild(head);
           const row = document.createElement('div');
           row.className = 'wm-color-row';
           row.innerHTML =
-            '<span class="wm-color-label">Wybierz kolor</span>' +
+            '<span class="wm-color-label">Kolor</span>' +
             colorButtons(0);
           picker.appendChild(row);
         } else {
-          picker.innerHTML = '';
+          // Zestaw: nagłówek z licznikiem (N/N) + rząd swatchy per sztuka
           const head = document.createElement('div');
           head.className = 'wm-color-head';
-          head.textContent = 'Wybierz kolor każdej sztuki';
+          head.innerHTML =
+            '<span>Wybierz kolor każdej sztuki</span>' +
+            '<span class="wm-color-count">(' + units + '/' + units + ')</span>';
           picker.appendChild(head);
           for (let i = 0; i < units; i++) {
             const row = document.createElement('div');
@@ -1244,10 +1263,10 @@ const jsonLd = {
         const sel = colors[idx] || 'green';
         return (
           '<div class="wm-color-opts" data-idx="' + idx + '">' +
-          '<button type="button" class="wm-color-btn' + (sel === 'green' ? ' active' : '') + '" data-color="green">' +
-          '<span class="wm-color-dot wm-color-dot--green"></span>Zielony</button>' +
-          '<button type="button" class="wm-color-btn' + (sel === 'black' ? ' active' : '') + '" data-color="black">' +
-          '<span class="wm-color-dot wm-color-dot--black"></span>Czarny</button>' +
+          '<button type="button" class="wm-color-btn' + (sel === 'green' ? ' active' : '') + '" data-color="green" aria-label="Zielony" title="Zielony">' +
+          '<span class="wm-color-dot wm-color-dot--green"></span></button>' +
+          '<button type="button" class="wm-color-btn' + (sel === 'black' ? ' active' : '') + '" data-color="black" aria-label="Czarny" title="Czarny">' +
+          '<span class="wm-color-dot wm-color-dot--black"></span></button>' +
           '</div>'
         );
       }
