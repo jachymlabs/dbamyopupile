@@ -100,6 +100,74 @@ const galleryImages: GalleryImage[] = [
 const lowestPrice = firstVariant?.priceWithTax ?? 0;
 const allOutOfStock = product.variants?.every((v: VendureVariant) => v.stockLevel === 'OUT_OF_STOCK');
 
+// ============================================
+// WARIANTY KOLORÓW — wykrywane z Vendure (nazwa zawiera kolor), z bezpiecznym fallbackiem na ID
+// Zielony = 68, Czarny = 69 (zweryfikowane live). Fallback chroni przed pomyłką gdyby ktoś zmienił ID.
+// ============================================
+const variantList = (product.variants ?? []) as VendureVariant[];
+const greenVariant =
+  variantList.find((v) => /ziel/i.test(v.name)) ?? variantList.find((v) => v.id === '68');
+const blackVariant =
+  variantList.find((v) => /czarn/i.test(v.name)) ?? variantList.find((v) => v.id === '69');
+const GREEN_ID = greenVariant?.id ?? '68';
+const BLACK_ID = blackVariant?.id ?? '69';
+
+// ============================================
+// ZESTAWY — ceny w groszach (brutto). Kupony BRYZA2 / BRYZA3 zweryfikowane na żywo Shop API.
+// single: 1 szt 59,99 zł | b2: 2+1 gratis 119 zł (BRYZA2) | b3: 3+2 gratis 179 zł (BRYZA3)
+// ============================================
+type Bundle = {
+  key: string;
+  units: number;
+  coupon: string | null;
+  total: number; // grosze, cena końcowa po kuponie
+  title: string;
+  priceLabel: string;
+  oldPrice?: string;
+  save?: string;
+  perUnit: string;
+  badges: string[];
+  recommended?: boolean;
+};
+const unitPrice = lowestPrice; // 5999
+const bundles: Bundle[] = [
+  {
+    key: 'single',
+    units: 1,
+    coupon: null,
+    total: unitPrice,
+    title: 'Pojedynczy',
+    priceLabel: formatPLN(unitPrice),
+    perUnit: '1 chusta dla psa',
+    badges: [],
+  },
+  {
+    key: 'b2',
+    units: 3,
+    coupon: 'BRYZA2',
+    total: 11900,
+    title: '2 + 1 GRATIS',
+    priceLabel: formatPLN(11900),
+    oldPrice: formatPLN(unitPrice * 3),
+    save: `Oszczędzasz ${formatPLN(unitPrice * 3 - 11900)}`,
+    perUnit: `${formatPLN(Math.round(11900 / 3))} / szt`,
+    badges: ['Darmowa dostawa'],
+    recommended: true,
+  },
+  {
+    key: 'b3',
+    units: 5,
+    coupon: 'BRYZA3',
+    total: 17900,
+    title: '3 + 2 GRATIS',
+    priceLabel: formatPLN(17900),
+    oldPrice: formatPLN(unitPrice * 5),
+    save: `Oszczędzasz ${formatPLN(unitPrice * 5 - 17900)}`,
+    perUnit: `${formatPLN(Math.round(17900 / 5))} / szt`,
+    badges: ['Darmowa dostawa', 'Najtaniej za sztukę'],
+  },
+];
+
 // Cena z Vendure — format PLN (dynamiczna, NIE hardcode)
 const formatPLN = (cents: number) =>
   new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(cents / 100);
@@ -244,54 +312,60 @@ const jsonLd = {
               </li>
             </ul>
 
-            <form method="POST" class="wm-form" id="wm-atc-form">
-              <input type="hidden" name="variantId" id="wm-variant-id" value={firstVariant?.id} />
-              <input type="hidden" name="quantity" id="wm-qty" value="1" />
-
-              <div class="wm-bundle-label">Wybierz kolor</div>
-              {/*
-                Selektor WARIANTÓW KOLOR — Bryza ma 2 warianty (Zielony / Czarny).
-                Każda karta = jeden Vendure variant. Klik ustawia #wm-variant-id na variant.id.
-                Cena dynamiczna z Vendure (variant.priceWithTax) — NIE hardcode.
-                Te same klasy wm-bundle-card → identyczny wygląd jak WolnaMiska.
-              */}
-              <div class="wm-bundles" role="radiogroup" aria-label="Wybierz kolor">
-                {product.variants?.map((v: VendureVariant, i: number) => (
+            {/*
+              MODUŁ ZAKUPU ZESTAWÓW — Bryza.
+              3 zestawy: pojedynczy / 2+1 gratis (kupon BRYZA2) / 3+2 gratis (kupon BRYZA3).
+              Kolor wybierany per sztuka (N selektorów = 1/3/5). Każda sztuka osobno: Zielony(68)/Czarny(69).
+              ATC: zlicza kolory → POST /api/cart per kolor → POST /api/cart/coupon (jeśli zestaw) → dispatch cart-updated.
+              Wszystkie wartości w groszach/brutto zweryfikowane na żywo Shop API: 11900 / 17900 + free shipping.
+              Klasy wm-* dla spójności wizualnej z resztą storefrontu.
+            */}
+            <form class="wm-form" id="wm-atc-form" data-variant-green={GREEN_ID} data-variant-black={BLACK_ID}>
+              {/* Wybór zestawu */}
+              <div class="wm-bundle-label">Wybierz zestaw</div>
+              <div class="wm-bundles" id="wm-bundle-list" role="radiogroup" aria-label="Wybierz zestaw">
+                {bundles.map((b, i) => (
                   <label
-                    class:list={['wm-bundle-card', i === 0 && 'active']}
-                    data-variant-id={v.id}
-                    data-price={formatPLN(v.priceWithTax)}
-                    data-old=""
-                    data-save=""
+                    class:list={['wm-bundle-card', i === 1 && 'active', b.recommended && 'wm-bundle-reco']}
+                    data-bundle={b.key}
+                    data-units={String(b.units)}
+                    data-coupon={b.coupon || ''}
+                    data-total={String(b.total)}
                   >
                     <input
                       type="radio"
-                      name="variant-choice"
-                      value={v.id}
-                      checked={i === 0}
-                      disabled={v.stockLevel === 'OUT_OF_STOCK'}
+                      name="bundle-choice"
+                      value={b.key}
+                      checked={i === 1}
                     />
                     <div class="wm-bundle-check">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                     </div>
                     <div class="wm-bundle-main">
-                      <div class="wm-bundle-name">{v.name}</div>
-                      <div class="wm-bundle-meta">{v.stockLevel === 'OUT_OF_STOCK' ? 'Chwilowo niedostępny' : 'Dostępny'}</div>
+                      <div class="wm-bundle-name">
+                        {b.title}
+                        {b.badges.map((bd) => <span class="wm-bundle-tag">{bd}</span>)}
+                      </div>
+                      <div class="wm-bundle-meta">{b.perUnit}</div>
                     </div>
                     <div class="wm-bundle-pricing">
-                      <div class="wm-bundle-price">{formatPLN(v.priceWithTax)}</div>
-                      <div class="wm-bundle-perunit">{formatPLN(v.priceWithTax)} / szt</div>
+                      {b.oldPrice && <div class="wm-bundle-old">{b.oldPrice}</div>}
+                      <div class="wm-bundle-price">{b.priceLabel}</div>
+                      {b.save && <div class="wm-bundle-save">{b.save}</div>}
                     </div>
                   </label>
                 ))}
               </div>
 
+              {/* Selektory koloru per sztuka — generowane JS-em na podstawie wybranego zestawu */}
+              <div class="wm-color-picker" id="wm-color-picker" aria-live="polite"></div>
+
               {allOutOfStock ? (
                 <button type="button" disabled class="wm-atc disabled">Chwilowo niedostępna</button>
               ) : (
                 <button type="submit" class="wm-atc" id="primary-atc-btn">
-                  <span class="wm-atc-text">Kup Teraz</span>
-                  <span class="wm-atc-price" id="wm-atc-price">{priceFormatted}</span>
+                  <span class="wm-atc-text">Dodaj do koszyka</span>
+                  <span class="wm-atc-price" id="wm-atc-price">{bundles[1].priceLabel}</span>
                   <svg class="wm-atc-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                 </button>
               )}
@@ -1049,13 +1123,15 @@ const jsonLd = {
     </script>
   )}
 
-  {/* Intercept ATC forms — async cart API + open drawer (utwardzony wzorzec [slug].astro) */}
+  {/* Intercept ATC forms — async cart API + open drawer (utwardzony wzorzec [slug].astro).
+      UWAGA: #wm-atc-form (moduł zestawów) ma WŁASNĄ obsługę niżej (multi-kolor + kupon),
+      więc tutaj go pomijamy. Tutaj zostają tylko proste formularze POST (np. sekcja bundle .bc-form). */}
   <script>
     function initAddToCartForms() {
-      // Bind ALL post-to-cart forms idempotently (hero + bundle cards)
       const forms = document.querySelectorAll('form[method="POST"]');
       forms.forEach((node) => {
         const form = node as HTMLFormElement;
+        if (form.id === 'wm-atc-form') return; // obsługiwany osobno
         if ((form as any).__atcBound) return;
         (form as any).__atcBound = true;
         const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement | null;
@@ -1086,10 +1162,8 @@ const jsonLd = {
 
             if (res.ok) {
               const data = await res.json();
-              // Open the side cart drawer (CartDrawer listens for this)
               window.dispatchEvent(new CustomEvent('cart-updated', { detail: data.order }));
             } else {
-              // Don't silently redirect to /koszyk — keep user on page, surface error
               alert('Nie udało się dodać do koszyka. Spróbuj ponownie.');
             }
           } catch {
@@ -1105,6 +1179,196 @@ const jsonLd = {
     }
     initAddToCartForms();
     document.addEventListener('astro:page-load', initAddToCartForms);
+  </script>
+
+  {/* MODUŁ ZESTAWÓW — wybór zestawu, selektory koloru per sztuka, ATC multi-kolor + kupon */}
+  <script>
+    function initBryzaBundles() {
+      const form = document.getElementById('wm-atc-form') as HTMLFormElement | null;
+      if (!form || (form as any).__bundleBound) return;
+      (form as any).__bundleBound = true;
+
+      const GREEN_ID = form.getAttribute('data-variant-green') || '68';
+      const BLACK_ID = form.getAttribute('data-variant-black') || '69';
+
+      const cards = Array.from(document.querySelectorAll('#wm-bundle-list .wm-bundle-card')) as HTMLElement[];
+      const picker = document.getElementById('wm-color-picker') as HTMLElement | null;
+      const atcPrice = document.getElementById('wm-atc-price');
+      const heroPrice = document.getElementById('wm-price');
+      const heroPriceOld = document.querySelector('.wm-price-old') as HTMLElement | null;
+      const heroPriceSave = document.querySelector('.wm-price-save') as HTMLElement | null;
+      const atcBtn = document.getElementById('primary-atc-btn') as HTMLButtonElement | null;
+
+      // Stan: wybrany kolor każdej sztuki (domyślnie 'green')
+      let colors: string[] = [];
+
+      function activeCard(): HTMLElement | undefined {
+        return cards.find((c) => c.classList.contains('active')) || cards[0];
+      }
+
+      function renderColorPicker(units: number) {
+        if (!picker) return;
+        // Dopasuj długość tablicy colors do liczby sztuk, zachowując dotychczasowe wybory
+        const next: string[] = [];
+        for (let i = 0; i < units; i++) next[i] = colors[i] || 'green';
+        colors = next;
+
+        if (units <= 1) {
+          // Pojedynczy: jeden wybór, bez numeracji "Sztuka N"
+          picker.innerHTML = '';
+          const row = document.createElement('div');
+          row.className = 'wm-color-row';
+          row.innerHTML =
+            '<span class="wm-color-label">Wybierz kolor</span>' +
+            colorButtons(0);
+          picker.appendChild(row);
+        } else {
+          picker.innerHTML = '';
+          const head = document.createElement('div');
+          head.className = 'wm-color-head';
+          head.textContent = 'Wybierz kolor każdej sztuki';
+          picker.appendChild(head);
+          for (let i = 0; i < units; i++) {
+            const row = document.createElement('div');
+            row.className = 'wm-color-row';
+            row.innerHTML =
+              '<span class="wm-color-label">Sztuka ' + (i + 1) + '</span>' +
+              colorButtons(i);
+            picker.appendChild(row);
+          }
+        }
+        bindColorButtons();
+      }
+
+      function colorButtons(idx: number): string {
+        const sel = colors[idx] || 'green';
+        return (
+          '<div class="wm-color-opts" data-idx="' + idx + '">' +
+          '<button type="button" class="wm-color-btn' + (sel === 'green' ? ' active' : '') + '" data-color="green">' +
+          '<span class="wm-color-dot wm-color-dot--green"></span>Zielony</button>' +
+          '<button type="button" class="wm-color-btn' + (sel === 'black' ? ' active' : '') + '" data-color="black">' +
+          '<span class="wm-color-dot wm-color-dot--black"></span>Czarny</button>' +
+          '</div>'
+        );
+      }
+
+      function bindColorButtons() {
+        if (!picker) return;
+        picker.querySelectorAll('.wm-color-opts').forEach((optsEl) => {
+          const idx = parseInt(optsEl.getAttribute('data-idx') || '0', 10);
+          optsEl.querySelectorAll('.wm-color-btn').forEach((btn) => {
+            btn.addEventListener('click', () => {
+              const color = btn.getAttribute('data-color') || 'green';
+              colors[idx] = color;
+              optsEl.querySelectorAll('.wm-color-btn').forEach((b) => b.classList.remove('active'));
+              btn.classList.add('active');
+            });
+          });
+        });
+      }
+
+      function selectBundle(card: HTMLElement) {
+        cards.forEach((c) => c.classList.remove('active'));
+        card.classList.add('active');
+        const radio = card.querySelector('input[type="radio"]') as HTMLInputElement | null;
+        if (radio) radio.checked = true;
+
+        const units = parseInt(card.getAttribute('data-units') || '1', 10);
+        const priceLabel = card.querySelector('.wm-bundle-price')?.textContent || '';
+        const oldLabel = card.querySelector('.wm-bundle-old')?.textContent || '';
+        const saveLabel = card.querySelector('.wm-bundle-save')?.textContent || '';
+
+        if (atcPrice) atcPrice.textContent = priceLabel;
+        if (heroPrice) heroPrice.textContent = priceLabel;
+        if (heroPriceOld) heroPriceOld.textContent = oldLabel;
+        if (heroPriceSave) heroPriceSave.textContent = saveLabel;
+
+        renderColorPicker(units);
+
+        // Powiadom StickyATCBar (zachowanie kompatybilności): qty = liczba sztuk zestawu, cena = etykieta zestawu
+        window.dispatchEvent(new CustomEvent('wm-bundle-change', {
+          detail: { variantId: GREEN_ID, qty: units, priceText: priceLabel }
+        }));
+      }
+
+      cards.forEach((card) => {
+        card.addEventListener('click', (e) => {
+          // Klik na całą kartę = wybór zestawu (ignoruj kliknięcia w przyciski koloru wewnątrz)
+          e.preventDefault();
+          selectBundle(card);
+        });
+      });
+
+      // Init na karcie domyślnie aktywnej (2+1)
+      selectBundle(activeCard()!);
+
+      // ATC: zlicz kolory → POST /api/cart per kolor → kupon → drawer
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const card = activeCard();
+        if (!card) return;
+        const coupon = card.getAttribute('data-coupon') || '';
+
+        // Zlicz sztuki per kolor
+        let green = 0, black = 0;
+        colors.forEach((c) => { if (c === 'black') black++; else green++; });
+
+        const adds: Array<{ variantId: string; quantity: number }> = [];
+        if (green > 0) adds.push({ variantId: GREEN_ID, quantity: green });
+        if (black > 0) adds.push({ variantId: BLACK_ID, quantity: black });
+        if (adds.length === 0) return;
+
+        let originalText = '';
+        if (atcBtn) {
+          atcBtn.disabled = true;
+          originalText = atcBtn.innerHTML;
+          atcBtn.textContent = 'Dodawanie...';
+        }
+
+        try {
+          let lastOrder: any = null;
+          // Dodaj pozycje sekwencyjnie (token sesji utrzymywany przez cookie, serwer serializuje)
+          for (const item of adds) {
+            const res = await fetch('/api/cart', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify(item),
+            });
+            if (!res.ok) throw new Error('add failed');
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            lastOrder = data.order;
+          }
+
+          // Zastosuj kupon zestawu (jeśli dotyczy)
+          if (coupon) {
+            const cres = await fetch('/api/cart/coupon', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({ couponCode: coupon }),
+            });
+            if (cres.ok) {
+              const cdata = await cres.json();
+              if (cdata.order) lastOrder = cdata.order;
+            }
+            // Brak kuponu nie blokuje — pozycje już w koszyku, drawer i tak się otworzy
+          }
+
+          window.dispatchEvent(new CustomEvent('cart-updated', { detail: lastOrder }));
+        } catch {
+          alert('Nie udało się dodać do koszyka. Spróbuj ponownie.');
+        } finally {
+          if (atcBtn) {
+            atcBtn.disabled = false;
+            atcBtn.innerHTML = originalText;
+          }
+        }
+      });
+    }
+    initBryzaBundles();
+    document.addEventListener('astro:page-load', initBryzaBundles);
   </script>
 
   {/* Scroll reveal for handoff sections */}
@@ -1128,44 +1392,9 @@ const jsonLd = {
     })();
   </script>
 
-  {/* Hero interactivity: variant (color) selection + gallery thumbs/dots */}
+  {/* Hero interactivity: gallery thumbs/dots (wybór koloru/zestawu obsługuje moduł zestawów) */}
   <script>
     (function() {
-      // ---- Variant (color) cards ----
-      const cards = document.querySelectorAll('.wm-bundle-card');
-      const variantInput = document.getElementById('wm-variant-id');
-      const atcPrice = document.getElementById('wm-atc-price');
-      const heroPrice = document.getElementById('wm-price');
-      const heroPriceOld = document.querySelector('.wm-price-old');
-      const heroPriceSave = document.querySelector('.wm-price-save');
-
-      cards.forEach((card) => {
-        card.addEventListener('click', (e) => {
-          e.preventDefault();
-          cards.forEach((c) => c.classList.remove('active'));
-          card.classList.add('active');
-
-          const radio = card.querySelector('input[type="radio"]');
-          if (radio) radio.checked = true;
-
-          const variantId = card.getAttribute('data-variant-id');
-          const price = card.getAttribute('data-price');
-          const oldPrice = card.getAttribute('data-old');
-          const save = card.getAttribute('data-save');
-          // Spina wybór koloru z hidden variantId wysyłanym do /api/cart
-          if (variantInput && variantId) variantInput.value = variantId;
-          if (atcPrice && price) atcPrice.textContent = price;
-          if (heroPrice && price) heroPrice.textContent = price;
-          if (heroPriceOld) heroPriceOld.textContent = oldPrice || '';
-          if (heroPriceSave) heroPriceSave.textContent = save || '';
-
-          // Notify StickyATCBar of variant change
-          window.dispatchEvent(new CustomEvent('wm-bundle-change', {
-            detail: { variantId: variantId || '', priceText: price || '' }
-          }));
-        });
-      });
-
       // ---- Gallery (thumbs + arrows + swipe + counter) ----
       const thumbs = document.querySelectorAll('.wm-thumb');
       const images = document.querySelectorAll('.wm-gallery-img');
