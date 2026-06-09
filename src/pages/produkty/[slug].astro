@@ -205,6 +205,16 @@ const firstVariant = product?.variants?.[0];
           <div>
             <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">{product.name}</h1>
 
+            {/* Podtytuł — emocjonalny opis produktu z custom field Vendure (shortDescription).
+                Renderowany jako lżejszy subtitle bezpośrednio pod H1.
+                set:html: treść sanityzowana (sanitizeHtml) — admin-only input. */}
+            {product.customFields?.shortDescription && (
+              <p
+                class="mt-1.5 text-base sm:text-lg text-gray-500 leading-snug rich-text"
+                set:html={sanitizeHtml(product.customFields.shortDescription)}
+              />
+            )}
+
             {allOutOfStock && (
               <span class="mt-2 inline-block rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700">
                 Niedostepny
@@ -245,17 +255,6 @@ const firstVariant = product?.variants?.[0];
               <p class="mt-2 text-sm font-medium text-amber-600">
                 Zostalo {stockNum} sztuk
               </p>
-            )}
-
-            {/* Short description */}
-            {/* TODO [H4]: set:html renders unescaped HTML from Vendure rich text custom field.
-                Accepted risk for single-operator setup (admin-only input). If multi-tenant,
-                add server-side HTML sanitization (e.g. sanitize-html). */}
-            {product.customFields?.shortDescription && (
-              <div
-                class="mt-4 text-sm text-gray-600 leading-relaxed rich-text"
-                set:html={sanitizeHtml(product.customFields.shortDescription)}
-              />
             )}
 
             <form method="POST" class="mt-6 space-y-4">
@@ -424,52 +423,61 @@ const firstVariant = product?.variants?.[0];
 
   {/* Intercept ATC form — use async cart API + open drawer instead of redirect */}
   <script>
-    function initAddToCartForm() {
-      const form = document.querySelector('form[method="POST"]') as HTMLFormElement | null;
-      if (!form) return;
-      const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement | null;
-      if (!btn) return;
+    function initAddToCartForms() {
+      // Bind ALL post-to-cart forms idempotently (not just the first one)
+      const forms = document.querySelectorAll('form[method="POST"]');
+      forms.forEach((node) => {
+        const form = node as HTMLFormElement;
+        if ((form as any).__atcBound) return;
+        (form as any).__atcBound = true;
+        const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement | null;
 
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
 
-        const formData = new FormData(form);
-        const variantId = formData.get('variantId') as string;
-        const quantity = parseInt(formData.get('quantity') as string || '1', 10);
+          const formData = new FormData(form);
+          const variantId = formData.get('variantId') as string;
+          const quantity = parseInt(formData.get('quantity') as string || '1', 10);
 
-        if (!variantId) return;
+          if (!variantId) return;
 
-        btn.disabled = true;
-        const originalText = btn.textContent;
-        btn.textContent = 'Dodawanie...';
-
-        try {
-          const res = await fetch('/api/cart', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ variantId, quantity }),
-          });
-
-          if (res.ok) {
-            const data = await res.json();
-            window.dispatchEvent(new CustomEvent('cart-updated', { detail: data.order }));
-          } else {
-            // Fallback: submit form normally
-            form.submit();
-            return;
+          let originalText = '';
+          if (btn) {
+            btn.disabled = true;
+            originalText = btn.textContent || '';
+            btn.textContent = 'Dodawanie...';
           }
-        } catch {
-          // Fallback: submit form normally
-          form.submit();
-          return;
-        }
 
-        btn.disabled = false;
-        btn.textContent = originalText;
+          try {
+            const res = await fetch('/api/cart', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({ variantId, quantity }),
+            });
+
+            if (res.ok) {
+              const data = await res.json();
+              // Open the side cart drawer (CartDrawer listens for this)
+              window.dispatchEvent(new CustomEvent('cart-updated', { detail: data.order }));
+            } else {
+              // Don't silently redirect to /koszyk — keep user on page, surface error
+              alert('Nie udało się dodać do koszyka. Spróbuj ponownie.');
+            }
+          } catch {
+            alert('Nie udało się dodać do koszyka. Sprawdź połączenie i spróbuj ponownie.');
+          } finally {
+            if (btn) {
+              btn.disabled = false;
+              btn.textContent = originalText;
+            }
+          }
+        });
       });
     }
-    initAddToCartForm();
+    initAddToCartForms();
+    // Re-bind if Astro client-side navigation ever gets enabled
+    document.addEventListener('astro:page-load', initAddToCartForms);
   </script>
 
   {/* Gallery scroll dots */}

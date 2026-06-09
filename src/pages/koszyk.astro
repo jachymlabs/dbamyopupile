@@ -12,12 +12,10 @@ import { buildAssetUrl } from '@/lib/utils';
 // Handle POST actions (adjust quantity, remove)
 //
 // C3 (Sprint 1): legacy form POST flow — obsługuje TYLKO `action=adjust`
-// i `action=remove`. NIE ma tutaj `action=add`, więc auto-bonus sync
-// (WolnaMiska → Ebook) zachodzi wyłącznie przez /api/cart (POST), nie tędy.
+// i `action=remove`. NIE ma tutaj `action=add`.
 //
 // Ten kod redirectuje z powrotem do /koszyk, więc UX no-JS (form fallback)
-// pozostaje spójny. Auto-bonus jest re-evaluowany przy każdej mutacji
-// koszyka po stronie /api/cart/*.
+// pozostaje spójny.
 //
 // CSRF: ten endpoint to klasyczny <form method="POST"> renderowany
 // w tym samym dokumencie — chroniony SameSite=Lax cookie + brak narażenia
@@ -75,8 +73,7 @@ const lines = order?.lines ?? [];
               const productSlug = line.productVariant?.product?.slug;
               const productName = line.productVariant?.product?.name || line.productVariant?.name;
               const variantName = line.productVariant?.name;
-              const isBonus = String(line.productVariant?.id) === '23';
-              const productHref = isBonus ? '/ebook' : `/produkty/${productSlug}`;
+              const productHref = `/produkty/${productSlug}`;
 
               return (
                 <li class="flex gap-4 py-5">
@@ -175,15 +172,10 @@ const lines = order?.lines ?? [];
               )}
 
               {order?.discounts?.length && order.discounts.length > 0 && order.discounts.map((d: any) => {
-                const isGift = /ebook|gratis/i.test(d.description || '');
                 return (
                   <div class="flex items-center justify-between gap-3 py-1">
                     <dt class="flex items-center gap-2 text-gray-700 min-w-0">
-                      {isGift ? (
-                        <svg class="w-4 h-4 shrink-0 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
-                      ) : (
-                        <svg class="w-4 h-4 shrink-0 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-                      )}
+                      <svg class="w-4 h-4 shrink-0 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
                       <span class="truncate">{d.description}</span>
                     </dt>
                     <dd class="shrink-0 font-semibold text-emerald-700 tabular-nums">-<Price price={Math.abs(d.amountWithTax)} /></dd>

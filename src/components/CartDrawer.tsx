@@ -1,22 +1,18 @@
-import { useEffect, useCallback } from 'react';
-import { useCartStore, closeCart, setCartState } from '../lib/cart-store';
-import { fetchCart, adjustCartItem, removeFromCart } from '../lib/cart-api';
-import { formatPrice, buildAssetUrl } from '../lib/utils';
-import type { CartLine } from '../lib/cart-store';
-import { ErrorBoundary } from './ErrorBoundary';
-import { lockScroll, unlockScroll } from '../lib/scroll-lock';
-import { useFocusTrap } from '../lib/use-focus-trap';
+import { useEffect, useCallback } from "react";
+import { useCartStore, closeCart, setCartState } from "../lib/cart-store";
+import { fetchCart, adjustCartItem, removeFromCart } from "../lib/cart-api";
+import { formatPrice, buildAssetUrl } from "../lib/utils";
+import type { CartLine } from "../lib/cart-store";
+import { ErrorBoundary } from "./ErrorBoundary";
+import { lockScroll, unlockScroll } from "../lib/scroll-lock";
+import { useFocusTrap } from "../lib/use-focus-trap";
 
-import { getFreeShippingThreshold } from '../lib/constants';
-
-// Variant ID promocyjnego ebooka — line bez controls, z GRATIS badge
-const BONUS_VARIANT_ID = '23';
+import { getFreeShippingThreshold } from "../lib/constants";
 
 function CartLineItem({ line }: { line: CartLine }) {
   const { productVariant } = line;
   const product = productVariant.product;
   const image = product.featuredAsset?.preview;
-  const isBonus = productVariant.id === BONUS_VARIANT_ID;
 
   const handleQuantityChange = (newQty: number) => {
     if (newQty < 1) return;
@@ -27,12 +23,12 @@ function CartLineItem({ line }: { line: CartLine }) {
     <div className="flex gap-3 py-4 border-b border-gray-100 last:border-0">
       {/* Image */}
       <a
-        href={isBonus ? '/ebook' : `/produkty/${product.slug}`}
+        href={`/produkty/${product.slug}`}
         className="shrink-0 w-16 h-16 rounded-md overflow-hidden bg-gray-100"
       >
         {image ? (
           <img
-            src={buildAssetUrl(image, 'thumb')}
+            src={buildAssetUrl(image, "thumb")}
             alt={product.name}
             width={64}
             height={64}
@@ -61,27 +57,19 @@ function CartLineItem({ line }: { line: CartLine }) {
       {/* Details */}
       <div className="flex-1 min-w-0">
         <a
-          href={isBonus ? '/ebook' : `/produkty/${product.slug}`}
+          href={`/produkty/${product.slug}`}
           className="text-sm font-medium text-gray-900 hover:text-gray-700 no-underline line-clamp-1"
         >
           {product.name}
         </a>
-        {productVariant.name !== product.name && !isBonus && (
+        {productVariant.name !== product.name && (
           <p className="text-xs text-gray-500 mt-0.5">{productVariant.name}</p>
         )}
-        {isBonus ? (
-          <div className="flex items-center gap-2 mt-1">
-            <span className="inline-block text-[10px] font-bold tracking-wider px-2 py-0.5 rounded bg-[#1E3A5F] text-white">GRATIS</span>
-            <span className="text-xs text-gray-400 line-through">49,99 zł</span>
-          </div>
-        ) : (
-          <p className="text-sm font-medium text-gray-900 mt-1">
-            {formatPrice(line.linePriceWithTax)}
-          </p>
-        )}
+        <p className="text-sm font-medium text-gray-900 mt-1">
+          {formatPrice(line.linePriceWithTax)}
+        </p>
 
-        {/* Quantity + remove (ukryte dla bonus line) */}
-        {!isBonus && (
+        {/* Quantity + remove */}
         <div className="flex items-center gap-2 mt-2">
           <div className="flex items-center border border-gray-200 rounded-md">
             <button
@@ -128,7 +116,6 @@ function CartLineItem({ line }: { line: CartLine }) {
             </svg>
           </button>
         </div>
-        )}
       </div>
     </div>
   );
@@ -159,12 +146,13 @@ function ShippingProgress({ subtotal }: { subtotal: number }) {
         </div>
       ) : (
         <p className="text-xs text-gray-600">
-          Brakuje Ci <strong>{formatPrice(remaining)}</strong> do darmowej dostawy!
+          Brakuje Ci <strong>{formatPrice(remaining)}</strong> do darmowej
+          dostawy!
         </p>
       )}
       <div className="mt-1.5 h-1.5 bg-gray-200 rounded-full overflow-hidden">
         <div
-          className={`h-full rounded-full transition-all duration-500 ${isFree ? 'bg-green-500' : 'bg-gray-900'}`}
+          className={`h-full rounded-full transition-all duration-500 ${isFree ? "bg-green-500" : "bg-gray-900"}`}
           style={{ width: `${progress}%` }}
         />
       </div>
@@ -186,8 +174,8 @@ function CartDrawerInner() {
       const order = (e as CustomEvent).detail;
       setCartState({ order, isOpen: true });
     };
-    window.addEventListener('cart-updated', handler);
-    return () => window.removeEventListener('cart-updated', handler);
+    window.addEventListener("cart-updated", handler);
+    return () => window.removeEventListener("cart-updated", handler);
   }, []);
 
   // Body scroll lock
@@ -208,14 +196,14 @@ function CartDrawerInner() {
   // Escape key
   const handleEscape = useCallback(
     (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) closeCart();
+      if (e.key === "Escape" && isOpen) closeCart();
     },
     [isOpen],
   );
 
   useEffect(() => {
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
   }, [handleEscape]);
 
   const lines = order?.lines ?? [];
@@ -225,7 +213,7 @@ function CartDrawerInner() {
     <div aria-live="polite">
       {/* Backdrop */}
       <div
-        className={`fixed inset-0 z-50 bg-black/40 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        className={`fixed inset-0 z-50 bg-black/40 transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}
         onClick={closeCart}
         aria-hidden="true"
       />
@@ -236,7 +224,7 @@ function CartDrawerInner() {
         className={`fixed z-50 bg-white shadow-xl flex flex-col transition-transform duration-300 ease-out
           inset-x-0 bottom-0 max-h-[85vh] rounded-t-2xl sm:rounded-t-none
           sm:inset-y-0 sm:left-auto sm:right-0 sm:w-[420px] sm:max-w-full sm:max-h-full
-          ${isOpen ? 'translate-y-0 sm:translate-x-0' : 'translate-y-full sm:translate-y-0 sm:translate-x-full'}`}
+          ${isOpen ? "translate-y-0 sm:translate-x-0" : "translate-y-full sm:translate-y-0 sm:translate-x-full"}`}
         role="dialog"
         aria-modal="true"
         aria-label="Koszyk"
@@ -251,7 +239,10 @@ function CartDrawerInner() {
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 shrink-0">
           <h2 className="text-base font-semibold text-gray-900">
-            Koszyk{order && order.totalQuantity > 0 ? ` (${order.totalQuantity})` : ''}
+            Koszyk
+            {order && order.totalQuantity > 0
+              ? ` (${order.totalQuantity})`
+              : ""}
           </h2>
           <button
             type="button"
@@ -267,7 +258,11 @@ function CartDrawerInner() {
               stroke="currentColor"
               strokeWidth={2}
             >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -289,8 +284,12 @@ function CartDrawerInner() {
                 d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
               />
             </svg>
-            <p className="text-sm font-medium text-gray-700 mb-1">Twój koszyk jest jeszcze pusty</p>
-            <p className="text-xs text-gray-400 mb-4">Odkryj nasz bestseller i zyskaj darmową dostawę</p>
+            <p className="text-sm font-medium text-gray-700 mb-1">
+              Twój koszyk jest jeszcze pusty
+            </p>
+            <p className="text-xs text-gray-400 mb-4">
+              Odkryj nasz bestseller i zyskaj darmową dostawę
+            </p>
             <a
               href="/"
               onClick={closeCart}
@@ -306,7 +305,9 @@ function CartDrawerInner() {
 
             {/* Error message */}
             {error && (
-              <div className="px-4 py-2 bg-red-50 text-sm text-red-700">{error}</div>
+              <div className="px-4 py-2 bg-red-50 text-sm text-red-700">
+                {error}
+              </div>
             )}
 
             {/* Line items */}
@@ -319,15 +320,25 @@ function CartDrawerInner() {
             {/* Summary + CTA */}
             <div className="shrink-0 border-t border-gray-200 px-4 py-4 space-y-3">
               {order?.discounts?.map((d, i) => {
-                const isGift = /ebook|gratis/i.test(d.description || '');
                 return (
-                  <div key={i} className="flex items-center justify-between gap-3 py-1 text-sm">
+                  <div
+                    key={i}
+                    className="flex items-center justify-between gap-3 py-1 text-sm"
+                  >
                     <span className="flex items-center gap-2 text-gray-700 min-w-0">
-                      {isGift ? (
-                        <svg className="w-4 h-4 shrink-0 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
-                      ) : (
-                        <svg className="w-4 h-4 shrink-0 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-                      )}
+                      <svg
+                        className="w-4 h-4 shrink-0 text-emerald-600"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+                        <line x1="7" y1="7" x2="7.01" y2="7" />
+                      </svg>
                       <span className="truncate">{d.description}</span>
                     </span>
                     <span className="shrink-0 font-semibold text-emerald-700 tabular-nums">

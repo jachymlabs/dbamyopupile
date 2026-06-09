@@ -7,23 +7,15 @@
  *  - rate-limit per IP
  *  - try/catch z 500 fallback
  *  - JSON body parser z early-return na błąd
- *  - identyczne stałe TRIGGER_VARIANT_ID / BONUS_VARIANT_ID
  *
  * Tutaj wyciągamy te wzorce. Logika biznesowa specyficzna dla endpointu
- * (kompozycja mutacji, lock per token, dedup bonusu) zostaje inline,
- * żeby nie ukrywać złożoności behind generic helper.
+ * (kompozycja mutacji, lock per token) zostaje inline, żeby nie ukrywać
+ * złożoności behind generic helper.
  */
 
-import { isRateLimitedAsync } from './rate-limit';
-import { assertSameOrigin } from './security';
-import { buildResponse, vendureQuery } from './vendure-api';
-
-// ─── Konfiguracja bonus ebook ───────────────────────────────────────
-// Auto-add config: kupno WolnaMiska (variant 21) → automatycznie
-// dorzucamy Ebook (variant 23) do koszyka. Cena 0 dzięki Vendure promotion.
-// Usuwany automatycznie gdy WolnaMiska znika z koszyka.
-export const TRIGGER_VARIANT_ID = '21'; // WolnaMiska
-export const BONUS_VARIANT_ID = '23';   // Ebook 30 przepisów
+import { isRateLimitedAsync } from "./rate-limit";
+import { assertSameOrigin } from "./security";
+import { buildResponse } from "./vendure-api";
 
 // ─── Rate limit / origin / error wrapper ───────────────────────────
 
@@ -62,7 +54,8 @@ export function withCartGuards(
     if (blocked) return blocked;
 
     // 2. Rate limit per IP.
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown';
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0] || "unknown";
     const limited = await isRateLimitedAsync(
       ip,
       opts.rateLimitKey,
@@ -70,9 +63,9 @@ export function withCartGuards(
       opts.rateLimitWindowMs ?? 60_000,
     );
     if (limited) {
-      return new Response(JSON.stringify({ error: 'Too many requests' }), {
+      return new Response(JSON.stringify({ error: "Too many requests" }), {
         status: 429,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
       });
     }
 
@@ -80,10 +73,13 @@ export function withCartGuards(
     try {
       return await handler({ request });
     } catch (err) {
-      console.error(`[cart:${opts.rateLimitKey}] internal error`, err instanceof Error ? err.message : err);
-      return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      console.error(
+        `[cart:${opts.rateLimitKey}] internal error`,
+        err instanceof Error ? err.message : err,
+      );
+      return new Response(JSON.stringify({ error: "Internal server error" }), {
         status: 500,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
       });
     }
   };
@@ -104,52 +100,8 @@ export async function parseCartBody<T = any>(
     const data = (await request.json()) as T;
     return { data };
   } catch {
-    return { error: buildResponse({ order: null, error: 'Invalid request body' }) };
+    return {
+      error: buildResponse({ order: null, error: "Invalid request body" }),
+    };
   }
-}
-
-// ─── Bonus ebook auto-sync ─────────────────────────────────────────
-
-const REMOVE_LINE = `mutation RemoveLine($lineId: ID!) {
-  removeOrderLine(orderLineId: $lineId) { __typename ... on Order { id } }
-}`;
-
-/**
- * Auto-usuwa bonus ebook z koszyka jeśli trigger product (WolnaMiska) zniknął.
- * Idempotentne — bezpieczne wywołanie nawet gdy trigger nadal w koszyku
- * (po prostu nic nie robi).
- *
- * Używane przez /api/cart/remove. Auto-add bonusa zostaje inline w /api/cart
- * (POST), bo jest spleciony z per-token lock i dedup logic.
- *
- * @returns nowy `order` po ewentualnym remove + nowy token (jeśli rotował)
- */
-export async function syncBonusEbookOnRemove(
-  order: any,
-  activeToken: string | undefined,
-): Promise<{ order: any; activeToken: string | undefined }> {
-  if (!order || order.__typename !== 'Order') return { order, activeToken };
-
-  const hasTrigger = order.lines?.some(
-    (l: any) => l.productVariant?.id === TRIGGER_VARIANT_ID,
-  );
-  const bonusLine = order.lines?.find(
-    (l: any) => l.productVariant?.id === BONUS_VARIANT_ID,
-  );
-
-  // Trigger nadal jest LUB bonusa nigdy nie było → nic do roboty.
-  if (hasTrigger || !bonusLine || !activeToken) {
-    return { order, activeToken };
-  }
-
-  try {
-    const resp = await vendureQuery(REMOVE_LINE, { lineId: bonusLine.id }, activeToken);
-    const result = resp.data?.removeOrderLine;
-    if (result?.__typename === 'Order') {
-      return { order: result, activeToken: resp.newToken || activeToken };
-    }
-  } catch {
-    // Best-effort cleanup — jeśli remove bonusu się wywali, zwróć niezmienione.
-  }
-  return { order, activeToken };
 }

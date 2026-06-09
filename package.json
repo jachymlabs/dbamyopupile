@@ -8,7 +8,14 @@
     "build": "astro build",
     "preview": "astro preview",
     "start": "node ./dist/server/entry.mjs",
-    "astro": "astro"
+    "astro": "astro",
+    "check:imports": "astro check 2>&1 | grep -E 'error ts\\(2304\\)|error ts\\(2552\\)' && exit 1 || exit 0",
+    "typecheck": "astro check",
+    "lint": "eslint .",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:mock": "tsx tests/mocks/vendure-mock.ts",
+    "prepare": "husky"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.8",
@@ -26,11 +33,35 @@
     "sanitize-html": "^2.17.2"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.49.1",
     "@tailwindcss/vite": "^4.1.4",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.10.5",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@types/sanitize-html": "^2.16.1",
+    "@typescript-eslint/eslint-plugin": "^8.59.1",
+    "@typescript-eslint/parser": "^8.59.1",
+    "astro-eslint-parser": "^1.4.0",
+    "cross-env": "^7.0.3",
+    "eslint": "^10.2.1",
+    "eslint-plugin-astro": "^1.7.0",
+    "express": "^4.21.2",
+    "globals": "^17.5.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "tailwindcss": "^4.1.4",
-    "typescript": "^5.8.3"
+    "tsx": "^4.19.2",
+    "typescript": "^5.8.3",
+    "wait-on": "^8.0.1"
+  },
+  "overrides": {
+    "vite": "^7.0.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,astro,js}": [
+      "eslint --fix"
+    ]
   }
 }

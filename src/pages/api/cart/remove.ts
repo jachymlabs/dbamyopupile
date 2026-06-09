@@ -1,11 +1,11 @@
-import type { APIRoute } from 'astro';
+import type { APIRoute } from "astro";
 import {
   getToken,
   vendureQuery,
   buildResponse,
   ORDER_FRAGMENT,
-} from '@/lib/vendure-api';
-import { withCartGuards, parseCartBody, syncBonusEbookOnRemove } from '@/lib/cart-helpers';
+} from "@/lib/vendure-api";
+import { withCartGuards, parseCartBody } from "@/lib/cart-helpers";
 
 const REMOVE = `mutation Remove($lineId: ID!) {
   removeOrderLine(orderLineId: $lineId) {
@@ -18,45 +18,44 @@ const REMOVE = `mutation Remove($lineId: ID!) {
 const TRANSITION_TO_ADDING_ITEMS = `mutation { transitionOrderToState(state: "AddingItems") { __typename ... on Order { id state } ... on OrderStateTransitionError { errorCode message } } }`;
 
 export const POST: APIRoute = withCartGuards(
-  { rateLimitKey: 'cart-remove' },
+  { rateLimitKey: "cart-remove" },
   async ({ request }) => {
     const token = getToken(request);
     const parsed = await parseCartBody<{ lineId?: unknown }>(request);
-    if ('error' in parsed) return parsed.error;
+    if ("error" in parsed) return parsed.error;
     const { lineId } = parsed.data;
 
     // H5: Input validation
-    if (!lineId || typeof lineId !== 'string') {
-      return buildResponse({ order: null, error: 'Invalid lineId' });
+    if (!lineId || typeof lineId !== "string") {
+      return buildResponse({ order: null, error: "Invalid lineId" });
     }
     if (lineId.length > 50) {
-      return buildResponse({ order: null, error: 'Invalid lineId' });
+      return buildResponse({ order: null, error: "Invalid lineId" });
     }
 
     let { data, newToken } = await vendureQuery(REMOVE, { lineId }, token);
 
     let result = data?.removeOrderLine;
     // Zachowaj oryginalny token jako fallback, żeby drugi call nie trafił
-    // do nowej sesji (ebook usuwany z innego koszyka)
+    // do nowej sesji.
     let activeToken = newToken || token;
 
     // Order utknal w stanie != AddingItems (np. po nieudanym checkout) — wymus reset i retry
-    if (result?.__typename === 'OrderModificationError') {
-      const reset = await vendureQuery(TRANSITION_TO_ADDING_ITEMS, {}, activeToken);
+    if (result?.__typename === "OrderModificationError") {
+      const reset = await vendureQuery(
+        TRANSITION_TO_ADDING_ITEMS,
+        {},
+        activeToken,
+      );
       activeToken = reset.newToken || activeToken;
-      if (reset.data?.transitionOrderToState?.__typename === 'Order') {
+      if (reset.data?.transitionOrderToState?.__typename === "Order") {
         const retry = await vendureQuery(REMOVE, { lineId }, activeToken);
         activeToken = retry.newToken || activeToken;
         result = retry.data?.removeOrderLine;
       }
     }
 
-    // Auto-remove ebook gdy WolnaMiska zniknęła
-    const synced = await syncBonusEbookOnRemove(result, activeToken);
-    result = synced.order;
-    activeToken = synced.activeToken;
-
-    if (result?.__typename === 'Order') {
+    if (result?.__typename === "Order") {
       return buildResponse({ order: result }, activeToken);
     }
     return buildResponse({ order: null, error: result?.message }, activeToken);

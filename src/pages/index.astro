@@ -28,7 +28,7 @@ const heroImageUrl = mainImage ? buildAssetUrl(mainImage.preview, 'large') : '/p
 
 <BaseLayout
   title="WolnaMiska — koniec z łapczywym jedzeniem psa"
-  description="Hybrydowa miska z ruchomą kulką. Zmienia każdy posiłek z 30 sekund pochłaniania w 15 minut spokojnego jedzenia. Do każdego zamówienia ebook z 30 przepisami gratis."
+  description="Hybrydowa miska z ruchomą kulką. Zmienia każdy posiłek z 30 sekund pochłaniania w 15 minut spokojnego jedzenia."
 >
   <div class="home">
 
@@ -53,9 +53,6 @@ const heroImageUrl = mainImage ? buildAssetUrl(mainImage.preview, 'large') : '/p
                 Zobacz WolnaMiskę
                 <span class="arrow">→</span>
               </a>
-              <a href="/ebook" class="btn btn-ghost">
-                Ebook z 30 przepisami
-              </a>
             </div>
 
             <div class="home-hero-trust">
@@ -66,10 +63,6 @@ const heroImageUrl = mainImage ? buildAssetUrl(mainImage.preview, 'large') : '/p
               <div class="home-hero-trust-item">
                 <div class="home-hero-trust-num">24h</div>
                 <div class="home-hero-trust-label">Wysyłka z Polski</div>
-              </div>
-              <div class="home-hero-trust-item">
-                <div class="home-hero-trust-num">+30</div>
-                <div class="home-hero-trust-label">Przepisów w prezencie</div>
               </div>
             </div>
           </div>
@@ -83,18 +76,6 @@ const heroImageUrl = mainImage ? buildAssetUrl(mainImage.preview, 'large') : '/p
                 loading="eager"
                 decoding="sync"
               />
-              <a href="/ebook" class="home-hero-bookmark">
-                <div class="home-hero-bookmark-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-                  </svg>
-                </div>
-                <div>
-                  <div class="home-hero-bookmark-tag">Gratis do zamówienia</div>
-                  <div class="home-hero-bookmark-text">Ebook z 30 przepisami</div>
-                </div>
-              </a>
             </div>
           </div>
         </div>
@@ -175,7 +156,6 @@ const heroImageUrl = mainImage ? buildAssetUrl(mainImage.preview, 'large') : '/p
               <li><strong>Spowalnia jedzenie</strong> — pies pracuje językiem nad kulką, dosięgając każdej kropli mokrej karmy</li>
               <li><strong>Antypoślizgowy spód</strong> — miska nie jeździ po podłodze nawet na kafelkach</li>
               <li><strong>Bezpieczna w zmywarce 70°C</strong> — bez BPA, bez PVC, łatwe czyszczenie</li>
-              <li><strong>Ebook 30 przepisów gratis</strong> — pasty, mokre dania, smakołyki na lato</li>
             </ul>
 
             <div class="home-pc-priceblock">
@@ -191,58 +171,6 @@ const heroImageUrl = mainImage ? buildAssetUrl(mainImage.preview, 'large') : '/p
             </a>
           </div>
         </article>
-      </div>
-    </section>
-
-    <!-- EBOOK SPLIT — wzór PDP split-section -->
-    <section class="home-ebook-section">
-      <div class="wrap">
-        <div class="home-ebook-grid">
-          <div class="home-ebook-cover-wrap">
-            <div class="home-ebook-cover">
-              <div class="home-ebook-cover-pages"></div>
-              <div class="home-ebook-cover-front">
-                <div class="home-ebook-cover-tag">EBOOK PDF</div>
-                <h3 class="home-ebook-cover-title">30 przepisów<br/>do WolnaMiski</h3>
-                <p class="home-ebook-cover-sub">Pasty, mokre dania, smakołyki dla psa</p>
-                <div class="home-ebook-cover-foot">
-                  <span>dbamyopupile.pl</span>
-                  <span class="home-ebook-cover-pill">+30 stron</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="home-ebook-content">
-            <span class="eyebrow">Gratis do zamówienia</span>
-            <h2 class="h2">
-              Plan na cały miesiąc — bez powtarzania <em>tej samej karmy.</em>
-            </h2>
-            <p class="lede" style="margin-top:0">
-              30 sprawdzonych przepisów do WolnaMiski. Konsultowane z behawiorystką i lekarzem weterynarii. Dostajesz w PDF razem z zamówieniem.
-            </p>
-
-            <ul class="home-ebook-list">
-              <li><strong>10 past i mas</strong> do lizania</li>
-              <li><strong>8 mokrych dań</strong> pełnowartościowych</li>
-              <li><strong>6 schłodzonych</strong> smakołyków na lato</li>
-              <li><strong>6 ratunkowych</strong> przepisów</li>
-              <li><strong>Lista CO MOŻNA</strong> / czego nie</li>
-              <li><strong>Plan tygodnia</strong> + lista zakupów</li>
-            </ul>
-
-            <p class="home-ebook-note">
-              Wersja PDF działa na każdym telefonie i komputerze, bez logowania. Otwierasz przy lodówce, gotujesz, dajesz psu.
-            </p>
-
-            <div style="display:flex; gap:14px; flex-wrap:wrap; margin-top:6px">
-              <a href="/ebook" class="btn btn-primary">
-                Zobacz co w środku
-                <span class="arrow">→</span>
-              </a>
-            </div>
-          </div>
-        </div>
       </div>
     </section>
 
@@ -337,7 +265,7 @@ const heroImageUrl = mainImage ? buildAssetUrl(mainImage.preview, 'large') : '/p
               <span class="home-faq-icon"></span>
             </summary>
             <div class="home-faq-body">
-              <strong>Tylko mokrą karmę</strong> — sucha wypadnie spod kulki. Najlepsze: mokra karma z dodatkami, jogurt naturalny, bulion bez soli, pasta z dyni lub banana, schłodzone smakołyki na lato. W ebooku z 30 przepisami (gratis do zamówienia) masz plan na cały miesiąc.
+              <strong>Tylko mokrą karmę</strong> — sucha wypadnie spod kulki. Najlepsze: mokra karma z dodatkami, jogurt naturalny, bulion bez soli, pasta z dyni lub banana, schłodzone smakołyki na lato.
             </div>
           </details>
 
@@ -376,10 +304,10 @@ const heroImageUrl = mainImage ? buildAssetUrl(mainImage.preview, 'large') : '/p
       <div class="wrap">
         <div class="home-final-grid">
           <div>
-            <span class="eyebrow">Zamawiasz miskę — dostajesz ebook</span>
+            <span class="eyebrow">Jedna miska, spokojniejsze posiłki</span>
             <h2>Spokojny pies przy <em>każdym</em> posiłku.</h2>
             <p class="home-final-lede">
-              Od pierwszego dnia. Bez tresury, bez aplikacji, bez 5 produktów. Jedna miska + 30 przepisów w PDF.
+              Od pierwszego dnia. Bez tresury, bez aplikacji, bez 5 produktów. Jedna miska, która zmienia każdy posiłek.
             </p>
             <div class="home-final-meta">
               <div class="home-final-meta-item">
@@ -392,7 +320,7 @@ const heroImageUrl = mainImage ? buildAssetUrl(mainImage.preview, 'large') : '/p
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="20 6 9 17 4 12"/>
                 </svg>
-                Pies nie podchodzi? Zwracamy pieniądze, ebook zostaje
+                Pies nie podchodzi? Zwracamy pieniądze
               </div>
               <div class="home-final-meta-item">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -409,8 +337,8 @@ const heroImageUrl = mainImage ? buildAssetUrl(mainImage.preview, 'large') : '/p
                 <img src="/produkty/wolnamiska/na-stole.webp" alt="WolnaMiska" loading="lazy" />
               </div>
               <div>
-                <div class="home-final-buy-title">WolnaMiska + Ebook</div>
-                <div class="home-final-buy-desc">Hybrydowa miska + 30 przepisów PDF</div>
+                <div class="home-final-buy-title">WolnaMiska</div>
+                <div class="home-final-buy-desc">Hybrydowa miska z ruchomą kulką</div>
               </div>
             </div>
             <span class="home-final-buy-price">{priceFormatted}</span>
@@ -421,7 +349,6 @@ const heroImageUrl = mainImage ? buildAssetUrl(mainImage.preview, 'large') : '/p
             <div class="home-final-buy-trust">
               <span>30 dni gwarancji</span>
               <span>Wysyłka 24h</span>
-              <span>Ebook gratis</span>
             </div>
           </div>
         </div>
