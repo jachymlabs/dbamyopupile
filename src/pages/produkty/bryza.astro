@@ -321,8 +321,9 @@ const jsonLd = {
             {/*
               MODUŁ ZAKUPU ZESTAWÓW — Bryza.
               3 zestawy: pojedynczy / 2+1 gratis (kupon BRYZA2) / 3+2 gratis (kupon BRYZA3).
-              Kolor wybierany per sztuka (N selektorów = 1/3/5). Każda sztuka osobno: Zielony(68)/Czarny(69).
-              ATC: zlicza kolory → POST /api/cart per kolor → POST /api/cart/coupon (jeśli zestaw) → dispatch cart-updated.
+              Kolor wybierany przez dwa liczniki auto-balansujące (Zielony 68 / Czarny 69): suma ZAWSZE = liczba sztuk zestawu.
+              Single = prosty toggle dwóch przycisków. Stan {green,black} → ATC.
+              ATC: stan green/black → POST /api/cart per kolor → POST /api/cart/coupon (jeśli zestaw) → dispatch cart-updated.
               Wszystkie wartości w groszach/brutto zweryfikowane na żywo Shop API: 11900 / 17900 + free shipping.
               Klasy wm-* dla spójności wizualnej z resztą storefrontu.
             */}
@@ -1211,79 +1212,98 @@ const jsonLd = {
       const heroPriceSave = document.querySelector('.wm-price-save') as HTMLElement | null;
       const atcBtn = document.getElementById('primary-atc-btn') as HTMLButtonElement | null;
 
-      // Stan: wybrany kolor każdej sztuki (domyślnie 'green')
-      let colors: string[] = [];
+      // ============================================================
+      // STAN KOLORÓW — liczniki auto-balansujące.
+      // green + black ZAWSZE = liczba sztuk wybranego zestawu (totalUnits).
+      // Dla single (totalUnits=1) używamy toggle: green=1/black=0 lub odwrotnie.
+      // Wszystkie helpery zadeklarowane PRZED użyciem (zero forward-reference / TDZ).
+      // ============================================================
+      let green = 1;        // domyślnie wszystkie sztuki zielone
+      let black = 0;
+      let totalUnits = 1;   // ustawiane przy wyborze zestawu
 
       function activeCard(): HTMLElement | undefined {
         return cards.find((c) => c.classList.contains('active')) || cards[0];
       }
 
-      function renderColorPicker(units: number) {
+      // Render liczników (zestaw) lub toggle (single) na podstawie aktualnego stanu green/black.
+      function renderColorPicker() {
         if (!picker) return;
-        // Dopasuj długość tablicy colors do liczby sztuk, zachowując dotychczasowe wybory
-        const next: string[] = [];
-        for (let i = 0; i < units; i++) next[i] = colors[i] || 'green';
-        colors = next;
-
         picker.innerHTML = '';
 
-        if (units <= 1) {
-          // Pojedynczy: nagłówek "Wybierz kolor" + jeden rząd swatchy, bez numeracji
+        if (totalUnits <= 1) {
+          // POJEDYNCZY — prosty przełącznik dwóch przycisków (bez licznika)
           const head = document.createElement('div');
           head.className = 'wm-color-head';
           head.innerHTML = '<span>Wybierz kolor</span>';
           picker.appendChild(head);
-          const row = document.createElement('div');
-          row.className = 'wm-color-row';
-          row.innerHTML =
-            '<span class="wm-color-label">Kolor</span>' +
-            colorButtons(0);
-          picker.appendChild(row);
-        } else {
-          // Zestaw: nagłówek z licznikiem (N/N) + rząd swatchy per sztuka
-          const head = document.createElement('div');
-          head.className = 'wm-color-head';
-          head.innerHTML =
-            '<span>Wybierz kolor każdej sztuki</span>' +
-            '<span class="wm-color-count">(' + units + '/' + units + ')</span>';
-          picker.appendChild(head);
-          for (let i = 0; i < units; i++) {
-            const row = document.createElement('div');
-            row.className = 'wm-color-row';
-            row.innerHTML =
-              '<span class="wm-color-label">Sztuka ' + (i + 1) + '</span>' +
-              colorButtons(i);
-            picker.appendChild(row);
-          }
-        }
-        bindColorButtons();
-      }
 
-      function colorButtons(idx: number): string {
-        const sel = colors[idx] || 'green';
-        return (
-          '<div class="wm-color-opts" data-idx="' + idx + '">' +
-          '<button type="button" class="wm-color-btn' + (sel === 'green' ? ' active' : '') + '" data-color="green" aria-label="Zielony" title="Zielony">' +
-          '<span class="wm-color-dot wm-color-dot--green"></span></button>' +
-          '<button type="button" class="wm-color-btn' + (sel === 'black' ? ' active' : '') + '" data-color="black" aria-label="Czarny" title="Czarny">' +
-          '<span class="wm-color-dot wm-color-dot--black"></span></button>' +
-          '</div>'
-        );
-      }
+          const toggle = document.createElement('div');
+          toggle.className = 'wm-color-toggle';
+          const greenSel = green >= 1;
+          toggle.innerHTML =
+            '<button type="button" class="wm-color-toggle-btn' + (greenSel ? ' active' : '') + '" data-color="green">' +
+            '<span class="wm-color-dot wm-color-dot--green"></span><span>Zielony</span></button>' +
+            '<button type="button" class="wm-color-toggle-btn' + (!greenSel ? ' active' : '') + '" data-color="black">' +
+            '<span class="wm-color-dot wm-color-dot--black"></span><span>Czarny</span></button>';
+          picker.appendChild(toggle);
 
-      function bindColorButtons() {
-        if (!picker) return;
-        picker.querySelectorAll('.wm-color-opts').forEach((optsEl) => {
-          const idx = parseInt(optsEl.getAttribute('data-idx') || '0', 10);
-          optsEl.querySelectorAll('.wm-color-btn').forEach((btn) => {
+          toggle.querySelectorAll('.wm-color-toggle-btn').forEach((btn) => {
             btn.addEventListener('click', () => {
               const color = btn.getAttribute('data-color') || 'green';
-              colors[idx] = color;
-              optsEl.querySelectorAll('.wm-color-btn').forEach((b) => b.classList.remove('active'));
-              btn.classList.add('active');
+              green = color === 'green' ? 1 : 0;
+              black = color === 'black' ? 1 : 0;
+              renderColorPicker();
             });
           });
+          return;
+        }
+
+        // ZESTAW (3 lub 5 szt) — dwa wiersze liczników z auto-balansem
+        const head = document.createElement('div');
+        head.className = 'wm-color-head';
+        head.innerHTML =
+          '<span>Wybierz kolory</span>' +
+          '<span class="wm-color-count">razem ' + totalUnits + ' szt</span>';
+        picker.appendChild(head);
+
+        picker.appendChild(counterRow('green', 'Zielony', green));
+        picker.appendChild(counterRow('black', 'Czarny', black));
+      }
+
+      // Pojedynczy wiersz licznika: kropka koloru + etykieta + [−] liczba [+]
+      function counterRow(color: string, label: string, value: number): HTMLElement {
+        const row = document.createElement('div');
+        row.className = 'wm-counter-row';
+        row.innerHTML =
+          '<span class="wm-counter-label"><span class="wm-color-dot wm-color-dot--' + color + '"></span>' + label + '</span>' +
+          '<div class="wm-counter-controls">' +
+          '<button type="button" class="wm-counter-btn" data-action="dec" data-color="' + color + '" aria-label="Mniej ' + label.toLowerCase() + '">−</button>' +
+          '<span class="wm-counter-value" aria-live="polite">' + value + '</span>' +
+          '<button type="button" class="wm-counter-btn" data-action="inc" data-color="' + color + '" aria-label="Więcej ' + label.toLowerCase() + '">+</button>' +
+          '</div>';
+
+        row.querySelectorAll('.wm-counter-btn').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const action = btn.getAttribute('data-action');
+            const c = btn.getAttribute('data-color');
+            adjustColor(c === 'black' ? 'black' : 'green', action === 'inc' ? 1 : -1);
+          });
         });
+        return row;
+      }
+
+      // Auto-balans: zmiana jednego koloru o delta, drugi dopełnia tak, by suma = totalUnits.
+      // Granice 0..totalUnits. Suma ZAWSZE poprawna — brak stanu błędu.
+      function adjustColor(color: 'green' | 'black', delta: number) {
+        if (color === 'green') {
+          green = Math.max(0, Math.min(totalUnits, green + delta));
+          black = totalUnits - green;
+        } else {
+          black = Math.max(0, Math.min(totalUnits, black + delta));
+          green = totalUnits - black;
+        }
+        renderColorPicker();
       }
 
       function selectBundle(card: HTMLElement) {
@@ -1302,7 +1322,11 @@ const jsonLd = {
         if (heroPriceOld) heroPriceOld.textContent = oldLabel;
         if (heroPriceSave) heroPriceSave.textContent = saveLabel;
 
-        renderColorPicker(units);
+        // Zmiana zestawu resetuje liczniki do domyślnych: wszystkie zielone, czarny 0.
+        totalUnits = units;
+        green = units;
+        black = 0;
+        renderColorPicker();
 
         // Powiadom StickyATCBar (zachowanie kompatybilności): qty = liczba sztuk zestawu, cena = etykieta zestawu
         window.dispatchEvent(new CustomEvent('wm-bundle-change', {
@@ -1312,7 +1336,8 @@ const jsonLd = {
 
       cards.forEach((card) => {
         card.addEventListener('click', (e) => {
-          // Klik na całą kartę = wybór zestawu (ignoruj kliknięcia w przyciski koloru wewnątrz)
+          // Klik na całą kartę = wybór zestawu. Liczniki koloru są poza kartą,
+          // więc ich kliknięcia nie przełączają zestawu.
           e.preventDefault();
           selectBundle(card);
         });
@@ -1321,16 +1346,12 @@ const jsonLd = {
       // Init na karcie domyślnie aktywnej (2+1)
       selectBundle(activeCard()!);
 
-      // ATC: zlicz kolory → POST /api/cart per kolor → kupon → drawer
+      // ATC: użyj stanu green/black → POST /api/cart per kolor → kupon → drawer
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const card = activeCard();
         if (!card) return;
         const coupon = card.getAttribute('data-coupon') || '';
-
-        // Zlicz sztuki per kolor
-        let green = 0, black = 0;
-        colors.forEach((c) => { if (c === 'black') black++; else green++; });
 
         const adds: Array<{ variantId: string; quantity: number }> = [];
         if (green > 0) adds.push({ variantId: GREEN_ID, quantity: green });

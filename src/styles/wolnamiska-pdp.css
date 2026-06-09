@@ -156,28 +156,39 @@
         .wm-bundle-corner{font-size:9px;padding:4px 10px;left:14px;top:-11px}
       }
 
-      /* Bryza — swatche koloru per sztuka */
+      /* Bryza — wybór koloru: liczniki auto-balansujące (zestaw) + toggle (single).
+         Duże pola dotykowe pod starszy target. Navy główny + powder blue akcent. */
       .wm-color-picker{display:flex;flex-direction:column;gap:10px;margin-top:2px}
       .wm-color-picker:empty{display:none}
-      .wm-color-head{display:flex;align-items:baseline;gap:8px;font-family:var(--h-f-body);font-weight:600;font-size:13px;letter-spacing:0.03em;text-transform:uppercase;color:var(--h-ink);margin-bottom:2px}
-      .wm-color-head .wm-color-count{font-weight:600;font-size:12px;letter-spacing:0.02em;text-transform:none;color:var(--h-ink-3)}
-      .wm-color-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 16px;background:var(--h-white);border:1.5px solid var(--h-rule);border-radius:12px}
-      .wm-color-label{font-family:var(--h-f-body);font-weight:600;font-size:14px;color:var(--h-ink);white-space:nowrap}
-      .wm-color-opts{display:flex;gap:12px}
-      /* Swatch = klikalne kółko koloru; zaznaczony = ring navy */
-      .wm-color-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;padding:0;background:none;border:none;border-radius:50%;cursor:pointer;transition:transform 160ms var(--h-ease)}
-      .wm-color-btn:hover{transform:scale(1.08)}
-      .wm-color-btn .wm-color-dot{flex-shrink:0;width:26px;height:26px;border-radius:50%;border:1.5px solid oklch(0 0 0 / 0.18);transition:box-shadow 160ms var(--h-ease)}
+      .wm-color-head{display:flex;align-items:baseline;gap:8px;font-family:var(--h-f-body);font-weight:700;font-size:14px;letter-spacing:0.02em;color:var(--h-ink);margin-bottom:2px}
+      .wm-color-head .wm-color-count{font-weight:600;font-size:13px;letter-spacing:0.01em;color:var(--h-ink-3)}
+
+      /* Wspólny dot koloru (używany w licznikach i toggle) */
+      .wm-color-dot{flex-shrink:0;width:22px;height:22px;border-radius:50%;border:1.5px solid oklch(0 0 0 / 0.18)}
       .wm-color-dot--green{background:oklch(0.62 0.13 150)}
       .wm-color-dot--black{background:oklch(0.22 0 0)}
-      /* Ring navy na zaznaczonym swatchu */
-      .wm-color-btn.active::after{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid var(--h-navy);box-shadow:0 0 0 2px var(--h-white) inset}
-      .wm-color-btn.active .wm-color-dot{border-color:transparent}
+
+      /* --- Wiersz licznika (zestaw 3/5 szt) --- */
+      .wm-counter-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 16px;background:var(--h-white);border:1.5px solid var(--h-rule);border-radius:14px}
+      .wm-counter-label{display:flex;align-items:center;gap:10px;font-family:var(--h-f-body);font-weight:600;font-size:16px;color:var(--h-ink);white-space:nowrap}
+      .wm-counter-controls{display:flex;align-items:center;gap:6px;flex-shrink:0}
+      .wm-hero button.wm-counter-btn{display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;padding:0;background:var(--h-blue-soft);color:var(--h-navy);border:1.5px solid var(--h-blue);border-radius:11px;font-family:var(--h-f-display);font-weight:700;font-size:24px;line-height:1;cursor:pointer;transition:background 160ms var(--h-ease), transform 120ms var(--h-ease)}
+      .wm-hero button.wm-counter-btn:hover{background:var(--h-blue)}
+      .wm-hero button.wm-counter-btn:active{transform:scale(0.94)}
+      .wm-counter-value{min-width:34px;text-align:center;font-family:var(--h-f-display);font-weight:700;font-size:20px;color:var(--h-ink);font-variant-numeric:tabular-nums}
+
+      /* --- Toggle (pojedyncza sztuka) --- */
+      .wm-color-toggle{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+      .wm-hero button.wm-color-toggle-btn{display:flex;align-items:center;justify-content:center;gap:10px;min-height:52px;padding:12px 16px;background:var(--h-white);color:var(--h-ink);border:1.5px solid var(--h-rule);border-radius:14px;font-family:var(--h-f-body);font-weight:600;font-size:16px;cursor:pointer;transition:border-color 160ms var(--h-ease), background 160ms var(--h-ease)}
+      .wm-hero button.wm-color-toggle-btn:hover{border-color:var(--h-blue)}
+      .wm-hero button.wm-color-toggle-btn.active{border-color:var(--h-navy);box-shadow:0 0 0 1.5px var(--h-navy) inset;background:var(--h-blue-soft)}
 
       @media(max-width:520px){
-        .wm-color-row{padding:11px 14px}
-        .wm-color-btn{width:32px;height:32px}
-        .wm-color-btn .wm-color-dot{width:24px;height:24px}
+        .wm-counter-row{padding:11px 14px}
+        .wm-hero button.wm-counter-btn{width:48px;height:48px;font-size:26px}
+        .wm-counter-value{font-size:21px;min-width:38px}
+        .wm-color-toggle{grid-template-columns:1fr;gap:8px}
+        .wm-hero button.wm-color-toggle-btn{min-height:54px}
       }
 
       /* ATC button — solid Deep Navy, only darker on hover */
