@@ -114,6 +114,12 @@ function stripHtml(html: string): string {
 
 const rawDescription = product?.customFields?.shortDescription || product?.description || '';
 const metaDescription = stripHtml(rawDescription).slice(0, 160);
+
+// Tytuł oferty (SEO/social/zakładka): nazwa + emocjonalny podtytuł, nie samo "Bryza"
+const subtitleRaw = stripHtml(product?.customFields?.shortDescription || '');
+const pageTitle = product
+  ? (subtitleRaw ? `${product.name} — ${subtitleRaw}` : product.name)
+  : 'Produkt';
 const ogImageUrl = mainImage?.preview ? buildAssetUrl(mainImage.preview, 'large') : undefined;
 
 // Stock status
@@ -165,7 +171,7 @@ const firstVariant = product?.variants?.[0];
 ---
 
 <BaseLayout
-  title={product?.name || 'Produkt'}
+  title={pageTitle}
   description={metaDescription}
   ogImage={ogImageUrl}
   ogType="product"
