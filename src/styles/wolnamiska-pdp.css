@@ -507,12 +507,12 @@
       .wm-pdp .split-content{display:flex;flex-direction:column;gap:18px}
       .wm-pdp .split-eyebrow{display:inline-block;align-self:flex-start;font-family:var(--wm-f-body);font-weight:700;font-size:11.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--wm-navy);background:var(--wm-blue);padding:6px 14px;border-radius:999px}
       .wm-pdp .split-title{font-family:var(--wm-f-display);font-weight:700;font-size:clamp(28px, 3.4vw, 40px);line-height:1.05;letter-spacing:-0.02em;color:var(--wm-ink);margin:0;max-width:520px}
-      .wm-pdp .split-lede{font-family:var(--wm-f-body);font-weight:400;font-size:clamp(15px, 1.3vw, 17px);line-height:1.55;color:var(--wm-ink-2);margin:0;max-width:520px}
+      .wm-pdp .split-lede{font-family:var(--wm-f-body);font-weight:400;font-size:clamp(17px, 1.6vw, 20px);line-height:1.62;color:var(--wm-ink-2);margin:0;max-width:520px}
       .wm-pdp .split-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:14px;border-top:1px solid var(--wm-rule);padding-top:20px;margin-top:6px}
-      .wm-pdp .split-list li{font-family:var(--wm-f-body);font-size:14.5px;line-height:1.55;color:var(--wm-ink-2);padding-left:22px;position:relative}
+      .wm-pdp .split-list li{font-family:var(--wm-f-body);font-size:16.5px;line-height:1.6;color:var(--wm-ink-2);padding-left:22px;position:relative}
       .wm-pdp .split-list li::before{content:"";position:absolute;left:0;top:9px;width:8px;height:8px;background:var(--wm-navy);border-radius:50%}
       .wm-pdp .split-list strong{color:var(--wm-ink);font-weight:600;font-family:var(--wm-f-body)}
-      .wm-pdp .split-note{font-family:var(--wm-f-body);font-style:italic;font-size:14px;line-height:1.55;color:var(--wm-ink-3);margin:6px 0 0;padding-top:16px;border-top:1px dashed var(--wm-rule);max-width:520px}
+      .wm-pdp .split-note{font-family:var(--wm-f-body);font-style:italic;font-size:15.5px;line-height:1.6;color:var(--wm-ink-3);margin:6px 0 0;padding-top:16px;border-top:1px dashed var(--wm-rule);max-width:520px}
 
       /* ============================================ */
       /* PERSONA — Dla kogo idealnie                  */
