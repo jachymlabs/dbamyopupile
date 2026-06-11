@@ -141,9 +141,9 @@ const bundles: Bundle[] = [
     units: 1,
     coupon: null,
     total: unitPrice,
-    title: 'Pojedynczy',
+    title: '1 chusta',
     priceLabel: formatPLN(unitPrice),
-    perUnit: '1 chusta dla psa',
+    perUnit: 'dla jednego psa',
     badges: [],
   },
   {
@@ -155,7 +155,7 @@ const bundles: Bundle[] = [
     priceLabel: formatPLN(11900),
     oldPrice: formatPLN(unitPrice * 3),
     save: `Oszczędzasz ${formatPLN(unitPrice * 3 - 11900)}`,
-    perUnit: `${formatPLN(Math.round(11900 / 3))} / szt`,
+    perUnit: `3 chusty · ${formatPLN(Math.round(11900 / 3))} za sztukę`,
     badges: [],
     recommended: true,
     cornerBadge: 'NAJPOPULARNIEJSZE',
@@ -170,7 +170,7 @@ const bundles: Bundle[] = [
     priceLabel: formatPLN(17900),
     oldPrice: formatPLN(unitPrice * 5),
     save: `Oszczędzasz ${formatPLN(unitPrice * 5 - 17900)}`,
-    perUnit: `${formatPLN(Math.round(17900 / 5))} / szt`,
+    perUnit: `5 chust · ${formatPLN(Math.round(17900 / 5))} za sztukę`,
     badges: [],
     cornerBadge: 'NAJTANIEJ ZA SZTUKĘ',
     freeShipping: true,
@@ -180,7 +180,8 @@ const bundles: Bundle[] = [
 const priceFormatted = formatPLN(lowestPrice);
 
 const stripHtml = (html: string) => html.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
-const metaDescription = stripHtml(product.customFields?.shortDescription || product.description || '').slice(0, 160);
+// Meta description na sztywno — bespoke landing, pełna kontrola SERP (shortDescription z Vendure zasila tylko title)
+const metaDescription = 'Zmocz, wykręć i zawiąż psu na karku — kryształki w chuście trzymają chłód godzinami. Działa od samej wody. Od 59,99 zł, zestaw 2+1 z darmową dostawą.';
 const ogImageUrl = mainImage?.preview ? buildAssetUrl(mainImage.preview, 'large') : undefined;
 
 // Tytuł oferty: name + shortDescription (jak w [slug].astro)
@@ -292,7 +293,7 @@ const jsonLd = {
             </div>
 
             <h1 class="wm-title">Twój pies nie powie Ci, że jest mu za gorąco</h1>
-            <p class="wm-subtitle">Zmoczysz ją wodą, zawiążesz na szyi i przez kilka godzin daje psu ulgę w największy skwar. Bez prądu, bez lodówki, bez czekania.</p>
+            <p class="wm-subtitle">Zmoczysz chustę wodą i zawiążesz psu na szyi — a on przez kilka godzin ma na karku chłodny okład, nawet w największy skwar.</p>
 
             <div class="wm-price-block">
               <div class="wm-price-row">
@@ -300,17 +301,17 @@ const jsonLd = {
                 <span class="wm-price-old"></span>
                 <span class="wm-price-save"></span>
               </div>
-              <div class="wm-omnibus">Najniższa cena z 30 dni przed obniżką: {priceFormatted}</div>
+              <div class="wm-omnibus">Najniższa cena 1 chusty z 30 dni przed obniżką: {priceFormatted}</div>
             </div>
 
             <ul class="wm-usps">
               <li>
                 <svg class="wm-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                <span><strong>Chłodzi nawet kilka godzin</strong> — dopóki paruje z niej woda</span>
+                <span><strong>Chłodzi godzinami</strong> — kryształki w środku trzymają chłód</span>
               </li>
               <li>
                 <svg class="wm-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                <span><strong>Bez prądu i bez lodówki</strong> — wystarczy woda z kranu</span>
+                <span><strong>Działa od samej wody</strong> — bez prądu i bez mrożenia</span>
               </li>
               <li>
                 <svg class="wm-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -330,6 +331,7 @@ const jsonLd = {
             <form class="wm-form" id="wm-atc-form" data-variant-green={GREEN_ID} data-variant-black={BLACK_ID}>
               {/* Wybór zestawu */}
               <div class="wm-bundle-label">Wybierz zestaw</div>
+              <div class="wm-bundle-sublabel">Zapasowa zawsze się przyda — jedna na psie, druga schnie po płukaniu.</div>
               <div class="wm-bundles" id="wm-bundle-list" role="radiogroup" aria-label="Wybierz zestaw">
                 {bundles.map((b, i) => (
                   <label
@@ -370,6 +372,8 @@ const jsonLd = {
                 ))}
               </div>
 
+              <div class="wm-omnibus">Przekreślone kwoty to suma cen regularnych chust w zestawie ({priceFormatted}/szt).</div>
+
               {/* Selektory koloru per sztuka — generowane JS-em na podstawie wybranego zestawu */}
               <div class="wm-color-picker" id="wm-color-picker" aria-live="polite"></div>
 
@@ -385,7 +389,7 @@ const jsonLd = {
 
               <div class="wm-delivery-promise">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-                <span>Zamów do <strong>14:00</strong>, paczka wyruszy <strong>jeszcze dzisiaj</strong></span>
+                <span>Zamów do <strong>14:00</strong> w dzień roboczy, paczka wyruszy <strong>jeszcze dzisiaj</strong></span>
               </div>
             </form>
 
@@ -441,9 +445,9 @@ const jsonLd = {
                   </span>
                 </summary>
                 <div class="wm-acc-body">
-                  <p>Chłodząca chusta dla psa na upalne dni. Zmoczysz ją wodą, wykręcisz nadmiar i zawiążesz psu na szyi. Woda paruje, a parowanie zabiera ciepło z ciała — chusta daje psu ulgę tak długo, jak długo z niej paruje.</p>
+                  <p>Chłodząca chusta dla psa na upalne dni. W środku ma drobne kryształki, które po nasączeniu wodą pęcznieją i trzymają chłód godzinami. Zmoczysz ją, wykręcisz nadmiar i zawiążesz psu na szyi — wilgotna chusta i parująca z niej woda odbierają ciepło z ciała.</p>
                   <ul class="wm-acc-list">
-                    <li><strong>Materiał:</strong> poliester, który chłonie wodę i powoli ją oddaje</li>
+                    <li><strong>Materiał:</strong> poliester z kryształkami w środku, które chłoną wodę i powoli ją oddają</li>
                     <li><strong>Wiązanie:</strong> regulowane, pasuje na małego i większego psa</li>
                     <li><strong>Kolory:</strong> zielony lub czarny — obie chłodzą tak samo</li>
                     <li><strong>Dla kogo:</strong> psy z krótkim pyskiem, seniory, psy z gęstym futrem i te dużo na dworze</li>
@@ -462,10 +466,10 @@ const jsonLd = {
                   </span>
                 </summary>
                 <div class="wm-acc-body">
-                  <p>Chusta daje psu chłód przez wilgoć i parowanie — nic w nią nie dodajemy. Zakładasz ją tak, by leżała wygodnie i nie uciskała szyi.</p>
+                  <p>W środku chusty są drobne kryształki, które trzymają wodę — psa chłodzi sama woda i jej parowanie. Niczego więcej do chusty nie dodajemy. Wiążesz ją tak, by układała się wygodnie i nie uciskała szyi.</p>
                   <ul class="wm-acc-list">
-                    <li><strong>Bez prądu i lodówki:</strong> wystarczy zwykła woda z kranu</li>
-                    <li><strong>Lekka i szybkoschnąca:</strong> po praniu schnie w mig</li>
+                    <li><strong>Działa od samej wody:</strong> bez prądu i bez mrożenia</li>
+                    <li><strong>Lekka i wygodna:</strong> nie ciąży psu i nie krępuje ruchów</li>
                     <li><strong>Regulowane wiązanie:</strong> dopasujesz obwód do swojego psa</li>
                     <li><strong>Przy upale:</strong> chusta to wsparcie, nie zamiennik cienia, wody i opieki weterynarza</li>
                   </ul>
@@ -483,14 +487,15 @@ const jsonLd = {
                   </span>
                 </summary>
                 <div class="wm-acc-body">
-                  <p><strong>Zamówienia do 14:00</strong> wysyłamy tego samego dnia.</p>
+                  <p><strong>Zamówienia do 14:00</strong> w dni robocze wysyłamy tego samego dnia.</p>
                   <ul class="wm-acc-list">
-                    <li><strong>InPost Paczkomat:</strong> 9,99 zł · 24h</li>
+                    <li><strong>Zestawy 2+1 i 3+2:</strong> dostawa gratis (Paczkomat i kurier)</li>
+                    <li><strong>InPost Paczkomat:</strong> 9,99 zł · zwykle 24h</li>
                     <li><strong>Kurier InPost:</strong> 14,99 zł · 24–48h</li>
                     <li><strong>Pobranie:</strong> 19,99 zł</li>
                     <li><strong>Płatność:</strong> BLIK, karta lub przy odbiorze</li>
                   </ul>
-                  <p><strong>30 dni</strong> na bezproblemowy zwrot. Nie pytamy o powód.</p>
+                  <p><strong>30 dni</strong> na bezproblemowy zwrot. Nie pytamy o powód — odsyłasz chustę na swój koszt, a my oddajemy całą cenę zakupu.</p>
                 </div>
               </details>
             </div>
@@ -519,7 +524,7 @@ const jsonLd = {
       <!-- 02b HOW IT WORKS — 4 GIFY (zawsze pierwsza sekcja w opisie) -->
       <section class="section" id="how">
         <div class="wrap">
-          <h2 class="h2 reveal">Trzy ruchy i pies ma swój chłód</h2>
+          <h2 class="h2 reveal">Zmocz, wykręć, zawiąż — a gdy wyschnie, po prostu powtórz</h2>
 
           <div class="how-grid wm-carousel-mobile" data-carousel>
             <article class="how-card reveal">
@@ -530,7 +535,7 @@ const jsonLd = {
               </div>
               <span class="how-num">01</span>
               <h3>Zmocz wodą</h3>
-              <p>Wkładasz chustę pod kran albo do miski z zimną wodą i czekasz, aż nasiąknie.</p>
+              <p>Wkładasz chustę do miski z zimną wodą i czekasz, aż nasiąknie. Za pierwszym razem zostaw ją w wodzie kilka minut, aż kryształki w środku napęcznieją — potem wystarczy chwila.</p>
             </article>
 
             <article class="how-card reveal d1">
@@ -614,7 +619,7 @@ const jsonLd = {
               <span class="split-eyebrow">Zastosowanie</span>
               <h2 class="split-title">Na spacer, do ogrodu, do auta</h2>
               <p class="split-lede">Bryza sprawdza się wszędzie, gdzie pies łapie słońce — na porannym spacerze, w ogrodzie, na działce czy w nagrzanym aucie.</p>
-              <p class="split-lede">To chłód na każdy upalny dzień. Zmoczysz ją w domu przed wyjściem, zawiążesz psu na szyję i macie spokój — a w razie potrzeby odświeżysz ją wodą po drodze.</p>
+              <p class="split-lede">Zmoczysz ją w domu przed wyjściem, zawiążesz psu na szyi i macie spokój na długie godziny — kryształki w środku trzymają wilgoć przez cały spacer.</p>
             </div>
           </div>
         </div>
@@ -624,7 +629,7 @@ const jsonLd = {
       <section class="section persona-section">
         <div class="wrap">
           <h2 class="h2 reveal">Któremu psu upał daje najbardziej w kość</h2>
-          <p class="lede reveal d1">Cztery sytuacje. Sprawdź, czy poznajesz swojego psa.</p>
+          <p class="lede reveal d1">Sprawdź, czy w którejś z tych czterech sytuacji poznajesz swojego psa.</p>
 
           <div class="persona-grid">
             <article class="persona-card reveal">
@@ -678,13 +683,13 @@ const jsonLd = {
             <div class="split-content reveal d1">
               <span class="split-eyebrow">Co dostajesz</span>
               <h2 class="split-title">Pięć rzeczy w jednej chuście</h2>
-              <p class="split-lede">Każda po to, żeby upalny dzień był dla psa lżejszy. Nic na pokaz.</p>
+              <p class="split-lede">Każda z tych pięciu rzeczy jest po to, żeby gorący dzień był dla psa lżejszy — i żadna nie jest na pokaz.</p>
               <ul class="split-list">
-                <li><strong>Chłodzi godzinami</strong> — daje ulgę, póki paruje z niej woda.</li>
+                <li><strong>Trzyma chłód godzinami</strong> — a gdy wyschnie, po prostu moczysz ją znowu.</li>
                 <li><strong>Działa od samej wody</strong> — nie potrzebuje prądu ani mrożenia, wystarczy ją zmoczyć.</li>
                 <li><strong>Regulowana</strong> — dopasujesz i na małego, i na dużego psa.</li>
                 <li><strong>Miękka i lekka</strong> — leży wygodnie i nie przeszkadza psu.</li>
-                <li><strong>Prosta w obsłudze</strong> — zmocz, wykręć, zawiąż. Tyle.</li>
+                <li><strong>Prosta w obsłudze</strong> — zmocz, wykręć i zawiąż, niczego więcej nie trzeba.</li>
               </ul>
               <p class="split-note">Polski sklep, polska obsługa. Odbieramy telefon 9-17 i odpisujemy na maile w ciągu godziny.</p>
             </div>
@@ -698,9 +703,9 @@ const jsonLd = {
           <div class="split-grid reverse">
             <div class="split-content reveal">
               <span class="split-eyebrow">Dlaczego to ważne</span>
-              <h2 class="split-title">On nigdy Ci nie powie, że się dusi</h2>
+              <h2 class="split-title">Upał męczy go bardziej, niż po nim widać</h2>
               <p class="split-lede">Pies znosi upał w ciszy. Dyszy, szuka cienia, kładzie się na chłodnych kafelkach — i tyle. Sam o pomoc nie poprosi.</p>
-              <p class="split-lede">To Ty musisz zauważyć, że jest mu za gorąco — a Bryza daje ulgę jednym ruchem pod kranem.</p>
+              <p class="split-lede">To Ty musisz dostrzec, że cierpi — a z Bryzą pomożesz mu od razu. Wystarczy chwila pod kranem.</p>
               <p class="split-note">Pamiętaj też o cieniu i wodzie do picia, a przy niepokojących objawach zadzwoń do weterynarza. Chusta jest wsparciem, nie zamiennikiem opieki.</p>
             </div>
             <div class="split-media reveal d1">
@@ -802,7 +807,7 @@ const jsonLd = {
       <section class="section compare-band" id="compare">
         <div class="wrap">
           <h2 class="h2 reveal">Jak schłodzić psa w upał?</h2>
-          <p class="lede reveal d1">Trzy sposoby na gorące dni. Każdy ma swoje minusy. Tylko jeden chłodzi tak długo, jak go potrzebujesz.</p>
+          <p class="lede reveal d1">Na gorące dni są trzy sposoby — każdy ma swoje minusy, ale tylko jeden chłodzi tak długo, jak potrzebujesz.</p>
 
           <div class="compare">
             <article class="cc reveal">
@@ -845,7 +850,7 @@ const jsonLd = {
                 <li class="yes"><span class="mark">✓</span> Chłodzi dopóki paruje z niej woda</li>
                 <li class="yes"><span class="mark">✓</span> Bez prądu i bez zamrażarki</li>
                 <li class="yes"><span class="mark">✓</span> Regulowana — pasuje na każdego psa</li>
-                <li class="yes"><span class="mark">✓</span> Lekka, bierzesz ją wszędzie</li>
+                <li class="yes"><span class="mark">✓</span> Lekka — jedzie z Wami na spacer i na działkę</li>
                 <li class="yes"><span class="mark">✓</span> Wystarczy woda z kranu</li>
                 <li class="yes"><span class="mark">✓</span> 30 dni na zwrot bez pytań</li>
               </ul>
@@ -874,6 +879,10 @@ const jsonLd = {
               </ul>
             </article>
           </div>
+
+          <div class="compare-cta reveal">
+            <a href="#wm-bundle-list" class="cta-primary">Wybieram Bryzę dla mojego psa <span class="arrow">→</span></a>
+          </div>
         </div>
       </section>
 
@@ -889,7 +898,7 @@ const jsonLd = {
             <div class="phone-card-body">
               <span class="phone-eyebrow">Wolisz porozmawiać</span>
               <h2 class="phone-h2">Zadzwoń, jeśli masz wątpliwości</h2>
-              <p class="phone-lede">Pasuje na Twojego psa? Jak ją moczyć i prać? Jak długo trwa dostawa? Odbieramy i odpowiadamy konkretnie — bez sprzedażowej ściemy.</p>
+              <p class="phone-lede">Pasuje na Twojego psa? Jak ją moczyć i prać? Jak długo trwa dostawa? Odbieramy i odpowiadamy po ludzku — konkretnie, bez namawiania na siłę.</p>
               <div class="phone-actions">
                 <a href="tel:+48577723506" class="phone-cta-primary">
                   <span class="phone-cta-label">Zadzwoń</span>
@@ -910,7 +919,7 @@ const jsonLd = {
       <section class="section bundle-section">
         <div class="wrap">
           <h2 class="h2 reveal">Zamawiasz bez ryzyka</h2>
-          <p class="bundle-lede reveal d1">Jedna chusta, jasna cena i miesiąc na decyzję. Jeśli Wam nie podejdzie, odsyłasz ją i odzyskujesz pieniądze.</p>
+          <p class="bundle-lede reveal d1">Wybierasz zestaw, a ryzyko bierzemy na siebie. Masz 30 dni na decyzję — jeśli Wam nie podejdzie, odsyłasz i odzyskujesz pieniądze.</p>
 
           <div class="bundle-grid">
             <article class="bundle-card reveal">
@@ -918,24 +927,20 @@ const jsonLd = {
               <div class="bc-price">{priceFormatted}</div>
               <div class="bc-each">jedna chusta, jeden pies</div>
               <ul class="bc-feat">
-                <li>Chłód dla psa od pierwszego upalnego dnia</li>
                 <li>Do wyboru kolor zielony lub czarny</li>
-                <li>Wysyłka tego samego dnia przy zamówieniu do 14:00</li>
+                <li>Zestaw 2+1 gratis za 119 zł — z darmową dostawą</li>
+                <li>Wysyłka tego samego dnia przy zamówieniu do 14:00 w dni robocze</li>
               </ul>
-              <form method="POST" class="bc-form">
-                <input type="hidden" name="variantId" value={firstVariant?.id} />
-                <input type="hidden" name="quantity" value="1" />
-                <button type="submit" class="bc-btn bc-btn-primary">Dodaję do koszyka</button>
-              </form>
+              <a href="#wm-bundle-list" class="bc-btn bc-btn-primary" style="display:block;text-align:center;text-decoration:none">Wybieram zestaw i kolor →</a>
             </article>
 
             <article class="bundle-card reveal d1">
               <div class="bc-qty">30 dni na zwrot</div>
-              <div class="bc-price">bez ryzyka</div>
-              <div class="bc-each">ryzyko po naszej stronie</div>
+              <div class="bc-price">spokojna głowa</div>
+              <div class="bc-each">decyzję podejmujesz w domu</div>
               <ul class="bc-feat">
-                <li>Pies nie polubił chusty? Odsyłasz ją w 30 dni</li>
-                <li>Pełny zwrot pieniędzy, bez tłumaczenia się</li>
+                <li>Pies nie polubił chusty? Odsyłasz ją w ciągu 30 dni</li>
+                <li>Oddajemy całą cenę zakupu — co do złotówki</li>
                 <li>Nie pytamy o powód</li>
               </ul>
             </article>
@@ -1007,14 +1012,14 @@ const jsonLd = {
           <div class="faq-wrap">
             <div class="faq-side">
               <h2 class="h2 reveal">Masz pytania?</h2>
-              <p class="lede reveal d1">Osiem najczęstszych pytań przed zakupem. Konkret, bez ściemy.</p>
+              <p class="lede reveal d1">Dziewięć pytań, które przed zakupem słyszymy najczęściej — i szczera odpowiedź na każde z nich.</p>
               <div class="aside reveal d2">„Kupiłam, bo jedno pytanie w FAQ opisało dokładnie to, co martwiło mnie przy moim psie. Odpowiedź była poważna, nie sprzedażowa." <br><br><span style="font-family:var(--wm-f-body);font-style:normal;font-weight:600;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--wm-ink-2)">— Zofia, Warszawa, buldog francuski</span></div>
             </div>
 
             <div class="faq-list">
               <details class="faq-item" open>
                 <summary class="faq-q"><span class="q-num">01</span><span class="q-text">Jak długo Bryza trzyma chłód?</span><span class="q-icon"></span></summary>
-                <div class="faq-a"><div class="faq-a-inner">Tak długo, jak długo paruje z niej woda — zwykle kilka godzin, w zależności od upału i wiatru.<br><br>Gdy chusta wyschnie, wystarczy zmoczyć ją ponownie i znów chłodzi. W praktyce moczysz raz, a o resztę dba parowanie.</div></div>
+                <div class="faq-a"><div class="faq-a-inner">Zwykle kilka godzin, w zależności od upału i wiatru — kryształki w środku trzymają wodę, a jej parowanie cały czas odbiera ciepło.<br><br>Gdy chusta wyschnie, wystarczy zmoczyć ją ponownie i znów chłodzi. W praktyce moczysz ją raz przed wyjściem, a o resztę dba sama.</div></div>
               </details>
 
               <details class="faq-item">
@@ -1023,33 +1028,38 @@ const jsonLd = {
               </details>
 
               <details class="faq-item">
-                <summary class="faq-q"><span class="q-num">03</span><span class="q-text">Jak ją prać i konserwować?</span><span class="q-icon"></span></summary>
-                <div class="faq-a"><div class="faq-a-inner">Po sezonie albo po zabrudzonym spacerze po prostu ją pierzesz i suszysz — poliester schnie szybko i nie traci właściwości.<br><br>Trzymasz ją suchą, gdy z niej nie korzystasz, a przed użyciem znów moczysz wodą.</div></div>
+                <summary class="faq-q"><span class="q-num">03</span><span class="q-text">Czy pies zechce ją nosić?</span><span class="q-icon"></span></summary>
+                <div class="faq-a"><div class="faq-a-inner">Większość psów szybko o niej zapomina — chusta jest lekka, miękka i nie krępuje ruchów, a przyjemny chłód robi swoje. Przy pierwszym założeniu daj psu chwilę na oswojenie, najlepiej w domu.<br><br>A jeśli Twój pies należy do wyjątków i chusty nie polubi — masz 30 dni na zwrot. Odsyłasz ją i oddajemy Ci całą cenę zakupu.</div></div>
               </details>
 
               <details class="faq-item">
-                <summary class="faq-q"><span class="q-num">04</span><span class="q-text">Dla jakich psów Bryza sprawdzi się najlepiej?</span><span class="q-icon"></span></summary>
+                <summary class="faq-q"><span class="q-num">04</span><span class="q-text">Jak ją prać i konserwować?</span><span class="q-icon"></span></summary>
+                <div class="faq-a"><div class="faq-a-inner">Po sezonie albo po zabrudzonym spacerze przepłucz ją w czystej wodzie i rozłóż do wyschnięcia — wysuszona wraca do postaci płaskiej chusty i nie traci właściwości.<br><br>Trzymasz ją suchą, gdy z niej nie korzystasz, a przed użyciem znów moczysz wodą.</div></div>
+              </details>
+
+              <details class="faq-item">
+                <summary class="faq-q"><span class="q-num">05</span><span class="q-text">Dla jakich psów Bryza sprawdzi się najlepiej?</span><span class="q-icon"></span></summary>
                 <div class="faq-a"><div class="faq-a-inner">Najbardziej skorzystają psy, którym upał daje w kość: <strong>rasy z krótkim pyskiem</strong> (buldogi, mopsy, boksery), <strong>seniory</strong>, psy z gęstym lub długim futrem oraz te, które dużo czasu spędzają na dworze.<br><br>To nie znaczy, że inne psy nie skorzystają — w upalny dzień odrobina chłodu przyda się każdemu.</div></div>
               </details>
 
               <details class="faq-item">
-                <summary class="faq-q"><span class="q-num">05</span><span class="q-text">Jak często trzeba ją moczyć?</span><span class="q-icon"></span></summary>
-                <div class="faq-a"><div class="faq-a-inner">Wtedy, gdy wyschnie. Im większy upał i im suchsze powietrze, tym szybciej woda odparuje.<br><br>Najprościej trzymać przy sobie butelkę z wodą albo skorzystać z najbliższego kranu — moczenie zajmuje chwilę i chłód wraca.</div></div>
+                <summary class="faq-q"><span class="q-num">06</span><span class="q-text">Jak często trzeba ją moczyć?</span><span class="q-icon"></span></summary>
+                <div class="faq-a"><div class="faq-a-inner">Wtedy, gdy wyschnie. Im większy upał i im suchsze powietrze, tym szybciej woda odparuje.<br><br>W praktyce moczysz chustę w domu przed wyjściem i wilgoci wystarcza zwykle na cały spacer. Gdy wyschnie, moczysz ją ponownie pod kranem — i chłód wraca na kolejne godziny.</div></div>
               </details>
 
               <details class="faq-item">
-                <summary class="faq-q"><span class="q-num">06</span><span class="q-text">Czy to bezpieczne dla psa?</span><span class="q-icon"></span></summary>
-                <div class="faq-a"><div class="faq-a-inner">Chusta daje psu chłód przez wilgoć i parowanie — <strong>nic w nią nie dodajemy</strong>. Zakładasz ją tak, by leżała wygodnie i nie uciskała szyi.<br><br>Jeśli pies ma problemy zdrowotne, jak zawsze warto skonsultować upalne dni z weterynarzem.</div></div>
+                <summary class="faq-q"><span class="q-num">07</span><span class="q-text">Czy to bezpieczne dla psa?</span><span class="q-icon"></span></summary>
+                <div class="faq-a"><div class="faq-a-inner">Tak. Chłodzi sama woda zamknięta w kryształkach i jej parowanie — <strong>niczego więcej do chusty nie dodajemy</strong>. Zakładasz ją tak, by leżała wygodnie i nie uciskała szyi.<br><br>Jeśli pies ma problemy zdrowotne, jak zawsze warto skonsultować upalne dni z weterynarzem.</div></div>
               </details>
 
               <details class="faq-item">
-                <summary class="faq-q"><span class="q-num">07</span><span class="q-text">Czy chusta zastępuje opiekę nad psem w upale?</span><span class="q-icon"></span></summary>
+                <summary class="faq-q"><span class="q-num">08</span><span class="q-text">Czy chusta zastępuje opiekę nad psem w upale?</span><span class="q-icon"></span></summary>
                 <div class="faq-a"><div class="faq-a-inner">Nie — Bryza to wsparcie, nie zamiennik. W gorące dni nadal pamiętaj o cieniu, dostępie do wody i unikaniu spacerów w samo południe.<br><br>Chusta łagodzi odczuwanie upału, ale przy niepokojących objawach zawsze reaguj i w razie potrzeby jedź do weterynarza.</div></div>
               </details>
 
               <details class="faq-item">
-                <summary class="faq-q"><span class="q-num">08</span><span class="q-text">Ile trwa dostawa i czy mogę zwrócić?</span><span class="q-icon"></span></summary>
-                <div class="faq-a"><div class="faq-a-inner">Zamówienia do <strong>14:00 wysyłamy tego samego dnia</strong>. InPost Paczkomat dotrze w 24h, kurier InPost w 24-48h. Płacisz BLIK, kartą lub przy odbiorze.<br><br><strong>Masz 30 dni na zwrot.</strong> Chusta Wam nie podeszła? Odsyłasz, dostajesz pełny zwrot. Bez pytań, bez tłumaczenia się.</div></div>
+                <summary class="faq-q"><span class="q-num">09</span><span class="q-text">Ile trwa dostawa i czy mogę zwrócić?</span><span class="q-icon"></span></summary>
+                <div class="faq-a"><div class="faq-a-inner">Zamówienia do <strong>14:00 w dni robocze wysyłamy tego samego dnia</strong>. InPost Paczkomat dotrze zwykle w 24h, kurier InPost w 24-48h. Przy zestawach 2+1 i 3+2 dostawa jest darmowa. Płacisz BLIK, kartą lub przy odbiorze.<br><br><strong>Masz 30 dni na zwrot.</strong> Chusta Wam nie podeszła? Odsyłasz ją na swój koszt, a my oddajemy całą cenę zakupu — bez pytań i tłumaczenia się.</div></div>
               </details>
             </div>
           </div>
@@ -1062,7 +1072,7 @@ const jsonLd = {
           <div class="final-grid">
             <div>
               <h2 class="reveal">Lato nie zaczeka. <strong>On też nie.</strong></h2>
-              <p class="final-lede reveal d2">Każdy upalny dzień bez ulgi to dzień, który Twój pies przesypia w kącie, zamiast być przy Tobie. Możesz to zmienić jednym ruchem pod kranem. Dał Ci tyle wierności, ile potrafił — teraz Twoja kolej.</p>
+              <p class="final-lede reveal d2">Każdy gorący dzień bez odrobiny chłodu Twój pies przeczeka w kącie, zamiast spędzić go przy Tobie. A wystarczy zmoczona chusta na karku, żeby to zmienić. On jest Ci wierny każdego dnia — teraz Twoja kolej, żeby zadbać o niego.</p>
             </div>
             <div class="final-buy reveal d2">
               <div class="fb-row">
