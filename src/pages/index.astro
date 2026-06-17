@@ -36,27 +36,27 @@ const heroImage = heroProduct?.productAsset ? buildAssetUrl(heroProduct.productA
 // do /sklep (właściciel dobiera sam).
 // SVG paths dla persona icons (Lucide-style stroke, 24x24)
 const PERSONA_ICONS: Record<string, string> = {
-  bowl: '<path d="M3 11h18a9 9 0 0 1-18 0z"/><path d="M12 11V8"/><path d="M9 5c0-1 1-2 3-2s3 1 3 2"/><line x1="5" y1="20" x2="19" y2="20"/>',
-  belly: '<circle cx="12" cy="12" r="9"/><path d="M8 13c1.5 1.5 2.5 2 4 2s2.5-.5 4-2"/><circle cx="9" cy="10" r="0.6"/><circle cx="15" cy="10" r="0.6"/>',
-  zoom: '<path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/>',
   sun: '<circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/><line x1="5" y1="5" x2="7" y2="7"/><line x1="17" y1="17" x2="19" y2="19"/><line x1="5" y1="19" x2="7" y2="17"/><line x1="17" y1="7" x2="19" y2="5"/>',
+  paw: '<circle cx="5.5" cy="12.5" r="1.7"/><circle cx="9.5" cy="8" r="1.7"/><circle cx="14.5" cy="8" r="1.7"/><circle cx="18.5" cy="12.5" r="1.7"/><path d="M8 16.5c0-2.2 1.8-3.5 4-3.5s4 1.3 4 3.5c0 1.6-1.4 2.5-3 2.5h-2c-1.6 0-3-.9-3-2.5z"/>',
+  car: '<path d="M5 17h14v-5l-2-5H7l-2 5v5z"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>',
+  drop: '<path d="M12 2.5S6 9 6 14a6 6 0 0 0 12 0c0-5-6-11.5-6-11.5z"/>',
   home: '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/>',
   gift: '<polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>',
 };
 
 const personas = [
-  { icon: 'bowl', title: 'Łapczywy żarłok', desc: 'Miska znika w 30 sekund. Pies połyka suchą karmę całymi kęsami, prawie nie gryzie.' },
-  { icon: 'belly', title: 'Wrażliwy brzuch', desc: 'Po szybkim jedzeniu wzdęcia, czkawka, zwracanie. Posiłek kończy się dyskomfortem.' },
-  { icon: 'zoom', title: 'Energiczny młodziak', desc: 'Nadmiar energii, nuda w domu, rozkopana miska po obiedzie. Głowa potrzebuje zajęcia.' },
-  { icon: 'sun', title: 'Upały i długie spacery', desc: 'Latem dyszy po kilku minutach, szybko się przegrzewa, niechętnie wychodzi w skwar.' },
-  { icon: 'home', title: 'Pies zostaje sam', desc: 'Wychodzisz do pracy, a pupil nudzi się przez pół dnia. Potrzebuje czegoś do roboty.' },
-  { icon: 'gift', title: 'Prezent dla psiary', desc: 'Komuś, kto traktuje psa jak członka rodziny. Coś sensownego, nie kolejny gadżet do szuflady.' },
+  { icon: 'sun', title: 'Upalne lato', desc: 'Termometr powyżej 25°C. Pies dyszy już po kilku minutach i szuka cienia zamiast iść dalej.' },
+  { icon: 'paw', title: 'Senior lub krótki pysk', desc: 'Buldogi, mopsy, starsze psy. Znoszą gorąco najgorzej i przegrzewają się szybciej niż reszta.' },
+  { icon: 'car', title: 'Auto i podróże', desc: 'Nagrzane wnętrze, transporter, trasa na wakacje. W drodze pies nie ma jak się schłodzić.' },
+  { icon: 'drop', title: 'Długie spacery i trening', desc: 'Pies chce iść i biegać, ale w cieple szybko się grzeje i pada po kilkunastu minutach.' },
+  { icon: 'home', title: 'Balkon, taras, działka', desc: 'Leży na słońcu całe popołudnie i dyszy. W domu też potrafi być duszno i gorąco.' },
+  { icon: 'gift', title: 'Prezent dla psiary', desc: 'Komuś, kto traktuje psa jak członka rodziny. Coś, co realnie pomaga, nie gadżet do szuflady.' },
 ];
 ---
 
 <BaseLayout
-  title="dbamyopupile — akcesoria, które ułatwiają życie psu i Tobie"
-  description="Sklep z akcesoriami dla psów: miski spowalniające jedzenie, chłodzące bandany i więcej. Bezpieczne materiały, polska marka, wysyłka 24h InPost."
+  title="dbamyopupile — Bryza, szal chłodzący dla psa na upały"
+  description="Bryza to szal chłodzący dla psa: namaczasz w wodzie i chłodzi przez kilka godzin. Spacer bez przegrzewania, bez lodu i prądu. Polska marka, wysyłka 24h InPost."
 >
   <div class="dd-home-stitch bg-background min-h-screen">
 
@@ -65,13 +65,13 @@ const personas = [
       <div class="container-stitch flex flex-col md:flex-row items-center gap-md md:gap-lg py-md md:py-xl">
         <!-- LEFT: text + CTAs -->
         <div class="flex-1 flex flex-col gap-sm">
-          <span class="dd-hero-eyebrow">Polska marka dla psów</span>
+          <span class="dd-hero-eyebrow">Szal chłodzący dla psa</span>
           <h1 class="text-h1">
-            Twój pies pochłania miskę<br/>
-            <span style="color: var(--brand-primary);">w 30 sekund</span>
+            W upał pies pada<br/>
+            <span style="color: var(--brand-primary);">po kilku minutach</span>
           </h1>
           <p class="text-body-lg" style="max-width: 520px;">
-            Łapczywe jedzenie to nie charakter psa — to wzdęcia, czkawka i nuda. Robimy miski, które spowalniają posiłek do 5 minut, i szale chłodzące na upalne spacery. Bezpieczne materiały. Testujemy na własnych psach.
+            Pies nie poci się jak my — w gorąco ratuje się dyszeniem, a to nie nadąża. Bryza to szal, który namaczasz w zimnej wodzie i chłodzi psią szyję przez kilka godzin. Pełny spacer bez przegrzewania, bez lodu i bez prądu.
           </p>
           <div class="flex gap-sm flex-wrap mt-xs">
             <a href="/sklep" class="btn-pill btn-pill--primary">
@@ -122,34 +122,34 @@ const personas = [
     <section class="section-stitch dd-section-problem">
       <div class="container-stitch">
         <div class="dd-problem-head">
-          <span class="dd-eyebrow">Znasz to ze swoim psem</span>
-          <h2 class="text-h2">Posiłek znika w sekundy.<br/><span style="color: var(--brand-primary);">A potem zaczynają się kłopoty.</span></h2>
+          <span class="dd-eyebrow">Znasz to z upalnego dnia</span>
+          <h2 class="text-h2">Skwar daje psu w kość.<br/><span style="color: var(--brand-primary);">A on nie umie się schłodzić.</span></h2>
         </div>
         <div class="dd-problem-grid">
           <div class="dd-problem-card">
-            <span class="dd-problem-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11h18a9 9 0 0 1-18 0z"/><path d="M12 11V8"/><path d="M9 5c0-1 1-2 3-2s3 1 3 2"/><line x1="5" y1="20" x2="19" y2="20"/></svg></span>
-            <h3 class="dd-problem-card-title">Połyka, nie gryzie</h3>
-            <p class="dd-problem-card-desc">Cała miska w 30 sekund, kęsy w całości. Pies nie je — on pochłania, jakby ktoś miał mu zabrać.</p>
+            <span class="dd-problem-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v6"/><path d="M6.5 8a6 6 0 1 0 11 0"/><path d="M12 14v4"/><path d="M10 20h4"/></svg></span>
+            <h3 class="dd-problem-card-title">Dyszy po kilku minutach</h3>
+            <p class="dd-problem-card-desc">Pies nie poci się jak człowiek. W upał chłodzi się głównie dyszeniem, a to nie nadąża.</p>
           </div>
           <div class="dd-problem-card">
-            <span class="dd-problem-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 14c1.5 1.5 2.5 2 4 2s2.5-.5 4-2"/></svg></span>
-            <h3 class="dd-problem-card-title">Wzdęcia i zwracanie</h3>
-            <p class="dd-problem-card-desc">Po szybkim jedzeniu czkawka, bekanie, czasem zwrócona karma na dywanie. Brzuch tego nie nadąża.</p>
+            <span class="dd-problem-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17h18"/><path d="M5 17l1-5h12l1 5"/><circle cx="8" cy="9" r="1"/><circle cx="16" cy="9" r="1"/></svg></span>
+            <h3 class="dd-problem-card-title">Kładzie się w cień</h3>
+            <p class="dd-problem-card-desc">Po kilku minutach pada na trawę, nie chce iść dalej. Spacer kończy się szybciej niż się zaczął.</p>
           </div>
           <div class="dd-problem-card">
-            <span class="dd-problem-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></svg></span>
-            <h3 class="dd-problem-card-title">Nuda i rozkopana miska</h3>
-            <p class="dd-problem-card-desc">Zjadł w mig, energia została. Miska wędruje po kuchni, a pies szuka, co by tu jeszcze rozrobić.</p>
+            <span class="dd-problem-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14v-5l-2-5H7l-2 5v5z"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg></span>
+            <h3 class="dd-problem-card-title">Nagrzane auto i balkon</h3>
+            <p class="dd-problem-card-desc">W transporterze, w aucie, na słonecznym tarasie pies nie ma jak odprowadzić ciepła.</p>
           </div>
           <div class="dd-problem-card">
             <span class="dd-problem-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/></svg></span>
-            <h3 class="dd-problem-card-title">Przegrzewa się w upały</h3>
-            <p class="dd-problem-card-desc">Latem dyszy po kilku minutach spaceru, kładzie się w cień, nie chce iść dalej. Skwar go ścina.</p>
+            <h3 class="dd-problem-card-title">Seniory i krótkie pyski</h3>
+            <p class="dd-problem-card-desc">Buldogi, mopsy, starsze psy znoszą gorąco najgorzej. Dla nich upał bywa naprawdę groźny.</p>
           </div>
         </div>
         <p class="dd-problem-closing">
-          To nie kwestia „taki już jest".<br/>
-          <strong>To codzienne sytuacje. Każdą z nich zmienia jedno konkretne akcesorium.</strong>
+          To nie kaprys i nie lenistwo.<br/>
+          <strong>Tak działa pies, który nie nadąża z chłodzeniem. Bryza mu w tym pomaga.</strong>
         </p>
       </div>
     </section>
@@ -222,7 +222,7 @@ const personas = [
             <div class="flex gap-xs">
               {[...Array(5)].map(() => <svg viewBox="0 0 24 24" width="16" height="16" fill="#F5B544" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z"/></svg>)}
             </div>
-            <p class="text-body-sm">„Labrador zżerał miskę w 20 sekund, potem leżał z wzdętym brzuchem. Teraz je 10 minut i już nie zwraca po obiedzie. Rok temu bym powinna."</p>
+            <p class="text-body-sm">„W lipcu labrador padał po pięciu minutach i kładł się na trawie. Z Bryzą przeszliśmy całą rundę nad rzeką i wrócił normalnie. Powinnam ją kupić rok temu."</p>
             <div class="dd-stitch-testimonial-author">
               <div class="dd-stitch-avatar">A</div>
               <div>
@@ -235,12 +235,12 @@ const personas = [
             <div class="flex gap-xs">
               {[...Array(5)].map(() => <svg viewBox="0 0 24 24" width="16" height="16" fill="#F5B544" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z"/></svg>)}
             </div>
-            <p class="text-body-sm">„Mój border to kłębek energii — miskę ogarniał w chwilę, potem rozkopywał całą kuchnię. Teraz posiłek go zajmuje naprawdę. Spokój."</p>
+            <p class="text-body-sm">„Mam buldoga, a wiadomo jak krótkie pyski znoszą upał. Bryza nie czyni cudów, ale Frania jest spokojniejsza i mniej sapie. Zakładam już przy 25 stopniach."</p>
             <div class="dd-stitch-testimonial-author">
               <div class="dd-stitch-avatar">T</div>
               <div>
                 <p class="text-button" style="font-size: 13px;">Tomek</p>
-                <p class="text-body-sm" style="font-size: 11px; color: var(--brand-muted);">border collie</p>
+                <p class="text-body-sm" style="font-size: 11px; color: var(--brand-muted);">buldog francuski</p>
               </div>
             </div>
           </article>
@@ -248,7 +248,7 @@ const personas = [
             <div class="flex gap-xs">
               {[...Array(5)].map(() => <svg viewBox="0 0 24 24" width="16" height="16" fill="#F5B544" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z"/></svg>)}
             </div>
-            <p class="text-body-sm">„W lipcu kładł się na trawie po pięciu minutach. Z bandaną przeszliśmy całą rundę i wrócił normalnie. Nie spodziewałam się, że szal z wodą aż tyle robi."</p>
+            <p class="text-body-sm">„Spodziewałam się, że wyschnie po pół godziny jak mokry ręcznik. Trzymała chłód prawie trzy godziny na działce. Naprawdę robi różnicę."</p>
             <div class="dd-stitch-testimonial-author">
               <div class="dd-stitch-avatar" style="background: var(--brand-accent-soft); color: var(--brand-accent);">M</div>
               <div>
@@ -290,7 +290,7 @@ const personas = [
               </svg>
             </span>
             <h3 class="dd-benefit-title">Bezpieczne dla psa</h3>
-            <p class="dd-benefit-desc">Materiały dopuszczone do kontaktu z żywnością, bez ostrych krawędzi. Zanim coś trafi do sklepu, przechodzi przez nasze psy.</p>
+            <p class="dd-benefit-desc">Łagodny chłód przez parowanie, bez zimnego szoku. Miękka, przewiewna tkanina. Zanim coś trafi do sklepu, przechodzi przez nasze psy.</p>
           </div>
           <div class="dd-benefit-card">
             <span class="dd-benefit-icon">
@@ -301,7 +301,7 @@ const personas = [
               </svg>
             </span>
             <h3 class="dd-benefit-title">Trwałe materiały</h3>
-            <p class="dd-benefit-desc">Psie zęby, codzienne mycie, stres przy misce — to powinno przeżyć. Nie kupujemy od producentów, których produkty rozpadają się po miesiącu.</p>
+            <p class="dd-benefit-desc">Setki namoczeń, pranie, cały sezon w użyciu — to powinno wytrzymać. Nie kupujemy od producentów, których rzeczy rozpadają się po miesiącu.</p>
           </div>
           <div class="dd-benefit-card">
             <span class="dd-benefit-icon">
@@ -325,12 +325,12 @@ const personas = [
         <div class="dd-founder">
           <div class="dd-founder-body">
             <span class="dd-eyebrow">Kto za tym stoi</span>
-            <h2 class="text-h2">Sami patrzyliśmy,<br/><span style="color: var(--brand-primary);">jak nasze psy się męczą</span></h2>
+            <h2 class="text-h2">Sami patrzyliśmy,<br/><span style="color: var(--brand-primary);">jak nasz pies się męczy</span></h2>
             <p class="dd-founder-p">
-              dbamyopupile nie powstało w sali konferencyjnej. Mamy psy i znamy to z domu: miska znika w 20 sekund, po obiedzie wzdęty brzuch, latem dyszenie po pięciu minutach spaceru. Próbowaliśmy rozsypywać karmę po podłodze, mokre ręczniki w upał, spowalnianie ręką. Półśrodki.
+              dbamyopupile nie powstało w sali konferencyjnej. Pierwszy naprawdę gorący lipiec i nasz pies po pięciu minutach spaceru kładł się w cień i nie chciał iść dalej. Próbowaliśmy mokrych ręczników, które wysychały w kwadrans, kostek lodu, których nie da się wziąć na spacer, postojów pod każdym drzewem. Półśrodki.
             </p>
             <p class="dd-founder-p">
-              W końcu zaczęliśmy szukać rzeczy, które działają, i testować je na własnych psach. Do sklepu trafia tylko to, co my sami zostawiamy w domu na stałe.
+              W końcu zaczęliśmy szukać czegoś, co naprawdę trzyma chłód i działa też w ruchu. Przetestowaliśmy kilka splotów na własnych psach, aż znaleźliśmy taki, który chłodzi godzinami. Tak powstała Bryza.
             </p>
             <div class="dd-founder-sign">
               <div class="dd-founder-sign-line"></div>
@@ -346,7 +346,7 @@ const personas = [
     <section class="section-stitch">
       <div class="container-stitch">
         <div class="dd-stitch-final-card">
-          <h2 class="text-h2" style="color: #FFFFFF;">Spokojniejszy posiłek.<br/>Lepszy spacer. Dzisiaj w paczkomacie.</h2>
+          <h2 class="text-h2" style="color: #FFFFFF;">Daj psu przejść upał<br/>spokojnie. Dzisiaj w paczkomacie.</h2>
           <p class="text-body-lg" style="color: rgba(255,255,255,.78); max-width: 600px;">
             Wysyłka 24h InPost z magazynu w Polsce. 14 dni na zwrot bez pytań. Darmowa dostawa od 99 zł.
           </p>
