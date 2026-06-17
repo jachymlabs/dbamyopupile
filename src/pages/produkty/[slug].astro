@@ -905,41 +905,38 @@ const isOptionOos = (id: string): boolean => optionHasStock[id] !== true;
 
             </form>
 
-            {/* Bryza: 3 najczęstsze pytania pod ATC (bezpieczeństwo / rasa / użycie) */}
+            {/* Bryza: 3 najczęstsze pytania pod ATC — karty z ikoną (inny styl niż akordeon niżej) */}
             {slug === 'bryza' && (
               <div class="pdp-bryza-faq">
                 <h3 class="pdp-bryza-faq-title">Najczęstsze pytania</h3>
-                <div class="pdp-mini-faq">
-                  <details class="pdp-mini-faq-item" open>
-                    <summary>
-                      <span class="pdp-mini-faq-q">
-                        <span class="material-symbols-outlined">health_and_safety</span>
-                        Czy szal jest bezpieczny dla psa?
-                      </span>
-                      <span class="material-symbols-outlined pdp-mini-faq-chev">expand_more</span>
-                    </summary>
-                    <p>Tak. Bryza chłodzi łagodnie, przez parowanie wody, więc nie ma zimnego szoku jak przy kostkach lodu. Tkanina jest miękka i przewiewna, zawiązujesz ją luźno na szyi, tak jak chustę, bez uciskania. Przy pierwszym założeniu popatrz na psa przez chwilę i nie zostawiaj go z szalem bez nadzoru na cały dzień.</p>
-                  </details>
-                  <details class="pdp-mini-faq-item">
-                    <summary>
-                      <span class="pdp-mini-faq-q">
-                        <span class="material-symbols-outlined">pets</span>
-                        Czy pasuje na każdą rasę psa?
-                      </span>
-                      <span class="material-symbols-outlined pdp-mini-faq-chev">expand_more</span>
-                    </summary>
-                    <p>Bryza jest w rozmiarach S, M i L, od małego psa po dużego. Zawiązujesz ją na szyi, więc masz zapas regulacji. Zmierz obwód szyi w miejscu, gdzie pies nosi obrożę, i porównaj z tabelą przy wariancie. Jeśli pies wypada między rozmiarami, wybierz większy.</p>
-                  </details>
-                  <details class="pdp-mini-faq-item">
-                    <summary>
-                      <span class="pdp-mini-faq-q">
-                        <span class="material-symbols-outlined">water_drop</span>
-                        Jak używać szala?
-                      </span>
-                      <span class="material-symbols-outlined pdp-mini-faq-chev">expand_more</span>
-                    </summary>
-                    <p>Namocz szal w zimnej wodzie przez chwilę, lekko wykręć nadmiar, żeby był wilgotny, a nie ociekający, i zawiąż na szyi psa. Chłodzi przez kilka godzin. Gdy wyschnie, po prostu namocz go znowu, tyle razy ile trzeba, także w trakcie spaceru.</p>
-                  </details>
+                <div class="pdp-pf-list">
+                  <div class="pdp-pf-item">
+                    <span class="pdp-pf-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+                    </span>
+                    <div class="pdp-pf-body">
+                      <p class="pdp-pf-q">Czy szal jest bezpieczny dla psa?</p>
+                      <p class="pdp-pf-a">Tak. Bryza chłodzi łagodnie, przez parowanie wody, więc nie ma zimnego szoku jak przy kostkach lodu. Tkanina jest miękka i przewiewna, zawiązujesz ją luźno na szyi, bez uciskania. Przy pierwszym założeniu popatrz na psa przez chwilę i nie zostawiaj go z szalem bez nadzoru na cały dzień.</p>
+                    </div>
+                  </div>
+                  <div class="pdp-pf-item">
+                    <span class="pdp-pf-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5.5" cy="12.5" r="1.7"/><circle cx="9.5" cy="8" r="1.7"/><circle cx="14.5" cy="8" r="1.7"/><circle cx="18.5" cy="12.5" r="1.7"/><path d="M8 16.5c0-2.2 1.8-3.5 4-3.5s4 1.3 4 3.5c0 1.6-1.4 2.5-3 2.5h-2c-1.6 0-3-.9-3-2.5z"/></svg>
+                    </span>
+                    <div class="pdp-pf-body">
+                      <p class="pdp-pf-q">Czy pasuje na każdą rasę psa?</p>
+                      <p class="pdp-pf-a">Bryza jest w rozmiarach S, M i L, od małego psa po dużego. Zawiązujesz ją na szyi, więc masz zapas regulacji. Zmierz obwód szyi w miejscu, gdzie pies nosi obrożę, i porównaj z tabelą przy wariancie. Jeśli pies wypada między rozmiarami, wybierz większy.</p>
+                    </div>
+                  </div>
+                  <div class="pdp-pf-item">
+                    <span class="pdp-pf-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.5S6 9 6 14a6 6 0 0 0 12 0c0-5-6-11.5-6-11.5z"/></svg>
+                    </span>
+                    <div class="pdp-pf-body">
+                      <p class="pdp-pf-q">Jak używać szala?</p>
+                      <p class="pdp-pf-a">Namocz szal w zimnej wodzie przez chwilę, lekko wykręć nadmiar, żeby był wilgotny, a nie ociekający, i zawiąż na szyi psa. Chłodzi przez kilka godzin. Gdy wyschnie, po prostu namocz go znowu, tyle razy ile trzeba, także w trakcie spaceru.</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
@@ -2707,6 +2704,45 @@ const isOptionOos = (id: string): boolean => optionHasStock[id] !== true;
       font-weight: 700;
       color: var(--brand-heading);
       margin: 0 0 10px;
+    }
+    .pdp-pf-list { display: flex; flex-direction: column; gap: 10px; }
+    .pdp-pf-item {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      background: var(--brand-surface);
+      border: 1px solid var(--brand-border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      transition: border-color 180ms ease, box-shadow 180ms ease;
+    }
+    .pdp-pf-item:hover { border-color: var(--brand-primary); box-shadow: 0 2px 10px rgba(116, 151, 191, 0.10); }
+    .pdp-pf-icon {
+      flex-shrink: 0;
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: var(--brand-primary-soft);
+      color: var(--brand-primary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .pdp-pf-icon svg { width: 20px; height: 20px; }
+    .pdp-pf-body { flex: 1; min-width: 0; }
+    .pdp-pf-q {
+      font-family: 'Outfit', sans-serif;
+      font-size: 14.5px;
+      font-weight: 700;
+      color: var(--brand-heading);
+      line-height: 1.3;
+      margin: 0 0 4px;
+    }
+    .pdp-pf-a {
+      font-size: 13px;
+      line-height: 1.55;
+      color: var(--brand-text);
+      margin: 0;
     }
     .pdp-bundle-tile--popular { border-color: var(--brand-primary); }
     .pdp-bundle-flag {
