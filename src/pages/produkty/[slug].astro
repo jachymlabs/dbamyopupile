@@ -661,38 +661,57 @@ const isOptionOos = (id: string): boolean => optionHasStock[id] !== true;
                 <Fragment>
                 <div class="pdp-bundle">
                   <span class="pdp-bundle-title">Wybierz zestaw</span>
+                  <p class="pdp-bundle-omnibus" id="pdp-bundle-omnibus" aria-live="polite"></p>
                   <div class="pdp-bundle-tiers" role="radiogroup" aria-label="Wybierz zestaw">
-                    <div class="pdp-bundle-tile is-selected" data-bundle-qty="1" role="radio" aria-checked="true" tabindex="0">
+                    <div class="pdp-bundle-tile is-selected" data-bundle-qty="1" data-omnibus="59,99 zł" role="radio" aria-checked="true" tabindex="0">
                       <div class="pdp-bundle-head">
                         <span class="pdp-bundle-radio" aria-hidden="true"></span>
                         <span class="pdp-bundle-info">
                           <span class="pdp-bundle-name">1 sztuka</span>
-                          <span class="pdp-bundle-sub">Na start</span>
+                          <span class="pdp-bundle-sub">Pojedyncza sztuka</span>
                         </span>
-                        <span class="pdp-bundle-price">59,99 zł</span>
+                        <span class="pdp-bundle-price">
+                          <span class="pdp-bundle-price-now">59,99 zł</span>
+                        </span>
                       </div>
                       <div class="pdp-bundle-tile-colors"></div>
                     </div>
-                    <div class="pdp-bundle-tile pdp-bundle-tile--popular" data-bundle-qty="3" role="radio" aria-checked="false" tabindex="0">
+                    <div class="pdp-bundle-tile pdp-bundle-tile--popular" data-bundle-qty="3" data-omnibus="99,99 zł" role="radio" aria-checked="false" tabindex="0">
                       <span class="pdp-bundle-flag">Najpopularniejszy</span>
                       <div class="pdp-bundle-head">
                         <span class="pdp-bundle-radio" aria-hidden="true"></span>
                         <span class="pdp-bundle-info">
                           <span class="pdp-bundle-name">2 + 1 gratis <em>(3 szt.)</em></span>
-                          <span class="pdp-bundle-sub">Darmowa dostawa, taniej o 79,98 zł</span>
+                          <span class="pdp-bundle-sub">
+                            <span class="pdp-bundle-ship">
+                              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                              Darmowa dostawa
+                            </span>
+                          </span>
                         </span>
-                        <span class="pdp-bundle-price">99,99 zł</span>
+                        <span class="pdp-bundle-price">
+                          <span class="pdp-bundle-price-old">179,97 zł</span>
+                          <span class="pdp-bundle-price-now">99,99 zł</span>
+                        </span>
                       </div>
                       <div class="pdp-bundle-tile-colors"></div>
                     </div>
-                    <div class="pdp-bundle-tile" data-bundle-qty="5" role="radio" aria-checked="false" tabindex="0">
+                    <div class="pdp-bundle-tile" data-bundle-qty="5" data-omnibus="149,99 zł" role="radio" aria-checked="false" tabindex="0">
                       <div class="pdp-bundle-head">
                         <span class="pdp-bundle-radio" aria-hidden="true"></span>
                         <span class="pdp-bundle-info">
                           <span class="pdp-bundle-name">3 + 2 gratis <em>(5 szt.)</em></span>
-                          <span class="pdp-bundle-sub">Darmowa dostawa, taniej o 149,96 zł</span>
+                          <span class="pdp-bundle-sub">
+                            <span class="pdp-bundle-ship">
+                              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                              Darmowa dostawa
+                            </span>
+                          </span>
                         </span>
-                        <span class="pdp-bundle-price">149,99 zł</span>
+                        <span class="pdp-bundle-price">
+                          <span class="pdp-bundle-price-old">299,95 zł</span>
+                          <span class="pdp-bundle-price-now">149,99 zł</span>
+                        </span>
                       </div>
                       <div class="pdp-bundle-tile-colors"></div>
                     </div>
@@ -721,15 +740,38 @@ const isOptionOos = (id: string): boolean => optionHasStock[id] !== true;
                         };
                       }).filter(function (c) { return c.variantId; });
 
-                      // Ukryj oryginalny selektor koloru + stepper ilości + sticky bar (bundle przejmuje wybór).
+                      // Ukryj oryginalny selektor koloru, stepper, sticky bar, główną cenę + omnibus.
                       document.querySelectorAll('.pdp-variant-block').forEach(function (b) { b.style.display = 'none'; });
                       if (qtyControl) qtyControl.style.display = 'none';
-                      const hint = document.getElementById('pdp-variant-hint');
-                      if (hint) hint.style.display = 'none';
+                      const priceBlock = document.querySelector('.pdp-price-block');
+                      if (priceBlock) priceBlock.style.display = 'none';
                       const sticky = document.querySelector('.dop-sticky-atc');
                       if (sticky) sticky.style.display = 'none';
+                      const hint = document.getElementById('pdp-variant-hint');
+                      const omnibusEl = document.getElementById('pdp-bundle-omnibus');
+                      const vidInput = document.getElementById('variantId');
 
                       const firstAvail = (colors.find(function (c) { return !c.oos; }) || colors[0] || {}).variantId || '';
+
+                      // Bundle sam zarządza kolorem — wyłącz gating "wybierz wariant" i trzymaj ATC aktywny.
+                      function forceAtcReady() {
+                        if (vidInput && firstAvail) vidInput.value = firstAvail;
+                        if (hint) { hint.hidden = true; hint.style.display = 'none'; }
+                        if (atcBtn) {
+                          atcBtn.removeAttribute('aria-disabled');
+                          atcBtn.removeAttribute('data-needs-selection');
+                          atcBtn.classList.remove('pdp-atc--needs-selection', 'pdp-atc--disabled');
+                          atcBtn.removeAttribute('disabled');
+                          atcBtn.disabled = false;
+                        }
+                      }
+
+                      function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
+                      function nameOf(vid) {
+                        const c = colors.find(function (x) { return String(x.variantId) === String(vid); });
+                        return c ? capitalize(c.name) : '';
+                      }
+
                       let tierQty = 1;
                       let slots = [];
 
@@ -738,10 +780,10 @@ const isOptionOos = (id: string): boolean => optionHasStock[id] !== true;
                         let html = '';
                         for (let i = 0; i < tierQty; i++) {
                           if (!slots[i]) slots[i] = firstAvail;
-                          html += '<div class="pdp-bundle-color-row"><span class="pdp-bundle-color-label">Kolor ' + (i + 1) + ':</span><div class="pdp-bundle-color-opts" role="radiogroup">';
+                          html += '<div class="pdp-bundle-color-row"><span class="pdp-bundle-color-label">Kolor ' + (i + 1) + ': <span class="pdp-bundle-color-chosen" data-chosen>' + nameOf(slots[i]) + '</span></span><div class="pdp-bundle-color-opts" role="radiogroup">';
                           colors.forEach(function (c) {
                             const active = String(slots[i]) === String(c.variantId);
-                            html += '<button type="button" class="pdp-bundle-color-sw' + (active ? ' is-active' : '') + (c.oos ? ' is-oos' : '') + '" data-slot="' + i + '" data-variant="' + c.variantId + '" title="' + c.name + '" aria-label="' + c.name + '"' + (c.oos ? ' disabled' : '') + ' style="background:' + c.color + '"></button>';
+                            html += '<button type="button" class="pdp-bundle-color-sw' + (active ? ' is-active' : '') + (c.oos ? ' is-oos' : '') + '" data-slot="' + i + '" data-variant="' + c.variantId + '" data-name="' + c.name + '" title="' + capitalize(c.name) + '" aria-label="' + capitalize(c.name) + '"' + (c.oos ? ' disabled' : '') + ' style="background:' + c.color + '"></button>';
                           });
                           html += '</div></div>';
                         }
@@ -752,6 +794,9 @@ const isOptionOos = (id: string): boolean => optionHasStock[id] !== true;
                             if (sw.classList.contains('is-oos')) return;
                             slots[parseInt(sw.getAttribute('data-slot'), 10)] = sw.getAttribute('data-variant');
                             sw.parentNode.querySelectorAll('.pdp-bundle-color-sw').forEach(function (x) { x.classList.toggle('is-active', x === sw); });
+                            const row = sw.closest('.pdp-bundle-color-row');
+                            const chosen = row ? row.querySelector('[data-chosen]') : null;
+                            if (chosen) chosen.textContent = capitalize(sw.getAttribute('data-name'));
                           });
                         });
                       }
@@ -767,7 +812,9 @@ const isOptionOos = (id: string): boolean => optionHasStock[id] !== true;
                         });
                         tierQty = parseInt(t.getAttribute('data-bundle-qty'), 10) || 1;
                         slots = slots.slice(0, tierQty);
+                        if (omnibusEl) omnibusEl.textContent = 'Najniższa cena z 30 dni: ' + (t.getAttribute('data-omnibus') || '');
                         renderRows(t.querySelector('.pdp-bundle-tile-colors'));
+                        forceAtcReady();
                       }
                       tiles.forEach(function (t) {
                         t.addEventListener('click', function (e) {
@@ -779,6 +826,8 @@ const isOptionOos = (id: string): boolean => optionHasStock[id] !== true;
                         });
                       });
                       selectTier(bundle.querySelector('.pdp-bundle-tile.is-selected') || tiles[0]);
+                      setTimeout(forceAtcReady, 0);
+                      setTimeout(forceAtcReady, 300);
 
                       if (form && atcBtn) {
                         form.addEventListener('submit', async function (e) {
@@ -2571,15 +2620,47 @@ const isOptionOos = (id: string): boolean => optionHasStock[id] !== true;
       line-height: 1.25;
     }
     .pdp-bundle-name em { font-style: normal; font-weight: 500; color: var(--brand-muted); font-size: 14px; }
-    .pdp-bundle-sub { font-size: 12.5px; font-weight: 600; color: var(--brand-primary-hover); }
+    .pdp-bundle-sub { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 600; color: var(--brand-primary-hover); }
+    .pdp-bundle-ship {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--brand-primary-soft);
+      color: var(--brand-primary-hover);
+      font-family: 'Outfit', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 9px 3px 7px;
+      border-radius: 999px;
+    }
+    .pdp-bundle-ship svg { flex-shrink: 0; }
     .pdp-bundle-price {
       flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      line-height: 1.05;
+    }
+    .pdp-bundle-price-old {
       font-family: 'Outfit', sans-serif;
-      font-size: 18px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--brand-muted);
+      text-decoration: line-through;
+    }
+    .pdp-bundle-price-now {
+      font-family: 'Outfit', sans-serif;
+      font-size: 19px;
       font-weight: 800;
       color: var(--brand-heading);
       letter-spacing: -0.01em;
     }
+    .pdp-bundle-omnibus {
+      font-size: 11.5px;
+      color: var(--brand-muted);
+      margin: 0 0 2px;
+    }
+    .pdp-bundle-color-chosen { font-weight: 700; color: var(--brand-heading); }
     .pdp-bundle-tile--popular { border-color: var(--brand-primary); }
     .pdp-bundle-flag {
       position: absolute;
@@ -2607,8 +2688,9 @@ const isOptionOos = (id: string): boolean => optionHasStock[id] !== true;
     }
     .pdp-bundle-color-opts { display: flex; gap: 10px; flex-wrap: wrap; }
     .pdp-bundle-color-sw {
-      width: 34px;
-      height: 34px;
+      position: relative;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
       border: 2px solid var(--brand-border);
       cursor: pointer;
@@ -2618,7 +2700,19 @@ const isOptionOos = (id: string): boolean => optionHasStock[id] !== true;
     .pdp-bundle-color-sw:hover { transform: scale(1.08); }
     .pdp-bundle-color-sw.is-active {
       border-color: var(--brand-heading);
-      box-shadow: 0 0 0 3px var(--brand-primary-soft);
+      box-shadow: 0 0 0 3px var(--brand-primary);
+      transform: scale(1.06);
+    }
+    .pdp-bundle-color-sw.is-active::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 47%;
+      width: 12px;
+      height: 7px;
+      border-left: 2.5px solid #fff;
+      border-bottom: 2.5px solid #fff;
+      transform: translate(-50%, -50%) rotate(-45deg);
     }
     .pdp-bundle-color-sw.is-oos { opacity: 0.35; cursor: not-allowed; }
 
