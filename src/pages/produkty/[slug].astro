@@ -851,6 +851,34 @@ const isOptionOos = (id: string): boolean => optionHasStock[id] !== true;
                               });
                               if (res.ok) { const d = await res.json(); lastOrder = d.order; }
                             }
+                            // Auto-aplikacja kuponu zestawu — klient nic nie wpisuje.
+                            // Kody MUSZĄ zgadzać się z promocjami kuponowymi w Vendure.
+                            const BUNDLE_COUPONS = { 3: 'ZESTAW3', 5: 'ZESTAW5' };
+                            const wantCode = BUNDLE_COUPONS[tierQty];
+                            for (const q in BUNDLE_COUPONS) {
+                              const c = BUNDLE_COUPONS[q];
+                              if (c !== wantCode) {
+                                try {
+                                  await fetch('/api/cart/coupon', {
+                                    method: 'DELETE',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    credentials: 'include',
+                                    body: JSON.stringify({ couponCode: c })
+                                  });
+                                } catch (e) {}
+                              }
+                            }
+                            if (wantCode) {
+                              try {
+                                const cr = await fetch('/api/cart/coupon', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  credentials: 'include',
+                                  body: JSON.stringify({ couponCode: wantCode })
+                                });
+                                if (cr.ok) { const cd = await cr.json(); if (cd && cd.order) lastOrder = cd.order; }
+                              } catch (e) {}
+                            }
                             if (lastOrder) window.dispatchEvent(new CustomEvent('cart-updated', { detail: lastOrder }));
                           } catch (err) {}
                           atcBtn.disabled = false;
