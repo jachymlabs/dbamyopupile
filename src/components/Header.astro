@@ -28,7 +28,6 @@ interface NavLink {
 const navLinks: NavLink[] = [
   { href: '/', label: 'Strona główna', match: (p) => p === '/' },
   { href: '/sklep', label: 'Sklep', match: (p) => p === '/sklep' || p.startsWith('/produkty') },
-  { href: '/dostawa-i-zwroty', label: 'Dostawa i zwroty', match: (p) => p.startsWith('/dostawa') },
   { href: '/kontakt', label: 'Kontakt', match: (p) => p.startsWith('/kontakt') },
 ];
 ---

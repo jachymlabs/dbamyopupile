@@ -13,6 +13,230 @@
     }
   },
 
+  "bryza": {
+    "averageRating": 4.68,
+    "totalCount": 289,
+    "distribution": { "5": 208, "4": 74, "3": 4, "2": 1, "1": 2 },
+    "items": [
+      {
+        "name": "Magdalena W.",
+        "tag": "golden retriever",
+        "stars": 5,
+        "title": "Wreszcie przechodzimy cały spacer w upał.",
+        "body": "Mój golden w lipcu po dziesięciu minutach kładł się w cień i nie chciał iść dalej. Namoczyłam Bryzę przed wyjściem, zawiązałam na szyi i przeszliśmy całą rundę nad rzeką bez ani jednej przerwy na leżenie. Po powrocie dyszał o połowę mniej niż zwykle. Dla mnie to różnica między spacerem a męczarnią.",
+        "verified": true,
+        "date": "18.07.2025"
+      },
+      {
+        "name": "Tomasz K.",
+        "tag": "labrador",
+        "stars": 5,
+        "title": "trzyma chłód naprawdę długo.",
+        "body": "spodziewałem się, że wyschnie po pół godziny jak mokry ręcznik, a trzymał wilgoć i chłód przez prawie trzy godziny na działce. labrador ma gęsty podszerstek i normalnie w upał jest nie do wyjścia, a tu spokojnie poległ w cieniu z bryzą na szyi. biorę drugą na zmianę.",
+        "verified": true,
+        "date": "02.08.2025"
+      },
+      {
+        "name": "Anna Lewandowska",
+        "tag": "buldog francuski",
+        "stars": 5,
+        "title": "Dla krótkiego pyska to konieczność.",
+        "body": "Mam buldoga francuskiego i wiadomo, jak takie psy znoszą upał, czyli fatalnie. Bryza nie zastąpi rozsądku i unikania słońca, ale realnie pomaga. Frania po założeniu szala jest spokojniejsza i mniej sapie. Zakładam już przy 25 stopniach. Materiał miły, zielona paisley śliczna.",
+        "verified": true,
+        "date": "29.06.2025"
+      },
+      {
+        "name": "piotr m.",
+        "stars": 5,
+        "title": "rewelacja na wyjazdy autem.",
+        "body": "jechaliśmy nad morze 6 godzin, pies w transporterze. zakładałem mu bryzę na każdym postoju, domaczałem na stacji. zero problemów, nie zagrzał się ani razu. wcześniej takie trasy to był dramat. polecam każdemu kto jeździ z psem na wakacje.",
+        "verified": true,
+        "date": "11.08.2025"
+      },
+      {
+        "name": "Karolina S.",
+        "tag": "border collie",
+        "stars": 5,
+        "title": "Idealne na trening w ciepłe dni.",
+        "body": "Border collie i upał to zła kombinacja, bo on i tak nie odpuszcza, choćby miał paść. Na treningu zakładam mu Bryzę i widzę, że dłużej wytrzymuje w pełnym skupieniu, zanim zacznie się przegrzewać. Wysyłka InPostem następnego dnia, super.",
+        "verified": true,
+        "date": "23.07.2025"
+      },
+      {
+        "name": "Grzegorz P.",
+        "tag": "owczarek niemiecki",
+        "stars": 5,
+        "body": "Sceptycznie podchodziłem do takich gadżetów, ale żona zamówiła i muszę przyznać, że działa. Owczarek z grubą sierścią wreszcie nie pada po kwadransie. Zakładamy mokrą, wykręconą i starcza na długi spacer. Solidnie uszyte, nie strzępi się po praniu.",
+        "verified": true,
+        "date": "05.08.2025"
+      },
+      {
+        "name": "Ewa",
+        "tag": "jamnik, seniorka",
+        "stars": 5,
+        "title": "Moja staruszka odżyła latem.",
+        "body": "Jamniczka ma 13 lat i ostatnie lato ledwo zniosła. W tym roku z Bryzą jest zupełnie inaczej, spokojnie leży na tarasie i nie dyszy całymi godzinami. Łagodny chłód, bez zimnego szoku, dokładnie tak jak pisaliście. Dziękuję, naprawdę.",
+        "verified": true,
+        "date": "30.07.2025"
+      },
+      {
+        "name": "Mateusz Z.",
+        "stars": 5,
+        "body": "Proste i genialne. Namoczyć, wykręcić, założyć. Pies nawet nie zauważa, że ma coś na szyi, a różnica w jego samopoczuciu w upał jest widoczna. Kupiłem czarną, bo mniej widać zabrudzenia.",
+        "verified": true,
+        "date": "14.06.2025"
+      },
+      {
+        "name": "Justyna R.",
+        "tag": "mops",
+        "stars": 5,
+        "title": "Mops przetrwał falę upałów.",
+        "body": "Przy 32 stopniach z mopsem to loteria. Bryza plus spacery o świcie i wieczorem uratowały nam ten lipiec. Szal namaczam zimną wodą, leciutko wykręcam i jest wilgotny, ale nie kapie na podłogę. Wezmę jeszcze jedną w innym kolorze.",
+        "verified": true,
+        "date": "21.07.2025"
+      },
+      {
+        "name": "Bartek",
+        "tag": "husky",
+        "stars": 5,
+        "body": "husky w polskim lecie to porażka, on jest stworzony do mrozu. bryza nie czyni cudów, ale wyraźnie mu ulżyło, mniej dyszy i chętniej idzie. domaczam w połowie spaceru przy fontannie i znów chłodzi. warto.",
+        "verified": true,
+        "date": "08.08.2025"
+      },
+      {
+        "name": "Aleksandra N.",
+        "stars": 5,
+        "title": "Ładny kolor i dobra jakość.",
+        "body": "Zielona paisley wygląda na żywo jeszcze ładniej niż na zdjęciach. Pies prezentuje się elegancko, a przy okazji jest schłodzony. Splot gruby, porządny, czuć że to nie jednorazówka. Po sezonie wyprałam ręcznie i jak nowa.",
+        "verified": true,
+        "date": "17.08.2025"
+      },
+      {
+        "name": "Damian W.",
+        "tag": "amstaff",
+        "stars": 5,
+        "body": "Krępy, umięśniony pies, szybko się grzeje na słońcu. Bryza rozmiar L pasuje idealnie na jego szyję, da się dobrze zawiązać. Chłodzi konkretnie przez dobre dwie, trzy godziny. Polecam, robi robotę.",
+        "verified": true,
+        "date": "26.06.2025"
+      },
+      {
+        "name": "Monika",
+        "stars": 5,
+        "body": "kupiłam dla dwóch psów, obie sztuki świetne. najfajniejsze jest to, że nie trzeba nic mrozić ani planować, woda z kranu i gotowe nawet w środku spaceru. lato bez zdyszanych psów, polecam serdecznie.",
+        "verified": true,
+        "date": "02.07.2025"
+      },
+      {
+        "name": "Robert J.",
+        "tag": "beagle",
+        "stars": 4,
+        "title": "Dobre, ale w skrajnym upale schnie szybciej.",
+        "body": "Działa zgodnie z opisem i pies wyraźnie lepiej znosi ciepło. Minus, że w naprawdę suchy, 33-stopniowy dzień trzeba domaczać częściej, mniej więcej co godzinę. Przy normalnych 26-28 stopniach trzyma dużo dłużej. Mimo wszystko polecam.",
+        "verified": true,
+        "date": "19.07.2025"
+      },
+      {
+        "name": "katarzyna p.",
+        "stars": 4,
+        "body": "fajny produkt, pies dobrze go znosi. zamówiłabym wcześniej rozmiar większy, bo na mojego dość sporego kundla M było trochę za ciasno do wygodnego zawiązania. poza tym bez zastrzeżeń, chłodzi jak należy.",
+        "verified": true,
+        "date": "12.08.2025"
+      },
+      {
+        "name": "Łukasz D.",
+        "stars": 4,
+        "title": "Spełnia zadanie.",
+        "body": "Robi dokładnie to, co ma robić. Odjąłbym gwiazdkę tylko za to, że chciałbym więcej ciemnych kolorów do wyboru, bo jasne szybko się brudzą od trawy. Chłodzenie na plus, wysyłka błyskawiczna.",
+        "verified": true,
+        "date": "28.07.2025"
+      },
+      {
+        "name": "Sylwia",
+        "tag": "cocker spaniel",
+        "stars": 4,
+        "body": "Cocker z długimi uszami i sporą sierścią, w upał cierpiał. Bryza pomaga, choć u nas efekt czuć głównie pierwsze dwie godziny. Materiał przyjemny, pies nie próbuje go zdejmować. Dobry zakup na lato.",
+        "verified": true,
+        "date": "06.08.2025"
+      },
+      {
+        "name": "Wojciech H.",
+        "stars": 4,
+        "body": "porządna rzecz w sensownej cenie. trzeba pamiętać żeby dobrze wykręcić, bo za pierwszym razem przesadziłem z wodą i kapało psu na klatkę. po wyciśnięciu nadmiaru jest idealnie. polecam.",
+        "verified": true,
+        "date": "15.07.2025"
+      },
+      {
+        "name": "Natalia K.",
+        "stars": 4,
+        "title": "Pies musiał się przyzwyczaić.",
+        "body": "Pierwszego dnia mój pies próbował go zsunąć, drugiego już w ogóle nie zwracał uwagi. Teraz spokojnie chodzi z Bryzą i widać, że jest mu chłodniej. Gdyby od razu zaakceptował, dałabym piątkę.",
+        "verified": true,
+        "date": "23.08.2025"
+      },
+      {
+        "name": "Adrian",
+        "stars": 4,
+        "body": "Solidny szal, dobrze trzyma chłód. Przydałaby się dokładniejsza tabela rozmiarów, bo trochę zgadywałem przy zamówieniu. Na szczęście trafiłem. Pies zadowolony, ja też.",
+        "verified": true,
+        "date": "01.08.2025"
+      },
+      {
+        "name": "Iwona M.",
+        "tag": "shih tzu",
+        "stars": 3,
+        "title": "U nas efekt umiarkowany.",
+        "body": "Mały pies, krótkie spacery, więc może dlatego nie odczułam wielkiej rewolucji. Chłodzi, owszem, ale spodziewałam się mocniejszego efektu. Jakość wykonania w porządku, samo wykonanie nie budzi zastrzeżeń. Dla większych psów pewnie sprawdza się lepiej.",
+        "verified": true,
+        "date": "10.08.2025"
+      },
+      {
+        "name": "pawel",
+        "stars": 3,
+        "body": "jest ok, ale nic odkrywczego. mokra szmatka na szyję w ładniejszej formie. działa najlepiej jak jest lekki wiatr, w stojącym powietrzu mniej. nie żałuję zakupu, ale bez fajerwerków.",
+        "verified": true,
+        "date": "27.07.2025"
+      },
+      {
+        "name": "Beata Sz.",
+        "stars": 3,
+        "title": "Kolor trochę inny niż myślałam.",
+        "body": "Zamawiałam zieloną i na zdjęciu wydawała się jaśniejsza, na żywo jest bardziej stonowana, oliwkowa. Nie jest źle, po prostu inaczej. Chłodzenie działa poprawnie. Trzy gwiazdki głównie za rozjazd koloru ze zdjęciem.",
+        "verified": true,
+        "date": "04.08.2025"
+      },
+      {
+        "name": "Krzysztof T.",
+        "stars": 3,
+        "body": "Spodziewałem się czegoś bardziej zimnego, w stylu wkładów chłodzących. To chłodzi łagodnie przez parowanie, więc efekt jest subtelny. Dla mojego psa wystarczający, ale jakbym wiedział, kupiłbym z innym nastawieniem.",
+        "verified": true,
+        "date": "16.08.2025"
+      },
+      {
+        "name": "Renata",
+        "stars": 2,
+        "title": "Rozmiar nietrafiony, mój błąd po części.",
+        "body": "Zamówiłam M dla średniego psa, a wyszło za małe na wygodne zawiązanie u mojego dość szyjastego boksera. Sam materiał i pomysł ok, ale ciężko go porządnie zamocować, ciągle się obluzowywał. Może przy większym rozmiarze byłoby lepiej.",
+        "verified": true,
+        "date": "09.07.2025"
+      },
+      {
+        "name": "marcin",
+        "stars": 1,
+        "body": "u mnie wyschło zdecydowanie za szybko, w upalny dzień po niecałej godzinie był suchy i trzeba było ciągle domaczać. może mam za gorący mikroklimat, ale spodziewałem się więcej. pies też niespecjalnie chciał go nosić.",
+        "verified": true,
+        "date": "31.07.2025"
+      },
+      {
+        "name": "Dorota A.",
+        "stars": 1,
+        "title": "Mój pies go nie zaakceptował.",
+        "body": "Niestety mój pies w ogóle nie tolerował niczego na szyi i po dwóch próbach dałam sobie spokój. To bardziej kwestia psa niż produktu, ale dla nas się nie sprawdziło. Wykonanie samego szala wygląda porządnie.",
+        "verified": true,
+        "date": "13.08.2025"
+      }
+    ]
+  },
+
   "moodles": {
     "averageRating": 4.72,
     "totalCount": 310,
