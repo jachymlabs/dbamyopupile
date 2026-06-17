@@ -851,24 +851,33 @@ const isOptionOos = (id: string): boolean => optionHasStock[id] !== true;
                               });
                               if (res.ok) { const d = await res.json(); lastOrder = d.order; }
                             }
-                            // Auto-aplikacja kuponu zestawu — klient nic nie wpisuje.
+                            // Otwórz koszyk OD RAZU po dodaniu sztuk (szybciej w odczuciu);
+                            // kupon doliczy się chwilę później drugim eventem.
+                            if (lastOrder) window.dispatchEvent(new CustomEvent('cart-updated', { detail: lastOrder }));
+
+                            // Auto-aplikacja kuponu zestawu — tylko niezbędne wywołania.
                             // Kody MUSZĄ zgadzać się z promocjami kuponowymi w Vendure.
                             const BUNDLE_COUPONS = { 3: 'ZESTAW3', 5: 'ZESTAW5' };
                             const wantCode = BUNDLE_COUPONS[tierQty];
+                            const applied = (lastOrder && lastOrder.couponCodes) || [];
+                            let couponChanged = false;
+                            // usuń tylko realnie zastosowany, niechciany kod zestawu
                             for (const q in BUNDLE_COUPONS) {
                               const c = BUNDLE_COUPONS[q];
-                              if (c !== wantCode) {
+                              if (c !== wantCode && applied.indexOf(c) !== -1) {
                                 try {
-                                  await fetch('/api/cart/coupon', {
+                                  const rr = await fetch('/api/cart/coupon', {
                                     method: 'DELETE',
                                     headers: { 'Content-Type': 'application/json' },
                                     credentials: 'include',
                                     body: JSON.stringify({ couponCode: c })
                                   });
+                                  if (rr.ok) { const rd = await rr.json(); if (rd && rd.order) { lastOrder = rd.order; couponChanged = true; } }
                                 } catch (e) {}
                               }
                             }
-                            if (wantCode) {
+                            // aplikuj docelowy kod tylko jeśli jeszcze go nie ma
+                            if (wantCode && applied.indexOf(wantCode) === -1) {
                               try {
                                 const cr = await fetch('/api/cart/coupon', {
                                   method: 'POST',
@@ -876,10 +885,10 @@ const isOptionOos = (id: string): boolean => optionHasStock[id] !== true;
                                   credentials: 'include',
                                   body: JSON.stringify({ couponCode: wantCode })
                                 });
-                                if (cr.ok) { const cd = await cr.json(); if (cd && cd.order) lastOrder = cd.order; }
+                                if (cr.ok) { const cd = await cr.json(); if (cd && cd.order) { lastOrder = cd.order; couponChanged = true; } }
                               } catch (e) {}
                             }
-                            if (lastOrder) window.dispatchEvent(new CustomEvent('cart-updated', { detail: lastOrder }));
+                            if (couponChanged && lastOrder) window.dispatchEvent(new CustomEvent('cart-updated', { detail: lastOrder }));
                           } catch (err) {}
                           atcBtn.disabled = false;
                           if (textEl) textEl.textContent = base;
