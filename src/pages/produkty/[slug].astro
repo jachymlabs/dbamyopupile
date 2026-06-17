@@ -15,6 +15,7 @@ import WibbloDescription from '@/components/pdp/WibbloDescription.astro';
 import GorlyDescription from '@/components/pdp/GorlyDescription.astro';
 import CrockyDescription from '@/components/pdp/CrockyDescription.astro';
 import MoodlesKidsDescription from '@/components/pdp/MoodlesKidsDescription.astro';
+import BryzaDescription from '@/components/pdp/BryzaDescription.astro';
 import PostATCBlock from '@/components/pdp/PostATCBlock.astro';
 import AllReviewsSection from '@/components/pdp/AllReviewsSection.astro';
 import { shopApi, shopApiRaw, redirectWithToken } from '@/lib/vendure';
@@ -242,7 +243,7 @@ function nameToColor(name: string): string | null {
   if (n.includes('truskaw') || n.includes('strawberry') || n.includes('różow') || n.includes('pink')) return '#E63946';
   if (n.includes('leśn') || n.includes('forest') || n.includes('zielon') || n.includes('green')) return '#4A7A52';
   if (n.includes('lawend') || n.includes('lavender') || n.includes('fiolet') || n.includes('purple')) return '#A78BCC';
-  if (n.includes('sage') || n.includes('szałwi')) return '#7B9075';
+  if (n.includes('sage') || n.includes('szałwi')) return '#92c2ea';
   if (n.includes('niebies') || n.includes('blue')) return '#5BA4DD';
   if (n.includes('żółt') || n.includes('yellow')) return '#F4C95D';
   if (n.includes('pomarań') || n.includes('orange')) return '#F08A45';
@@ -716,7 +717,9 @@ const isOptionOos = (id: string): boolean => optionHasStock[id] !== true;
            CUSTOM DESCRIPTION dla produktów z dedykowanym templatem.
            Moodles: pełny 14-sekcyjny opis. Inne: generic sekcje 3-10.
            ================================================== */}
-        {product.slug === 'formi' ? (
+        {product.slug === 'bryza' ? (
+          <BryzaDescription />
+        ) : product.slug === 'formi' ? (
           <FormiDescription />
         ) : product.slug === 'neurocube' ? (
           <NeuroCubeDescription />
@@ -1876,7 +1879,7 @@ const isOptionOos = (id: string): boolean => optionHasStock[id] !== true;
       background: var(--brand-primary);
       color: white;
       transform: translateY(-50%) scale(1.08);
-      box-shadow: 0 4px 14px rgba(123, 144, 117, 0.25);
+      box-shadow: 0 4px 14px rgba(146, 194, 234, 0.25);
       opacity: 1;
     }
     .pdp-gallery-arrow:hover .material-symbols-outlined,
@@ -2322,9 +2325,9 @@ const isOptionOos = (id: string): boolean => optionHasStock[id] !== true;
       animation: pdp-variant-pulse 1.4s ease-out;
     }
     @keyframes pdp-variant-pulse {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(123, 144, 117, 0.0); }
-      30% { box-shadow: 0 0 0 6px rgba(123, 144, 117, 0.45); }
-      70% { box-shadow: 0 0 0 3px rgba(123, 144, 117, 0.35); }
+      0%, 100% { box-shadow: 0 0 0 0 rgba(146, 194, 234, 0.0); }
+      30% { box-shadow: 0 0 0 6px rgba(146, 194, 234, 0.45); }
+      70% { box-shadow: 0 0 0 3px rgba(146, 194, 234, 0.35); }
     }
     .pdp-variant-label {
       font-size: 13px;
@@ -2370,7 +2373,7 @@ const isOptionOos = (id: string): boolean => optionHasStock[id] !== true;
     }
     .pdp-swatch-wrap--active .pdp-swatch {
       border-color: var(--brand-primary);
-      box-shadow: 0 0 0 3px var(--brand-primary-soft), 0 2px 8px rgba(123, 144, 117, 0.25);
+      box-shadow: 0 0 0 3px var(--brand-primary-soft), 0 2px 8px rgba(146, 194, 234, 0.25);
     }
     .pdp-swatch-label {
       font-size: 10px;
@@ -2566,7 +2569,7 @@ const isOptionOos = (id: string): boolean => optionHasStock[id] !== true;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      box-shadow: 0 6px 20px rgba(123, 144, 117, 0.25);
+      box-shadow: 0 6px 20px rgba(146, 194, 234, 0.25);
       transition: background 280ms ease, color 200ms ease, box-shadow 280ms ease, transform 100ms;
       min-height: 56px;
       text-align: center;
@@ -2581,7 +2584,7 @@ const isOptionOos = (id: string): boolean => optionHasStock[id] !== true;
     /* Default hover only when color NOT overridden via JS */
     .pdp-atc:not([data-color-applied="1"]):hover {
       background: var(--brand-primary-hover);
-      box-shadow: 0 8px 24px rgba(123, 144, 117, 0.35);
+      box-shadow: 0 8px 24px rgba(146, 194, 234, 0.35);
       filter: none;
     }
     .pdp-atc:active { transform: scale(0.98); }
@@ -2637,12 +2640,12 @@ const isOptionOos = (id: string): boolean => optionHasStock[id] !== true;
       color: #FFFFFF;
       opacity: 0.78;
       cursor: help;
-      box-shadow: 0 4px 14px rgba(123, 144, 117, 0.20);
+      box-shadow: 0 4px 14px rgba(146, 194, 234, 0.20);
     }
     .pdp-atc--needs-selection:hover {
       opacity: 1;
       background: var(--brand-primary-hover);
-      box-shadow: 0 6px 18px rgba(123, 144, 117, 0.30);
+      box-shadow: 0 6px 18px rgba(146, 194, 234, 0.30);
       filter: none;
     }
     .pdp-atc--needs-selection .pdp-atc-text {

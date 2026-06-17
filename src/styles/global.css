@@ -13,9 +13,9 @@
   --brand-border-strong: #D6CEBE;
 
   /* Primary — sage (calm, wellness) */
-  --brand-primary: #7B9075;
-  --brand-primary-hover: #5E7359;
-  --brand-primary-soft: #E1E8DD;
+  --brand-primary: #92c2ea;
+  --brand-primary-hover: #6aa9dd;
+  --brand-primary-soft: #e6f2fc;
 
   /* Accent — strawberry (CTAs only) */
   --brand-accent: #E63946;
@@ -70,9 +70,9 @@
   --color-brand-border: #E5DFD2;
   --color-brand-border-strong: #D6CEBE;
 
-  --color-brand-primary: #7B9075;
-  --color-brand-primary-hover: #5E7359;
-  --color-brand-primary-soft: #E1E8DD;
+  --color-brand-primary: #92c2ea;
+  --color-brand-primary-hover: #6aa9dd;
+  --color-brand-primary-soft: #e6f2fc;
 
   --color-brand-accent: #E63946;
   --color-brand-accent-hover: #C82A36;
@@ -97,12 +97,12 @@
   --color-surface-dim: #DBDAD6;
   --color-surface-variant: #E4E2DF;
 
-  --color-primary: #7B9075;
+  --color-primary: #92c2ea;
   --color-on-primary: #FFFFFF;
-  --color-primary-container: #667A60;
-  --color-on-primary-container: #F7FFF0;
-  --color-primary-fixed: #D2E9CA;
-  --color-primary-fixed-dim: #B7CDAF;
+  --color-primary-container: #6aa9dd;
+  --color-on-primary-container: #f0f8ff;
+  --color-primary-fixed: #cfe6f8;
+  --color-primary-fixed-dim: #aed4f0;
 
   --color-secondary: #E63946;
   --color-on-secondary: #FFFFFF;
@@ -121,7 +121,7 @@
 
   --color-inverse-surface: #30312E;
   --color-inverse-on-surface: #F2F1ED;
-  --color-inverse-primary: #B7CDAF;
+  --color-inverse-primary: #aed4f0;
 
   /* === Stitch spacing scale === */
   --spacing-unit: 4px;
@@ -980,11 +980,11 @@
   text-decoration: none;
   border-radius: 9999px;
   transition: background 200ms, transform 100ms, box-shadow 200ms;
-  box-shadow: 0 4px 16px rgba(123, 144, 117, 0.25);
+  box-shadow: 0 4px 16px rgba(146, 194, 234, 0.25);
 }
 .dd-cart-checkout-btn:hover {
   background: var(--brand-primary-hover);
-  box-shadow: 0 6px 20px rgba(123, 144, 117, 0.35);
+  box-shadow: 0 6px 20px rgba(146, 194, 234, 0.35);
 }
 .dd-cart-checkout-btn:active {
   transform: scale(0.98);
@@ -1056,7 +1056,7 @@
   text-decoration: none;
   border-radius: 9999px;
   transition: background 200ms, transform 100ms;
-  box-shadow: 0 4px 16px rgba(123, 144, 117, 0.25);
+  box-shadow: 0 4px 16px rgba(146, 194, 234, 0.25);
 }
 .dd-cart-empty-cta:hover {
   background: var(--brand-primary-hover);

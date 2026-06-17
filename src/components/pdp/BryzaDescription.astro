@@ -1,34 +1,33 @@
 ---
 /**
- * NeuroCubeDescription — pełny opis produktu NeuroCube.
- * Drewniana łamigłówka 3D dla 6+ lat. Alternatywa do ekranu.
+ * BryzaDescription — pełny opis produktu Bryza (szal chłodzący dla psa).
+ * Bazuje na uniwersalnym templatcie Moodles (te same klasy md-*).
  *
- * Assety w /public/neurocube/photos/ (14 webp).
- * Struktura 18 sekcji wg Moodles template.
- * Tone: sentence case, konwersacyjny, anti-ekran, ADHD uppercase.
+ * Assety w /public/bryza-pdp/ (webp z folderu szal-chlodzacy/generated).
+ * Sekcja 01 (gify) na razie pusta.
  */
 import { shopApi } from '@/lib/vendure';
 import { SEARCH_PRODUCTS } from '@/lib/queries';
 import { getProductReviews, formatRating, ratingPercentages, opiniiPlural, starKind } from '@/lib/reviews';
 import { getRegularPrice } from '@/lib/prices';
 
-const ASSET_BASE = '/neurocube/photos';
+const ASSET_BASE = '/bryza-pdp';
 
-// Reviews — z osobnego JSON per produkt (neurocube tutaj)
-const reviews = getProductReviews('neurocube');
+// Reviews — z osobnego JSON per produkt (bryza; jeśli brak danych → sekcje opinii się ukryją)
+const reviews = getProductReviews('bryza');
 const ratingPct = reviews ? ratingPercentages(reviews) : null;
 
-// Fetch related products — exclude neurocube, take first 5
+// Fetch related products — exclude bryza, take first 5
 let relatedProducts: any[] = [];
 try {
   const data = await shopApi<any>(SEARCH_PRODUCTS, {
     input: { groupByProduct: true, take: 12 },
   }, Astro.request);
   relatedProducts = (data.search?.items ?? [])
-    .filter((p: any) => p.slug !== 'neurocube')
+    .filter((p: any) => p.slug !== 'bryza')
     .slice(0, 5);
 } catch (e: any) {
-  if (import.meta.env.DEV) console.error('NeuroCubeDescription related products fetch failed:', e?.message);
+  if (import.meta.env.DEV) console.error('BryzaDescription related products fetch failed:', e?.message);
 }
 
 function formatPrice(grosze: number): string {
@@ -48,63 +47,47 @@ function extractPrice(p: any): number {
 
 <div class="md-pdp">
 
-  {/* ========== 01 — HERO 4 ZDJĘCIA (PC: 4-up grid, no arrows; mobile: carousel) ========== */}
-  <section class="md-hero-gifs">
-    <div class="md-gif-carousel" id="md-gif-carousel">
-      <div class="md-gif-item"><img src={`${ASSET_BASE}/neurocube-01-hero-sage-polka.webp`} alt="" loading="eager" /></div>
-      <div class="md-gif-item"><img src={`${ASSET_BASE}/neurocube-02-full-set-biurko.webp`} alt="" loading="lazy" /></div>
-      <div class="md-gif-item"><img src={`${ASSET_BASE}/neurocube-04-result-dziecko-uklada.webp`} alt="" loading="lazy" /></div>
-      <div class="md-gif-item"><img src={`${ASSET_BASE}/neurocube-05-unusual-charcoal-dramatic.webp`} alt="" loading="lazy" /></div>
-    </div>
-    <div class="md-mobile-arrows">
-      <button type="button" class="md-arrow" data-md-carousel-prev="md-gif-carousel" aria-label="Poprzedni">
-        <span class="material-symbols-outlined">chevron_left</span>
-      </button>
-      <button type="button" class="md-arrow" data-md-carousel-next="md-gif-carousel" aria-label="Następny">
-        <span class="material-symbols-outlined">chevron_right</span>
-      </button>
-    </div>
-  </section>
+  {/* ========== 01 — HERO 4 GIFY — PUSTE (gify dodamy później) ========== */}
 
   {/* ========== 02 — PROBLEM → SOLUTION (refined split) ========== */}
   <section class="md-section md-section--surface md-section--compact">
     <div class="md-container">
       <div class="md-center" style="margin-bottom: 36px;">
-        <span class="md-eyebrow md-eyebrow--sage">Od ekranu do skupienia</span>
-        <h2>Ekran zawsze wygrywa. Aż nie <span class="md-em">spróbujesz innego</span></h2>
+        <span class="md-eyebrow md-eyebrow--sage">Od upału do ulgi</span>
+        <h2>Daj psu chłód, <span class="md-em">który trzyma</span></h2>
       </div>
       <div class="md-problem-solve">
         <div class="md-ps-side md-ps-side--problem">
           <div class="md-ps-head">
             <span class="md-ps-emoji" aria-hidden="true">⨯</span>
-            <span class="md-ps-tag md-ps-tag--problem">Co teraz</span>
+            <span class="md-ps-tag md-ps-tag--problem">co teraz</span>
           </div>
           <ul class="md-ps-list">
-            <li><span class="material-symbols-outlined">close</span>Dzieci znikają w tablecie</li>
-            <li><span class="material-symbols-outlined">close</span>Dorośli scrollują po wieczorach</li>
-            <li><span class="material-symbols-outlined">close</span>Głowa pracuje, ale nic z tego nie zostaje</li>
-            <li><span class="material-symbols-outlined">close</span>Ręce zawsze przy szkle</li>
+            <li><span class="material-symbols-outlined">close</span>Dyszy po kilku minutach spaceru</li>
+            <li><span class="material-symbols-outlined">close</span>Kładzie się w cień i nie chce iść</li>
+            <li><span class="material-symbols-outlined">close</span>W aucie i na balkonie się przegrzewa</li>
+            <li><span class="material-symbols-outlined">close</span>Latem spacery kurczą się do minimum</li>
           </ul>
-          <p class="md-ps-foot">Mózg potrzebuje skupienia, którego ekran mu nie daje. Każda notyfikacja zaczyna nowy wątek, każdy scroll resetuje uwagę. Dlatego po godzinie z telefonem jesteś bardziej zmęczony niż przed.</p>
+          <p class="md-ps-foot">Pies nie poci się jak człowiek. W upał chłodzi się głównie dyszeniem, a to nie nadąża. Krótkie pyski, seniory i grubsze sierści mają najgorzej.</p>
         </div>
         <div class="md-ps-bridge" aria-hidden="true">
           <div class="md-ps-bridge-circle">
             <span class="md-ps-bridge-arrow">→</span>
           </div>
-          <span class="md-ps-bridge-label">NeuroCube</span>
+          <span class="md-ps-bridge-label">bryza</span>
         </div>
         <div class="md-ps-side md-ps-side--solution">
           <div class="md-ps-head">
             <span class="md-ps-emoji" aria-hidden="true">✓</span>
-            <span class="md-ps-tag md-ps-tag--solution">Co dostajesz</span>
+            <span class="md-ps-tag md-ps-tag--solution">co dostajesz</span>
           </div>
           <ul class="md-ps-list md-ps-list--ok">
-            <li><span class="material-symbols-outlined md-icon-fill">check_circle</span>Jedno zadanie, które wciąga</li>
-            <li><span class="material-symbols-outlined md-icon-fill">check_circle</span>Logiczne myślenie w ruchu</li>
-            <li><span class="material-symbols-outlined md-icon-fill">check_circle</span>Ciepłe drewno zamiast szkła</li>
-            <li><span class="material-symbols-outlined md-icon-fill">check_circle</span>Cisza i satysfakcja na koniec</li>
+            <li><span class="material-symbols-outlined md-icon-fill">check_circle</span>Chłód, który trzyma godzinami</li>
+            <li><span class="material-symbols-outlined md-icon-fill">check_circle</span>Pełny spacer bez przegrzania</li>
+            <li><span class="material-symbols-outlined md-icon-fill">check_circle</span>Ulga w aucie, na działce, w podróży</li>
+            <li><span class="material-symbols-outlined md-icon-fill">check_circle</span>Aktywacja w 30 sekund: namocz i załóż</li>
           </ul>
-          <p class="md-ps-foot">Drewniana kostka, której kształty same prowadzą palce. Ułożysz raz, rozłożysz, zaczniesz od nowa. Bez ładowarki, bez aplikacji, bez powiadomień.</p>
+          <p class="md-ps-foot">Namaczasz, lekko wykręcasz, zawiązujesz na szyi. Woda paruje powoli i odbiera ciepło, więc pies czuje chłód tam, gdzie przebiegają duże naczynia krwionośne.</p>
         </div>
       </div>
     </div>
@@ -114,11 +97,11 @@ function extractPrice(p: any): number {
   <section class="md-section">
     <div class="md-split">
       <div class="md-img-square">
-        <img src={`${ASSET_BASE}/neurocube-12-kawiarnia-student.webp`} alt="" loading="lazy" />
+        <img src={`${ASSET_BASE}/bryza-porownanie-bez-z-bryza.webp`} alt="Pies w upał bez szala i z szalem chłodzącym Bryza" loading="lazy" />
       </div>
       <div>
-        <h2><span class="md-em">Ekran</span> zawsze będzie czekał</h2>
-        <p class="md-body">Dzieci sięgają po tablet, dorośli po telefon, dziadkowie po pilota. Wszyscy szukamy tego samego: zajęcia dla głowy, kiedy nie wiadomo co ze sobą zrobić. Ekran daje to natychmiast, ale niczego nie zostawia. Po godzinie z telefonem jesteś bardziej zmęczony niż przed. NeuroCube działa odwrotnie. Wciąga przez kształt i fakturę drewna, nie przez algorytm. Ręce mają konkretne zadanie, głowa zwalnia, a po ułożeniu zostaje coś realnego.</p>
+        <h2><span class="md-em">Koniec</span> z przegrzanym psem</h2>
+        <p class="md-body">Dyszy po kilku minutach, kładzie się w cień, nie chce iść dalej. To nie lenistwo, tylko ciało, które nie nadąża z chłodzeniem. Pies nie poci się jak my, w upał ratuje się głównie dyszeniem. Bryza odbiera ciepło tam, gdzie pod skórą przebiegają duże naczynia krwionośne, czyli na szyi. Namaczasz, lekko wykręcasz, zawiązujesz, a parująca woda chłodzi przez kolejne godziny. Spacer wraca do normalnej długości, a pies przestaje się ścinać w skwarze. Szczególnie dla seniorów i psów z krótkim pyskiem, którym upał daje najbardziej w kość.</p>
       </div>
     </div>
   </section>
@@ -127,11 +110,11 @@ function extractPrice(p: any): number {
   <section class="md-section md-section--surface">
     <div class="md-split md-split--mirror">
       <div class="md-img-square">
-        <img src={`${ASSET_BASE}/neurocube-07-kontrast-czarne-naturalne.webp`} alt="" loading="lazy" />
+        <img src={`${ASSET_BASE}/bryza-soak-wear-wykrecanie.webp`} alt="Aktywacja szala Bryza: namoczenie i wykręcenie" loading="lazy" />
       </div>
       <div>
-        <h2>Jedna drewniana kostka, setki możliwych dróg</h2>
-        <p class="md-body">Każdy element ma inny kształt. <strong>Naturalne drewno</strong> w naturalnym kolorze i <strong>matowy charcoal</strong> dla kontrastu. Elementy układają się w pełną bryłę co do milimetra. <strong>Wystarczy raz dotknąć</strong>, żeby zrozumieć: to nie jest plastikowy gadżet. To rzecz, która z czasem ładnieje. Dla 6+ lat, ale tak naprawdę dla każdego, kto chce mieć coś do rąk zamiast kolejnego ekranu.</p>
+        <h2>Trzy ruchy i gotowe: Soak &amp; Wear</h2>
+        <p class="md-body">Bez lodówki, bez zamrażarki, bez czekania. <strong>Namocz</strong> szal w zimnej wodzie przez chwilę. <strong>Wykręć</strong> nadmiar, żeby był wilgotny, a nie ociekający. <strong>Załóż</strong> na szyję psa i zawiąż. Specjalny splot trzyma wilgoć i oddaje ją powoli, więc chłodzenie działa godzinami, a nie minut. Gdy szal wyschnie, po prostu namaczasz go znowu. Tyle razy, ile potrzeba.</p>
       </div>
     </div>
   </section>
@@ -141,7 +124,7 @@ function extractPrice(p: any): number {
   <section class="md-section md-section--sage-soft">
     <div class="md-split md-split--mirror">
       <div class="md-img-square">
-        <img src={`${ASSET_BASE}/neurocube-09-reka-wklada-element.webp`} alt="" loading="lazy" />
+        <img src={`${ASSET_BASE}/bryza-lifestyle-kobieta-buldog-park.webp`} alt="Właścicielka z psem na spacerze w upalny dzień" loading="lazy" />
       </div>
       <div>
         <span class="md-eyebrow md-eyebrow--sage">Prawdziwa historia</span>
@@ -165,70 +148,71 @@ function extractPrice(p: any): number {
   </section>
   )}
 
-  {/* ========== COMPARISON TABLE (pozycja 6) — neurocube vs tablet/rubik/drewniane klocki ========== */}
+  {/* ========== COMPARISON TABLE (pozycja 6) — moodles vs terapia/leki/aplikacja ========== */}
   <section class="md-section">
     <div class="md-container">
       <div class="md-center" style="margin-bottom: 36px;">
-        <span class="md-eyebrow md-eyebrow--sage">Anti-ekran</span>
-        <h2>Porównanie z klasycznymi alternatywami</h2>
+        <span class="md-eyebrow md-eyebrow--sage">Sposoby na upał</span>
+        <h2>Porównanie z domowymi metodami</h2>
       </div>
       <div class="md-compare-wrap">
         <table class="md-compare-table">
           <thead>
             <tr>
               <th></th>
-              <th class="md-compare-col-us"><span>NeuroCube</span></th>
-              <th>Tablet edukacyjny</th>
-              <th>Kostka Rubika</th>
-              <th>Drewniane klocki</th>
+              <th class="md-compare-col-us"><span>Bryza</span></th>
+              <th>Mokry ręcznik</th>
+              <th>Kostki lodu</th>
+              <th>Wiatrak</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td>Bez ekranu</td>
-              <td class="md-compare-cell-us"><span class="material-symbols-outlined md-yes">check_circle</span></td>
-              <td><span class="material-symbols-outlined md-no">cancel</span></td>
-              <td><span class="material-symbols-outlined md-yes">check_circle</span></td>
-              <td><span class="material-symbols-outlined md-yes">check_circle</span></td>
-            </tr>
-            <tr>
-              <td>Rozwija logiczne myślenie</td>
-              <td class="md-compare-cell-us"><span class="material-symbols-outlined md-yes">check_circle</span></td>
-              <td><span class="material-symbols-outlined md-yes">check_circle</span></td>
-              <td><span class="material-symbols-outlined md-yes">check_circle</span></td>
-              <td><span class="material-symbols-outlined md-no">cancel</span></td>
-            </tr>
-            <tr>
-              <td>Naturalny materiał</td>
+              <td>Chłodzi przez godziny</td>
               <td class="md-compare-cell-us"><span class="material-symbols-outlined md-yes">check_circle</span></td>
               <td><span class="material-symbols-outlined md-no">cancel</span></td>
               <td><span class="material-symbols-outlined md-no">cancel</span></td>
               <td><span class="material-symbols-outlined md-yes">check_circle</span></td>
             </tr>
             <tr>
-              <td>Bez baterii i aplikacji</td>
+              <td>Działa też na spacerze</td>
               <td class="md-compare-cell-us"><span class="material-symbols-outlined md-yes">check_circle</span></td>
               <td><span class="material-symbols-outlined md-no">cancel</span></td>
-              <td><span class="material-symbols-outlined md-yes">check_circle</span></td>
-              <td><span class="material-symbols-outlined md-yes">check_circle</span></td>
-            </tr>
-            <tr>
-              <td>Wyzwanie też dla dorosłego</td>
-              <td class="md-compare-cell-us"><span class="material-symbols-outlined md-yes">check_circle</span></td>
               <td><span class="material-symbols-outlined md-no">cancel</span></td>
-              <td><span class="material-symbols-outlined md-yes">check_circle</span></td>
               <td><span class="material-symbols-outlined md-no">cancel</span></td>
             </tr>
             <tr>
-              <td>Wygląda dobrze na półce</td>
+              <td>Nie moczy psa i podłogi</td>
               <td class="md-compare-cell-us"><span class="material-symbols-outlined md-yes">check_circle</span></td>
               <td><span class="material-symbols-outlined md-no">cancel</span></td>
               <td><span class="material-symbols-outlined md-no">cancel</span></td>
+              <td><span class="material-symbols-outlined md-yes">check_circle</span></td>
+            </tr>
+            <tr>
+              <td>Łagodny chłód, bez szoku termicznego</td>
+              <td class="md-compare-cell-us"><span class="material-symbols-outlined md-yes">check_circle</span></td>
+              <td><span class="material-symbols-outlined md-yes">check_circle</span></td>
               <td><span class="material-symbols-outlined md-no">cancel</span></td>
+              <td><span class="material-symbols-outlined md-yes">check_circle</span></td>
+            </tr>
+            <tr>
+              <td>Bez prądu i bez zamrażarki</td>
+              <td class="md-compare-cell-us"><span class="material-symbols-outlined md-yes">check_circle</span></td>
+              <td><span class="material-symbols-outlined md-yes">check_circle</span></td>
+              <td><span class="material-symbols-outlined md-no">cancel</span></td>
+              <td><span class="material-symbols-outlined md-no">cancel</span></td>
+            </tr>
+            <tr>
+              <td>Wielokrotnego użytku, na lata</td>
+              <td class="md-compare-cell-us"><span class="material-symbols-outlined md-yes">check_circle</span></td>
+              <td><span class="material-symbols-outlined md-yes">check_circle</span></td>
+              <td><span class="material-symbols-outlined md-no">cancel</span></td>
+              <td><span class="material-symbols-outlined md-yes">check_circle</span></td>
             </tr>
           </tbody>
         </table>
       </div>
+      {/* Mobile swipe hint — pokazuje się tylko gdy tabela się scrolluje (overflow visible) */}
       <p class="md-compare-hint">
         <span class="material-symbols-outlined">swipe</span>
         Przesuń w lewo i prawo aby zobaczyć całą tabelę
@@ -236,59 +220,59 @@ function extractPrice(p: any): number {
     </div>
   </section>
 
-  {/* ========== TABBED USE CASES (pozycja 7) — Dla kogo NeuroCube ========== */}
+  {/* ========== TABBED USE CASES (pozycja 7) — Dla kogo są Moodles ========== */}
   <section class="md-section md-section--surface">
     <div class="md-tabs-wrap">
       <div class="md-center" style="margin-bottom: 32px;">
-        <h2>Dla kogo jest NeuroCube?</h2>
+        <h2>Dla jakiego psa jest Bryza?</h2>
       </div>
       <div class="md-tabs-nav" role="tablist">
-        <button class="md-tab-btn md-tab-btn--active" data-md-tab="0">Dzieci 6+</button>
-        <button class="md-tab-btn" data-md-tab="1">Dorośli</button>
-        <button class="md-tab-btn" data-md-tab="2">Terapeuci</button>
-        <button class="md-tab-btn" data-md-tab="3">Seniorzy</button>
+        <button class="md-tab-btn md-tab-btn--active" data-md-tab="0">Upały na spacerze</button>
+        <button class="md-tab-btn" data-md-tab="1">Pies senior</button>
+        <button class="md-tab-btn" data-md-tab="2">Auto i podróże</button>
+        <button class="md-tab-btn" data-md-tab="3">Krótkie pyski</button>
       </div>
       <div class="md-tab-content md-tab-content--active">
         <div class="md-tab-grid">
           <div class="md-img-square">
-            <img src={`${ASSET_BASE}/neurocube-04-result-dziecko-uklada.webp`} alt="" loading="lazy" />
+            <img src={`${ASSET_BASE}/bryza-spacer-przerwa-na-wode.webp`} alt="Pies na spacerze w upalny dzień" loading="lazy" />
           </div>
           <div>
-            <h3 style="font-size: 22px;">Detox od ekranu, który dziecko polubi</h3>
-            <p class="md-body">Tablet daje natychmiastową stymulację, ale po godzinie zostaje tylko zmęczenie. NeuroCube wciąga inaczej, przez kształt i fakturę drewna. Dziecko ma konkretne zadanie, palce uczą się przestrzeni, a głowa odpoczywa od bodźców. Bez nagrody w aplikacji, bez kolejnych etapów. Tylko ułożona kostka, której nikt nie musi sprawdzać.</p>
+            <h3 style="font-size: 22px;">Spacer, który nie kończy się po pięciu minutach</h3>
+            <p class="md-body">W lipcu wystarczy kwadrans w słońcu i pies zaczyna dyszeć, szukać cienia, ciągnąć do domu. Bryza założona przed wyjściem trzyma chłód przez całą rundę. Pies idzie dalej, mniej się ścina i wraca bez tego ciężkiego dyszenia. Świetnie sprawdza się też na treningu i dłuższych wędrówkach.</p>
           </div>
         </div>
       </div>
       <div class="md-tab-content">
         <div class="md-tab-grid">
           <div class="md-img-square">
-            <img src={`${ASSET_BASE}/neurocube-12-kawiarnia-student.webp`} alt="" loading="lazy" />
+            <img src={`${ASSET_BASE}/bryza-seniorka-jamnik-dzialka.webp`} alt="Starszy pies odpoczywa na działce w cieniu" loading="lazy" />
           </div>
           <div>
-            <h3 style="font-size: 22px;">Fokus w przerwie między zadaniami</h3>
-            <p class="md-body">Pięć minut z NeuroCube robi z głową to, czego pół godziny scrollowania nigdy nie zrobi. Palce mają robotę, mózg się resetuje. Po wstaniu od biurka łatwiej wrócić do tego, co było przed chwilą za trudne. Szczególnie dla osób z ADHD, które potrzebują fizycznego zaczepienia, kiedy myśli pędzą za szybko.</p>
+            <h3 style="font-size: 22px;">Starszy pies znosi upał najgorzej</h3>
+            <p class="md-body">Z wiekiem serce i krążenie gorzej radzą sobie z gorącem, a sam ruch w skwarze szybciej męczy. Łagodny, równomierny chłód na szyi odciąża psa tam, gdzie najbardziej tego potrzebuje, bez zimnego szoku. Senior może spokojnie poleżeć na tarasie czy działce, nie dysząc całymi godzinami.</p>
           </div>
         </div>
       </div>
       <div class="md-tab-content">
         <div class="md-tab-grid">
           <div class="md-img-square">
-            <img src={`${ASSET_BASE}/neurocube-13-dlonie-close-up.webp`} alt="" loading="lazy" />
+            <img src={`${ASSET_BASE}/bryza-labrador-auto-czarna.webp`} alt="Pies w samochodzie z szalem chłodzącym" loading="lazy" />
           </div>
           <div>
-            <h3 style="font-size: 22px;">Narzędzie w gabinecie, nie zabawka</h3>
-            <p class="md-body">Terapeuci sensoryczni, logopedzi, psychologowie dziecięcy. NeuroCube daje konkretne, mierzalne zadanie do dłoni. Pomaga przy regulacji emocji, koncentracji, motoryce małej. Drewno wygląda profesjonalnie i nie kojarzy się z dziecięcą plastikową zabawką, więc działa też z dorosłym pacjentem.</p>
+            <h3 style="font-size: 22px;">Nagrzane auto i długa trasa</h3>
+            <p class="md-body">Nawet z klimą wnętrze auta nagrzewa się błyskawicznie, a pies w transporterze nie ma jak się schłodzić. Bryza założona przed jazdą daje mu chłód na czas drogi, postoju na stacji i pierwszych minut po wyjściu. Idealna na wakacyjne wyjazdy i wizyty u weterynarza w upalny dzień.</p>
           </div>
         </div>
       </div>
       <div class="md-tab-content">
         <div class="md-tab-grid">
           <div class="md-img-square">
-            <img src={`${ASSET_BASE}/neurocube-11-tata-syn-stol.webp`} alt="" loading="lazy" />
+            <img src={`${ASSET_BASE}/bryza-balkon-kawa-golden-czarna.webp`} alt="Pies odpoczywa w cieniu w upalny dzień" loading="lazy" />
           </div>
           <div>
-            <h3 style="font-size: 22px;">Trening głowy, który nie wygląda jak terapia</h3>
-            <p class="md-body">Badania pokazują, że codzienne układanie pomaga utrzymać sprawność palców i pamięci przestrzennej. NeuroCube nie wygląda jednak jak rehabilitacja. To po prostu ładny przedmiot na stoliku, który zaprasza, żeby coś ułożyć przy kawie. Wnuki dostają to samo zadanie i jest o czym pogadać.</p>
+            <h3 style="font-size: 22px;">Buldogi, mopsy i inne krótkie pyski</h3>
+            <p class="md-body">Brachycefale chłodzą się dyszeniem znacznie gorzej niż psy z dłuższym pyskiem, więc upał jest dla nich naprawdę groźny. Każde wsparcie w odprowadzaniu ciepła ma znaczenie. Bryza na szyi daje stały, łagodny chłód, dzięki czemu buldog czy mops łatwiej przetrwa gorące popołudnie.</p>
           </div>
         </div>
       </div>
@@ -355,12 +339,12 @@ function extractPrice(p: any): number {
     </section>
   )}
 
-  {/* ========== TRUST STRIP (pozycja 9) ========== */}
+  {/* ========== TRUST STRIP — pozycja 9 ========== */}
   <section class="md-trust-strip">
     <div class="md-trust-grid">
       <div class="md-trust-cell">
-        <span class="material-symbols-outlined">forest</span>
-        <span>Naturalne drewno</span>
+        <span class="material-symbols-outlined">groups</span>
+        <span>10k+ klientów</span>
       </div>
       <div class="md-trust-cell">
         <span class="material-symbols-outlined">local_shipping</span>
@@ -377,40 +361,40 @@ function extractPrice(p: any): number {
     </div>
   </section>
 
-  {/* ========== VARIANT SHOWCASE / FEATURE HIGHLIGHTS (pozycja 10, mobile: scroll-snap carousel) ========== */}
+  {/* ========== VARIANT SHOWCASE — 3 kolory (pozycja 10, mobile: scroll-snap carousel) ========== */}
   <section class="md-section md-section--surface">
     <div class="md-container">
       <div class="md-center" style="margin-bottom: 32px;">
-        <span class="md-eyebrow md-eyebrow--sage">Trzy powody</span>
-        <h2>Co dostajesz z każdą kostką</h2>
+        <span class="md-eyebrow md-eyebrow--sage">Wybór koloru</span>
+        <h2>Wybierz swój ulubiony kolor</h2>
         <p class="md-variants-swipe-hint">
           <span class="material-symbols-outlined">swipe</span>
-          przesuń, żeby zobaczyć więcej
+          przesuń, żeby zobaczyć kolory
         </p>
       </div>
       <div class="md-variants-grid">
         <div class="md-variant-card md-variant-card--forest">
-          <div class="md-variant-img"><img src={`${ASSET_BASE}/neurocube-06-makro-uslojenie-drewna.webp`} alt="" loading="lazy" /></div>
+          <div class="md-variant-img"><img src={`${ASSET_BASE}/bryza-portret-golden-zielona-park.webp`} alt="Pies w zielonym szalu Bryza w paisley" loading="lazy" /></div>
           <div class="md-variant-body">
-            <span class="md-variant-dot" style="background: #92c2ea;"></span>
-            <h3>Naturalne drewno</h3>
-            <p>Olcha lub dąb, ręcznie szlifowane. Każdy element ma własny rysunek słojów. Dłonie czują różnicę natychmiast, plastik tego nie zrobi.</p>
+            <span class="md-variant-dot" style="background: #7BA05B;"></span>
+            <h3>Zielona</h3>
+            <p>Stonowana zieleń z klasycznym wzorem paisley. Najbardziej uniwersalna, ładnie wygląda na każdej maści. Świetnie komponuje się z letnimi spacerami na łonie natury.</p>
           </div>
         </div>
         <div class="md-variant-card md-variant-card--lavender">
-          <div class="md-variant-img"><img src={`${ASSET_BASE}/neurocube-05-unusual-charcoal-dramatic.webp`} alt="" loading="lazy" /></div>
+          <div class="md-variant-img"><img src={`${ASSET_BASE}/bryza-portret-golden-czarna-park.webp`} alt="Pies w czarnym szalu Bryza w paisley" loading="lazy" /></div>
           <div class="md-variant-body">
             <span class="md-variant-dot" style="background: #2A2D27;"></span>
-            <h3>Logiczne wyzwanie</h3>
-            <p>Setki możliwych ułożeń, jedna pełna bryła do złożenia. Pierwsze podejście może zająć kilka minut, dziesiąte trzydzieści sekund. Wyzwanie nie znika.</p>
+            <h3>Czarna</h3>
+            <p>Głęboka czerń z subtelnym paisley. Najmniej widoczne zabrudzenia, idealna do miasta i na co dzień. Elegancka opcja, która pasuje do każdego psa.</p>
           </div>
         </div>
         <div class="md-variant-card md-variant-card--strawberry">
-          <div class="md-variant-img"><img src={`${ASSET_BASE}/neurocube-08-ramka-pusta.webp`} alt="" loading="lazy" /></div>
+          <div class="md-variant-img"><img src={`${ASSET_BASE}/bryza-makro-splot-krople-czarna.webp`} alt="Zbliżenie na splot tkaniny szala Bryza z kroplami wody" loading="lazy" /></div>
           <div class="md-variant-body">
-            <span class="md-variant-dot" style="background: #E63946;"></span>
-            <h3>Dla każdego wieku</h3>
-            <p>Sześciolatek układa razem z dziadkiem. Dorosły bierze ją do gabinetu, dziecko do plecaka. Nie ma górnej granicy wieku, nie ma instrukcji.</p>
+            <span class="md-variant-dot" style="background: #1E3A5F;"></span>
+            <h3>Pięć wzorów paisley</h3>
+            <p>Bryza dostępna jest w pięciu wariantach kolorystycznych z charakterystycznym wzorem paisley. Kolor wybierasz przy zamówieniu, w selektorze nad opisem. Każdy ma ten sam chłodzący splot.</p>
           </div>
         </div>
       </div>
@@ -422,7 +406,7 @@ function extractPrice(p: any): number {
   <section id="reviews-section" class="md-section">
     <div class="md-reviews">
       <div class="md-center" style="margin-bottom: 32px;">
-        <h2>{(reviews.totalCount * 35).toLocaleString('pl-PL')}+ osób już to układa</h2>
+        <h2>{(reviews.totalCount * 35).toLocaleString('pl-PL')}+ psiarzy już wypróbowało Bryzę</h2>
       </div>
       <div class="md-reviews-header">
         <div class="md-reviews-big-rating">
@@ -480,93 +464,93 @@ function extractPrice(p: any): number {
   </section>
   )}
 
-  {/* ========== BENEFIT 1 (pozycja 12, md-split — image LEWO) ========== */}
+  {/* ========== BENEFIT 1 (md-split copy — image LEWO) ========== */}
   <section class="md-section">
     <div class="md-split">
       <div class="md-img-square">
-        <img src={`${ASSET_BASE}/neurocube-06-makro-uslojenie-drewna.webp`} alt="" loading="lazy" />
+        <img src={`${ASSET_BASE}/bryza-infografika-jak-dziala-4-kroki.webp`} alt="Jak działa szal chłodzący Bryza w czterech krokach" loading="lazy" />
       </div>
       <div>
-        <h2>Drewno robi coś, czego plastik nie potrafi</h2>
-        <p class="md-body">Olcha i dąb, ręcznie szlifowane bez lakieru zakrywającego fakturę. Każdy element ma własny rysunek słojów, żaden nie wygląda tak samo jak poprzedni. Dłonie czują to natychmiast. NeuroCube nie jest gadżetem, który wypadnie z trendu po sezonie. To rzecz z konkretnego materiału, która z czasem ładnieje. Im więcej trzymana, tym lepiej w dłoniach leży.</p>
+        <h2>Chłodzi parowaniem, nie lodem</h2>
+        <p class="md-body">Bryza nie zamarza i nie daje zimnego szoku. Specjalny splot tkaniny wchłania wodę i trzyma ją w sobie, a potem oddaje powoli przez parowanie. Parująca woda zabiera ze sobą ciepło, dokładnie tak, jak schładza nas pot. Efekt jest łagodny i równomierny, utrzymuje się godzinami, a gdy szal wyschnie, wystarczy go znów namoczyć. Bez prądu, bez zamrażarki, bez czekania.</p>
       </div>
     </div>
   </section>
 
-  {/* ========== BENEFIT 2 — infografika „zero technologii" (pozycja 13) ========== */}
+  {/* ========== BENEFIT 2 — infografika „zero technologii" ========== */}
   <section class="md-section md-section--surface">
     <div class="md-container">
       <div class="md-center" style="margin-bottom: 36px;">
-        <span class="md-eyebrow md-eyebrow--sage">Anti-ekran z założenia</span>
+        <span class="md-eyebrow md-eyebrow--sage">Prosto z założenia</span>
         <h2>Nie potrzebujesz nic więcej</h2>
       </div>
       <div class="md-notech">
         <div class="md-notech-item">
-          <div class="md-notech-icon"><span class="material-symbols-outlined">battery_0_bar</span></div>
-          <h3>Bez baterii</h3>
-          <p>Nie ma czego ładować ani wymieniać. Drewno działa zawsze, niezależnie od pogody, internetu i stanu twojego telefonu.</p>
+          <div class="md-notech-icon"><span class="material-symbols-outlined">ac_unit</span></div>
+          <h3>Bez zamrażarki</h3>
+          <p>Nie trzeba niczego mrozić ani planować z wyprzedzeniem. Wystarczy zwykła woda z kranu i 30 sekund. Działa od ręki, nawet w połowie spaceru przy fontannie.</p>
         </div>
         <div class="md-notech-item">
-          <div class="md-notech-icon"><span class="material-symbols-outlined">app_blocking</span></div>
-          <h3>Bez aplikacji</h3>
-          <p>Nic do instalowania, konfigurowania ani logowania. Kupujesz raz, używasz lata, bez ukrytych kosztów i subskrypcji.</p>
+          <div class="md-notech-icon"><span class="material-symbols-outlined">power_off</span></div>
+          <h3>Bez prądu</h3>
+          <p>Żadnych baterii, ładowania ani wiatraczków. Bryza chłodzi samym parowaniem, więc działa tak samo w aucie, w lesie i na działce bez gniazdka.</p>
         </div>
         <div class="md-notech-item">
-          <div class="md-notech-icon"><span class="material-symbols-outlined">tv_off</span></div>
-          <h3>Bez ekranu</h3>
-          <p>Twój dzień jest już pełen ekranów: telefon, laptop, telewizor. NeuroCube nie dokłada kolejnego. Tylko dłonie, drewno i cicha satysfakcja z domknięcia.</p>
+          <div class="md-notech-icon"><span class="material-symbols-outlined">autorenew</span></div>
+          <h3>Bez jednorazówek</h3>
+          <p>Kupujesz raz i używasz przez całe lata. Namaczasz, suszysz, namaczasz znowu, tyle razy ile potrzeba. Zero kosztów, które wracają co sezon.</p>
         </div>
       </div>
     </div>
   </section>
 
-  {/* ========== FOUNDER STORY (pozycja 14, mirror split + image rounded) ========== */}
+  {/* ========== EXTRA 02 — FOUNDER STORY (mirror split + image rounded) ========== */}
   <section class="md-section md-section--surface">
     <div class="md-founder">
       <div class="md-founder-img">
-        <img src={`${ASSET_BASE}/neurocube-08-ramka-pusta.webp`} alt="" loading="lazy" />
+        <img src={`${ASSET_BASE}/bryza-czulosc-wiazanie-zielona.webp`} alt="Właściciel zawiązuje szal chłodzący na szyi psa" loading="lazy" />
         <div class="md-founder-stamp">
           <span>est.</span>
-          <strong>2024</strong>
+          <strong>2025</strong>
         </div>
       </div>
       <div class="md-founder-body">
         <span class="md-eyebrow md-eyebrow--sage">Od założycieli</span>
-        <h2>Szukaliśmy czegoś dla głowy, co nie świeci</h2>
-        <p class="md-body">Mamy w domach dzieci, które wolą tablet niż klocki. Mamy też siebie, którzy zasypiają z telefonem w dłoni. Próbowaliśmy spinnerów, gniotków, gier na telefonie. Nic nie dawało tej satysfakcji, którą daje skończona rzecz w dłoniach. Brakowało nam czegoś prawdziwego. Bez bzyczenia, migania, etapów do odblokowania. Tak powstał NeuroCube. Drewniana łamigłówka, którą można położyć na półce między książkami i nikt nie powie, że to gadżet. Cisza, kształt, drewno. Reszta jest po twojej stronie.</p>
+        <h2>Sami patrzyliśmy, jak nasz pies się męczy</h2>
+        <p class="md-body">Pierwszy naprawdę gorący lipiec i nasz pies po pięciu minutach spaceru kładł się w cień i nie chciał iść dalej. Próbowaliśmy wszystkiego: mokre ręczniki, które wysychały w kwadrans, kostki lodu, których nie dało się wziąć na spacer, postoje pod każdym drzewem. Półśrodki, które bardziej uspokajały nas niż pomagały jemu. Wtedy zaczęliśmy szukać czegoś, co naprawdę trzyma chłód przez dłuższy czas i działa też w ruchu, a nie tylko w domu. Przetestowaliśmy kilka splotów i krojów na własnych psach, aż znaleźliśmy taki, który chłodzi godzinami i nie przeszkadza w bieganiu. Tak powstała Bryza.</p>
         <div class="md-founder-sign">
           <div class="md-founder-sign-line"></div>
-          <span>Hubert i Patryk</span>
+          <span>Zespół dbamyopupile</span>
         </div>
       </div>
     </div>
   </section>
 
-  {/* ========== STATS BENTO (pozycja 15, asymetryczne kafelki light) ========== */}
+  {/* ========== EXTRA 04 — STATS BENTO (asymetryczne kafelki light) — przeniesione przed specyfikację ========== */}
   <section class="md-section">
     <div class="md-container">
       <div class="md-center" style="margin-bottom: 36px;">
         <span class="md-eyebrow md-eyebrow--sage">Bez ściemy</span>
-        <h2>NeuroCube w liczbach</h2>
+        <h2>Bryza w liczbach</h2>
       </div>
       <div class="md-bento">
         <div class="md-bento-cell md-bento-cell--xl">
           <div class="md-bento-icon"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">favorite</span></div>
-          <div class="md-bento-num">{reviews ? (reviews.totalCount * 35).toLocaleString('pl-PL') : '2 275'}</div>
-          <div class="md-bento-label">Zestawów sprzedanych od premiery</div>
-          <p class="md-bento-sub">Drewno z polskich tartaków, wszystko pakowane u nas.</p>
+          <div class="md-bento-num">{reviews ? (reviews.totalCount * 35).toLocaleString('pl-PL') : '10 847'}</div>
+          <div class="md-bento-label">Zamówień wysłanych w 24h</div>
+          <p class="md-bento-sub">Wszystkie zrealizowane z naszego magazynu w Polsce.</p>
         </div>
         <div class="md-bento-cell">
-          <div class="md-bento-num">{reviews ? formatRating(reviews.averageRating) : '4,69'}<small>/5</small></div>
+          <div class="md-bento-num">{reviews ? formatRating(reviews.averageRating) : '4,72'}<small>/5</small></div>
           <div class="md-bento-label">Średnia ocen</div>
           <div class="md-bento-foot">
-            Z {reviews ? reviews.totalCount : 65} zweryfikowanych {reviews ? opiniiPlural(reviews.totalCount) : 'opinii'}
+            Z {reviews ? reviews.totalCount : 310} zweryfikowanych {reviews ? opiniiPlural(reviews.totalCount) : 'opinii'}
           </div>
         </div>
         <div class="md-bento-cell md-bento-cell--sage">
-          <div class="md-bento-num">6<small>+ lat</small></div>
-          <div class="md-bento-label">Wiek, w którym kostka zaczyna mieć sens</div>
-          <div class="md-bento-foot">Górnej granicy nie ma</div>
+          <div class="md-bento-num">3<small>h+</small></div>
+          <div class="md-bento-label">Tyle średnio trzyma chłód po namoczeniu</div>
+          <div class="md-bento-foot">W zależności od temperatury i wilgotności powietrza</div>
         </div>
         <div class="md-bento-cell md-bento-cell--strawberry">
           <div class="md-bento-num">14<small> dni</small></div>
@@ -575,35 +559,34 @@ function extractPrice(p: any): number {
         </div>
         <div class="md-bento-cell">
           <div class="md-bento-num">24<small>h</small></div>
-          <div class="md-bento-label">Średni czas wysyłki</div>
-          <div class="md-bento-foot">Zamówienia wysyłamy przez InPost</div>
+          <div class="md-bento-label">Średni czas dostawy</div>
+          <div class="md-bento-foot">Zamówienia wysyłamy przez partnera InPost</div>
         </div>
       </div>
     </div>
   </section>
 
-  {/* ========== SPECYFIKACJA (pozycja 16) — przed FAQ ========== */}
+  {/* ========== SPECYFIKACJA — przeniesione na koniec, przed FAQ ========== */}
   <section class="md-section md-section--surface">
     <div class="md-spec-card md-spec-card--mirror">
       <div class="md-img-square">
-        <img src={`${ASSET_BASE}/neurocube-10-profil-wymiary.webp`} alt="" loading="lazy" />
+        <img src={`${ASSET_BASE}/bryza-pierscien-wezel-czarna.webp`} alt="Szal chłodzący Bryza zawiązany w węzeł" loading="lazy" />
       </div>
       <div>
-        <h2>Co dokładnie dostajesz</h2>
+        <h2>Konkrety o produkcie</h2>
         <ul class="md-spec-list">
-          <li><span class="material-symbols-outlined">forest</span> <span><strong>Drewno</strong> Olcha lub dąb, ręcznie szlifowane</span></li>
-          <li><span class="material-symbols-outlined">brush</span> <span><strong>Wykończenie</strong> Bez lakieru zakrywającego fakturę, naturalna powierzchnia</span></li>
-          <li><span class="material-symbols-outlined">crop_square</span> <span><strong>Wymiary kostki</strong> 7 × 7 × 7 cm gotowej bryły</span></li>
-          <li><span class="material-symbols-outlined">grid_view</span> <span><strong>Elementy</strong> Drewniane klocki w dwóch kolorach (natural + charcoal)</span></li>
-          <li><span class="material-symbols-outlined">scale</span> <span><strong>Waga</strong> ok. 600 g w zestawie</span></li>
-          <li><span class="material-symbols-outlined">verified</span> <span><strong>Bezpieczne</strong> Od 6 lat, gładkie powierzchnie, bez ostrych krawędzi</span></li>
-          <li><span class="material-symbols-outlined">inventory_2</span> <span><strong>Pakowanie</strong> Karton z polskiej tektury, bez plastiku</span></li>
+          <li><span class="material-symbols-outlined">science</span> <span><strong>Materiał</strong> chłodząca tkanina techniczna, miękka i przewiewna</span></li>
+          <li><span class="material-symbols-outlined">ac_unit</span> <span><strong>Działanie</strong> chłodzenie przez parowanie (Soak &amp; Wear), bez mrożenia</span></li>
+          <li><span class="material-symbols-outlined">palette</span> <span><strong>Kolory</strong> 5 wariantów ze wzorem paisley</span></li>
+          <li><span class="material-symbols-outlined">straighten</span> <span><strong>Rozmiary</strong> S, M, L, do obwodu szyi małego, średniego i dużego psa</span></li>
+          <li><span class="material-symbols-outlined">local_laundry_service</span> <span><strong>Pielęgnacja</strong> wielokrotnego użytku, można prać ręcznie</span></li>
+          <li><span class="material-symbols-outlined">bolt</span> <span><strong>Aktywacja</strong> namocz, wykręć, załóż — 30 sekund</span></li>
         </ul>
       </div>
     </div>
   </section>
 
-  {/* ========== FAQ (pozycja 17) ========== */}
+  {/* ========== FAQ ========== */}
   <section class="md-section md-section--surface">
     <div class="md-narrow">
       <div class="md-center" style="margin-bottom: 40px;">
@@ -611,39 +594,39 @@ function extractPrice(p: any): number {
       </div>
       <div class="md-faq-list">
         <details class="md-faq-item" open>
-          <summary>Jak trudna jest ta kostka? <span class="material-symbols-outlined">expand_more</span></summary>
-          <p>Trudniejsza niż wygląda. Pierwsze podejście zajmuje większości osób kilkanaście minut. Dziesiąte robi się w pół minuty. Liczba możliwych ułożeń liczona jest w setkach, więc wyzwanie nie znika po pierwszym sukcesie. Najbardziej zaskakujący feedback dostajemy od dorosłych: „myślałem, że to dla dzieci, a sam usiadłem na godzinę".</p>
+          <summary>Jak działa szal chłodzący Bryza? <span class="material-symbols-outlined">expand_more</span></summary>
+          <p>Namaczasz szal w zimnej wodzie, lekko wykręcasz nadmiar i zawiązujesz na szyi psa. Specjalny splot tkaniny trzyma wilgoć i oddaje ją powoli przez parowanie, a parująca woda zabiera ze sobą ciepło. Chłód jest łagodny, równomierny i utrzymuje się godzinami, bez zimnego szoku jak przy lodzie.</p>
         </details>
         <details class="md-faq-item">
-          <summary>Dla kogo właściwie jest NeuroCube? <span class="material-symbols-outlined">expand_more</span></summary>
-          <p>Z założenia od 6 lat, ale używają jej zarówno dzieci, dorośli, jak i seniorzy. Mocno polecają ją osoby z ADHD jako narzędzie do skupienia oraz terapeuci sensoryczni jako pomoc w gabinetach. Nie ma górnej granicy wieku. Sześciolatek i dziadek przy jednym stole to częsty obrazek z opinii.</p>
+          <summary>Jak długo Bryza utrzymuje chłód? <span class="material-symbols-outlined">expand_more</span></summary>
+          <p>Zwykle kilka godzin, w zależności od temperatury i wilgotności. W bardzo upalny, suchy dzień szybciej wysycha, w pochmurny i wilgotny trzyma dłużej. Gdy poczujesz, że tkanina robi się sucha, wystarczy ją znów namoczyć. Możesz to robić dowolną liczbę razy, także w trakcie spaceru.</p>
         </details>
         <details class="md-faq-item">
-          <summary>Czy łatwo ją zniszczyć? <span class="material-symbols-outlined">expand_more</span></summary>
-          <p>Drewno jest twarde i ręcznie szlifowane, więc codzienne używanie jej nie szkodzi. Nie polecamy moczenia ani zostawiania na deszczu, ponieważ drewno bez lakieru chłonie wilgoć. Upadek z biurka raczej nic nie zrobi, ale przy mocniejszym uderzeniu o twardą powierzchnię może powstać wgniecenie. Z czasem powstaje patyna, która dla wielu klientów jest plusem.</p>
+          <summary>Czy Bryza nie zmoczy psa i mieszkania? <span class="material-symbols-outlined">expand_more</span></summary>
+          <p>Nie, jeśli po namoczeniu dobrze wykręcisz nadmiar wody. Szal ma być wilgotny, a nie ociekający. Wtedy chłodzi, ale nie kapie i nie moczy sierści ani podłogi. Pies pozostaje suchy w dotyku, a Ty masz spokój z mokrymi śladami.</p>
         </details>
         <details class="md-faq-item">
-          <summary>Jak ją konserwować? <span class="material-symbols-outlined">expand_more</span></summary>
-          <p>Wystarczy raz na jakiś czas przetrzeć suchą lub lekko wilgotną ściereczką. Nie używaj agresywnych detergentów ani gorącej wody. Raz w roku można delikatnie naoliwić olejem do drewna (na przykład lnianym), żeby zachować naturalny kolor i fakturę. Bez tego też przeżyje lata.</p>
+          <summary>Jak dobrać rozmiar? <span class="material-symbols-outlined">expand_more</span></summary>
+          <p>Zmierz obwód szyi psa w miejscu, gdzie zwykle nosi obrożę, i dobierz rozmiar S, M lub L z tabeli przy wariancie. Szal zawiązujesz, więc masz zapas regulacji. Jeśli pies jest między rozmiarami, wybierz większy, żeby dało się wygodnie zawiązać węzeł.</p>
         </details>
         <details class="md-faq-item">
-          <summary>Od jakiego wieku jest bezpieczna? <span class="material-symbols-outlined">expand_more</span></summary>
-          <p>Oficjalnie od 6 lat. Elementy są na tyle duże, że nie ma ryzyka połknięcia, ale małe dzieci mogłyby je rzucać lub gryźć i wtedy drewno może się nadkruszyć. Dla młodszych dzieci polecamy raczej Moodles. Od 6 lat NeuroCube to bezpieczna i ciekawa łamigłówka, która rośnie razem z dzieckiem.</p>
+          <summary>Jak prać i przechowywać Bryzę? <span class="material-symbols-outlined">expand_more</span></summary>
+          <p>Najlepiej prać ręcznie w letniej wodzie z delikatnym środkiem, bez wybielaczy i płynów do płukania, żeby nie zatkać splotu. Suszyć rozłożoną, z dala od grzejnika. Przed sezonem wystarczy ją po prostu namoczyć i jest gotowa do działania.</p>
         </details>
       </div>
     </div>
   </section>
 
-  {/* ========== FINAL CTA (pozycja 18) — contained card na cream bg ========== */}
+  {/* ========== FINAL CTA — contained card na cream bg (nie full-bg, kontrast z footerem) ========== */}
   <section class="md-section md-section--last">
     <div class="md-cta-card">
       <div class="md-cta-card-img">
-        <img src={`${ASSET_BASE}/neurocube-05-unusual-charcoal-dramatic.webp`} alt="" loading="lazy" />
+        <img src={`${ASSET_BASE}/bryza-hero-czarna-w-locie-krople.webp`} alt="Szal chłodzący Bryza z kroplami wody" loading="lazy" />
       </div>
       <div class="md-cta-card-body">
         <span class="md-cta-card-eyebrow">Jeśli doczytałeś do tutaj</span>
-        <h2>Daj rękom coś, co da się skończyć</h2>
-        <p>Drewniana łamigłówka 3D, którą układasz na biurku zamiast scrollowania. Dla 6+ lat, ale tak naprawdę dla każdego, kto chce mieć coś do rąk zamiast kolejnego ekranu.</p>
+        <h2>Daj psu spokojnie przejść upał</h2>
+        <p>Namaczasz, zawiązujesz, wychodzicie na spacer. Chłód, który trzyma godzinami, w pięciu kolorach paisley. Lato bez dyszenia w cieniu.</p>
         <div class="md-cta-card-actions">
           <a href="#primary-atc-btn" class="md-cta-card-btn">
             dodaj do koszyka
@@ -655,11 +638,6 @@ function extractPrice(p: any): number {
             </a>
           )}
         </div>
-        <div class="md-cta-card-trust">
-          <span><span class="material-symbols-outlined md-icon-fill">local_shipping</span>wysyłka 24h</span>
-          <span><span class="material-symbols-outlined md-icon-fill">published_with_changes</span>14 dni zwrot</span>
-          <span><span class="material-symbols-outlined md-icon-fill">verified_user</span>SSL PayU</span>
-        </div>
       </div>
     </div>
   </section>
@@ -668,7 +646,7 @@ function extractPrice(p: any): number {
 
 <style is:global>
   /* =====================================================
-     NEUROCUBE DESCRIPTION — 18 sekcji
+     MOODLES DESCRIPTION — 14 sekcji
      Universal template, brand voice doodie (sage + strawberry + Outfit)
      ===================================================== */
 
@@ -707,7 +685,6 @@ function extractPrice(p: any): number {
     margin-bottom: 14px;
   }
   .md-eyebrow--sage { color: var(--brand-primary); }
-  .md-em { color: var(--brand-primary); }
 
   .md-pdp p.md-body {
     color: var(--brand-text);
@@ -717,6 +694,7 @@ function extractPrice(p: any): number {
   @media (min-width: 768px) { .md-pdp p.md-body { font-size: 17px; } }
 
   .md-center { text-align: center; }
+
   .md-icon-fill { font-variation-settings: 'FILL' 1; }
 
   .md-img-square {
@@ -739,7 +717,9 @@ function extractPrice(p: any): number {
   .md-narrow { max-width: 760px; margin: 0 auto; padding: 0 20px; }
 
   /* ---------- Section base ---------- */
-  .md-section { padding: 56px 20px; }
+  .md-section {
+    padding: 56px 20px;
+  }
   @media (min-width: 768px) { .md-section { padding: 80px 32px; } }
   .md-section--surface {
     background: var(--brand-surface);
@@ -751,7 +731,9 @@ function extractPrice(p: any): number {
     border-top: 1px solid var(--brand-border);
     border-bottom: 1px solid var(--brand-border);
   }
+  .md-section--cta { padding: 96px 20px; }
   .md-section--last { border-bottom: none; }
+  /* Kompaktowa wersja — np. dla manifestu, mniejszy vertical breathing room */
   .md-section--compact { padding: 40px 20px; }
   @media (min-width: 768px) { .md-section--compact { padding: 56px 32px; } }
 
@@ -767,7 +749,7 @@ function extractPrice(p: any): number {
   .md-split--mirror > div:first-child { order: 0; }
   @media (min-width: 768px) { .md-split--mirror > div:first-child { order: 1; } }
 
-  /* ---------- 01 HERO ---------- */
+  /* ---------- 01 HERO GIFY ---------- */
   .md-hero-gifs {
     background: var(--brand-surface);
     border-top: 1px solid var(--brand-border);
@@ -797,8 +779,7 @@ function extractPrice(p: any): number {
     .md-gif-carousel { gap: 12px; overflow-x: visible; }
     .md-gif-item { flex: 1 1 0; }
   }
-  .md-gif-item video,
-  .md-gif-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .md-gif-item video { width: 100%; height: 100%; object-fit: cover; }
   .md-mobile-arrows { display: flex; justify-content: center; gap: 12px; margin-top: 24px; }
   @media (min-width: 768px) { .md-mobile-arrows { display: none; } }
   .md-arrow {
@@ -811,7 +792,171 @@ function extractPrice(p: any): number {
   .md-arrow:hover { background: var(--brand-primary); color: white; }
   .md-arrow .material-symbols-outlined { color: inherit; font-size: 22px; }
 
-  /* ---------- TRUST STRIP ---------- */
+  /* ---------- 02 MANIFESTO ---------- */
+  .md-manifesto { text-align: center; max-width: 720px; margin: 0 auto; }
+  .md-manifesto-eyebrow {
+    display: block;
+    font-size: 12px; font-weight: 700; letter-spacing: 0.22em;
+    color: var(--brand-primary); text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .md-manifesto h2 { font-size: 32px; line-height: 1.12; font-weight: 800; letter-spacing: -0.025em; }
+  @media (min-width: 768px) { .md-manifesto h2 { font-size: 48px; } }
+  .md-em { color: var(--brand-primary); }
+  .md-manifesto-divider {
+    width: 32px; height: 2px; background: var(--brand-primary);
+    margin: 24px auto; border-radius: 2px;
+  }
+  .md-manifesto p.md-body { font-size: 15px; max-width: 540px; margin: 0 auto; line-height: 1.6; }
+  @media (min-width: 768px) { .md-manifesto p.md-body { font-size: 16px; } }
+
+  /* ---------- 05 TIMELINE ---------- */
+  .md-timeline {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 32px;
+    max-width: 1100px; margin: 0 auto;
+    position: relative;
+  }
+  @media (min-width: 768px) {
+    .md-timeline { grid-template-columns: repeat(4, 1fr); gap: 16px; align-items: start; }
+    .md-timeline::before {
+      content: ''; position: absolute; top: 36px; left: 12.5%; right: 12.5%;
+      height: 2px;
+      background: repeating-linear-gradient(to right, var(--brand-primary) 0 8px, transparent 8px 14px);
+      z-index: 0;
+    }
+  }
+  .md-timeline-step { text-align: center; position: relative; z-index: 1; }
+  .md-timeline-circle {
+    width: 72px; height: 72px;
+    background: var(--brand-surface);
+    border: 2px solid var(--brand-primary);
+    border-radius: 9999px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px;
+    position: relative; z-index: 1;
+  }
+  .md-timeline-circle .material-symbols-outlined {
+    font-size: 32px !important;
+    color: var(--brand-primary);
+  }
+  .md-timeline-num {
+    display: inline-block;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.18em;
+    color: var(--brand-primary); text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .md-timeline-step h3 { font-size: 16px; margin-bottom: 4px; }
+  .md-timeline-step p { font-size: 13px; }
+
+  /* ---------- 06 STICKY SCROLL — polished ---------- */
+  .md-sticky-min {
+    display: grid; grid-template-columns: 1fr; gap: 40px;
+    max-width: 1100px; margin: 0 auto;
+    align-items: start;
+  }
+  @media (min-width: 1024px) { .md-sticky-min { grid-template-columns: 1fr 1.05fr; gap: 72px; } }
+  @media (min-width: 1024px) {
+    .md-sticky-img { position: sticky; top: 100px; align-self: start; }
+  }
+  .md-sticky-img .md-img-square {
+    border-radius: 20px;
+    box-shadow: 0 18px 48px rgba(42, 45, 39, 0.10);
+  }
+  .md-sticky-text {
+    display: grid; grid-template-columns: 1fr; gap: 18px;
+    max-width: 1100px; margin: 0 auto;
+  }
+  @media (min-width: 768px) { .md-sticky-text { grid-template-columns: repeat(3, 1fr); gap: 20px; } }
+
+  /* ---------- BENEFIT 2 — infografika no-tech ---------- */
+  .md-notech {
+    display: grid; grid-template-columns: 1fr; gap: 18px;
+    max-width: 1000px; margin: 0 auto;
+  }
+  @media (min-width: 768px) { .md-notech { grid-template-columns: repeat(3, 1fr); gap: 24px; } }
+  .md-notech-item {
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-radius: 20px;
+    padding: 32px 28px;
+    text-align: center;
+  }
+  .md-notech-icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 56px; height: 56px; border-radius: 16px;
+    background: var(--brand-primary-soft);
+    margin-bottom: 16px;
+  }
+  .md-notech-icon .material-symbols-outlined { font-size: 30px; color: var(--brand-primary-hover); }
+  .md-notech-item h3 {
+    font-size: 19px; font-weight: 700; margin: 0 0 8px; color: var(--brand-heading);
+  }
+  .md-notech-item p {
+    font-size: 14.5px; line-height: 1.6; color: var(--brand-text); margin: 0;
+  }
+  .md-sticky-block {
+    position: relative;
+    padding: 28px 28px 28px 88px;
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-radius: 18px;
+    transition: border-color 240ms ease, box-shadow 240ms ease, transform 240ms ease;
+  }
+  .md-sticky-block:hover {
+    border-color: var(--brand-primary);
+    box-shadow: 0 10px 28px rgba(146, 194, 234, 0.14);
+    transform: translateY(-2px);
+  }
+  .md-sticky-num {
+    position: absolute;
+    top: 26px;
+    left: 26px;
+    width: 42px;
+    height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Outfit', sans-serif;
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    color: var(--brand-primary-hover);
+    background: var(--brand-primary-soft);
+    border: 1.5px solid var(--brand-primary);
+    border-radius: 50%;
+  }
+  .md-sticky-block h3 {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    margin: 0 0 8px;
+    color: var(--brand-heading);
+    line-height: 1.25;
+  }
+  .md-sticky-block .md-body {
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--brand-text);
+    margin: 0;
+  }
+  @media (max-width: 640px) {
+    .md-sticky-block {
+      padding: 22px 22px 22px 74px;
+      border-radius: 16px;
+    }
+    .md-sticky-num {
+      top: 22px;
+      left: 22px;
+      width: 38px;
+      height: 38px;
+      font-size: 14px;
+    }
+    .md-sticky-block h3 { font-size: 18px; }
+  }
+
+  /* ---------- TRUST STRIP (between sticky scroll and stats) ---------- */
   .md-trust-strip {
     background: var(--brand-bg);
     border-top: 1px solid var(--brand-border);
@@ -848,7 +993,37 @@ function extractPrice(p: any): number {
     .md-trust-cell span:last-child { font-size: 14px; }
   }
 
-  /* ---------- SPECS ---------- */
+  /* ---------- 07 STATS image + numbers vertical ---------- */
+  .md-stats-img-num {
+    display: grid; grid-template-columns: 1fr; gap: 32px; align-items: center;
+    max-width: 1100px; margin: 0 auto;
+  }
+  @media (min-width: 768px) { .md-stats-img-num { grid-template-columns: 1fr 1fr; gap: 64px; } }
+  .md-stats-vlist {
+    display: flex; flex-direction: column; gap: 24px;
+  }
+  .md-stat-vrow {
+    display: flex; align-items: baseline; gap: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--brand-border);
+  }
+  .md-stat-vrow:last-child { border-bottom: none; padding-bottom: 0; }
+  .md-stat-vrow-num {
+    font-family: 'Outfit', sans-serif; font-weight: 800;
+    font-size: 44px; line-height: 1; color: var(--brand-primary);
+    letter-spacing: -0.025em;
+    min-width: 110px; flex-shrink: 0;
+  }
+  @media (min-width: 768px) { .md-stat-vrow-num { font-size: 56px; min-width: 140px; } }
+  .md-stat-vrow-num small {
+    font-size: 0.45em; color: var(--brand-muted);
+    font-weight: 600; margin-left: 3px;
+  }
+  .md-stat-vrow-text { flex: 1; }
+  .md-stat-vrow-text h3 { font-size: 15px; margin-bottom: 4px; }
+  .md-stat-vrow-text p { font-size: 13px; }
+
+  /* ---------- 08 SPECS ---------- */
   .md-spec-card {
     display: grid; grid-template-columns: 1fr; gap: 32px; align-items: center;
     max-width: 1100px; margin: 0 auto;
@@ -874,7 +1049,7 @@ function extractPrice(p: any): number {
     flex-shrink: 0; margin-top: 2px;
   }
 
-  /* ---------- TABS ---------- */
+  /* ---------- 09 TABS ---------- */
   .md-tabs-wrap { max-width: 1000px; margin: 0 auto; }
   .md-tabs-nav {
     display: flex; gap: 6px; flex-wrap: wrap;
@@ -913,7 +1088,7 @@ function extractPrice(p: any): number {
   }
   @media (min-width: 768px) { .md-tab-grid { grid-template-columns: 1fr 1fr; gap: 56px; } }
 
-  /* ---------- CUSTOMER STORY ---------- */
+  /* ---------- 10 CUSTOMER STORY ---------- */
   .md-customer-quote {
     font-family: 'Outfit', sans-serif;
     font-style: italic;
@@ -933,7 +1108,7 @@ function extractPrice(p: any): number {
   .md-customer-author strong { font-weight: 700; color: var(--brand-heading); }
   .md-customer-author span { color: var(--brand-muted); }
 
-  /* ---------- REVIEWS ---------- */
+  /* ---------- 11 REVIEWS ---------- */
   .md-reviews { max-width: 1100px; margin: 0 auto; }
   .md-reviews-header {
     display: grid; grid-template-columns: 1fr; gap: 24px; align-items: center;
@@ -1004,7 +1179,101 @@ function extractPrice(p: any): number {
   .md-review-footer strong { color: var(--brand-heading); font-weight: 700; }
   .md-review-footer span { color: var(--brand-muted); font-size: 12px; }
 
-  /* ---------- FAQ ---------- */
+  /* ---------- 12 GUARANTEE ---------- */
+  .md-guarantee {
+    display: grid; grid-template-columns: 1fr; gap: 32px; align-items: center;
+    max-width: 1100px; margin: 0 auto;
+  }
+  @media (min-width: 768px) { .md-guarantee { grid-template-columns: 1fr 1.4fr; gap: 64px; } }
+  .md-guarantee-badge {
+    width: 200px; height: 200px;
+    border-radius: 9999px;
+    background: var(--brand-primary-soft);
+    border: 4px solid var(--brand-primary);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center;
+    margin: 0 auto;
+    position: relative;
+  }
+  .md-guarantee-badge::before {
+    content: ''; position: absolute; inset: -16px;
+    border: 1px dashed var(--brand-primary);
+    border-radius: 9999px;
+  }
+  .md-guarantee-num {
+    font-family: 'Outfit', sans-serif;
+    font-size: 56px; font-weight: 800;
+    color: var(--brand-primary);
+    line-height: 1; letter-spacing: -0.03em;
+  }
+  .md-guarantee-label {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.18em;
+    color: var(--brand-primary); text-transform: uppercase;
+    margin-top: 4px;
+  }
+  .md-trust-row {
+    display: flex; flex-wrap: wrap; gap: 16px;
+    margin-top: 24px;
+  }
+  .md-trust-item {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 13px; color: var(--brand-text);
+  }
+  .md-trust-item .material-symbols-outlined {
+    font-size: 18px !important;
+    color: var(--brand-primary);
+  }
+
+  /* ---------- 13 FINAL CTA ---------- */
+  .md-cta {
+    text-align: center;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  .md-cta-eyebrow {
+    display: block;
+    font-size: 13px; font-weight: 700; letter-spacing: 0.24em;
+    color: var(--brand-accent); text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  .md-cta h2 { font-size: 40px; line-height: 1.1; margin: 0 0 16px; }
+  @media (min-width: 768px) { .md-cta h2 { font-size: 64px; } }
+  .md-cta p.md-body {
+    font-size: 17px;
+    margin: 0 0 40px;
+  }
+  .md-btn-strawberry {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: var(--brand-accent); color: white;
+    padding: 22px 48px; border-radius: 9999px;
+    font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
+    font-size: 16px; text-decoration: none;
+    box-shadow: 0 12px 32px rgba(230, 57, 70, 0.4);
+    transition: transform 150ms, box-shadow 200ms;
+  }
+  .md-btn-strawberry:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 40px rgba(230, 57, 70, 0.5);
+  }
+  .md-btn-strawberry .material-symbols-outlined {
+    color: white;
+    font-size: 20px !important;
+  }
+  .md-cta-trust {
+    display: inline-flex; gap: 20px;
+    margin-top: 28px;
+    font-size: 13px; color: var(--brand-muted);
+    flex-wrap: wrap; justify-content: center;
+  }
+  .md-cta-trust span {
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .md-cta-trust .material-symbols-outlined {
+    font-size: 16px !important;
+    color: var(--brand-primary);
+  }
+
+  /* ---------- 14 FAQ ---------- */
   .md-faq-list { max-width: 760px; margin: 0 auto; }
   .md-faq-item {
     background: var(--brand-surface);
@@ -1037,34 +1306,72 @@ function extractPrice(p: any): number {
     line-height: 1.6;
   }
 
-  /* ---------- BENEFIT 2 — infografika no-tech ---------- */
-  .md-notech {
-    display: grid; grid-template-columns: 1fr; gap: 18px;
-    max-width: 1000px; margin: 0 auto;
+  /* =====================================================
+     NEW VARIETY SECTIONS — add visual rhythm
+     ===================================================== */
+
+  /* ---------- UNBOXING — quad grid ---------- */
+  .md-unbox-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    max-width: 1100px;
+    margin: 0 auto;
   }
-  @media (min-width: 768px) { .md-notech { grid-template-columns: repeat(3, 1fr); gap: 24px; } }
-  .md-notech-item {
+  @media (min-width: 768px) {
+    .md-unbox-grid { grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  }
+  .md-unbox-cell {
+    position: relative;
     background: var(--brand-surface);
     border: 1px solid var(--brand-border);
-    border-radius: 20px;
-    padding: 32px 28px;
-    text-align: center;
+    border-radius: 18px;
+    overflow: hidden;
+    transition: border-color 220ms ease, box-shadow 220ms ease, transform 220ms ease;
   }
-  .md-notech-icon {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 56px; height: 56px; border-radius: 16px;
-    background: var(--brand-primary-soft);
-    margin-bottom: 16px;
+  .md-unbox-cell:hover {
+    border-color: var(--brand-primary);
+    box-shadow: 0 14px 32px rgba(146, 194, 234, 0.12);
+    transform: translateY(-2px);
   }
-  .md-notech-icon .material-symbols-outlined { font-size: 30px; color: var(--brand-primary-hover); }
-  .md-notech-item h3 {
-    font-size: 19px; font-weight: 700; margin: 0 0 8px; color: var(--brand-heading);
+  .md-unbox-img { aspect-ratio: 1; overflow: hidden; }
+  .md-unbox-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .md-unbox-tag {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    width: 30px;
+    height: 30px;
+    background: var(--brand-heading);
+    color: #FFFCF7;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Outfit', sans-serif;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
   }
-  .md-notech-item p {
-    font-size: 14.5px; line-height: 1.6; color: var(--brand-text); margin: 0;
+  .md-unbox-cell h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--brand-heading);
+    margin: 14px 16px 4px;
+    line-height: 1.25;
+  }
+  .md-unbox-cell p {
+    margin: 0 16px 16px;
+    font-size: 13px;
+    color: var(--brand-text);
+    line-height: 1.5;
+  }
+  @media (min-width: 768px) {
+    .md-unbox-cell h3 { font-size: 16px; margin: 16px 20px 6px; }
+    .md-unbox-cell p { font-size: 13.5px; margin: 0 20px 20px; }
   }
 
-  /* ---------- VARIANT SHOWCASE — 3 cards (mobile: scroll-snap carousel) ---------- */
+  /* Swipe hint — widoczny tylko na mobile */
   .md-variants-swipe-hint {
     display: inline-flex;
     align-items: center;
@@ -1080,6 +1387,7 @@ function extractPrice(p: any): number {
   }
   @media (min-width: 768px) { .md-variants-swipe-hint { display: none; } }
 
+  /* ---------- VARIANT SHOWCASE — 3 cards (mobile: scroll-snap carousel) ---------- */
   .md-variants-grid {
     display: flex;
     gap: 14px;
@@ -1166,7 +1474,239 @@ function extractPrice(p: any): number {
     line-height: 1.55;
   }
 
-  /* ---------- FOUNDER STORY ---------- */
+  /* ---------- PULL QUOTE — typographic breather ---------- */
+  .md-section--pullquote {
+    background:
+      radial-gradient(50% 70% at 20% 20%, rgba(146, 194, 234, 0.08) 0%, transparent 60%),
+      radial-gradient(45% 60% at 85% 80%, rgba(230, 57, 70, 0.05) 0%, transparent 60%),
+      var(--brand-bg);
+    padding: 96px 20px;
+  }
+  @media (min-width: 768px) { .md-section--pullquote { padding: 128px 32px; } }
+  .md-pullquote {
+    max-width: 900px;
+    margin: 0 auto;
+    text-align: center;
+    position: relative;
+  }
+  .md-pullquote-mark {
+    display: block;
+    font-family: 'Outfit', sans-serif;
+    font-size: 120px;
+    font-weight: 900;
+    color: var(--brand-primary);
+    line-height: 0.7;
+    margin-bottom: 24px;
+    opacity: 0.7;
+  }
+  @media (min-width: 768px) { .md-pullquote-mark { font-size: 180px; } }
+  .md-pullquote-text {
+    font-family: 'Outfit', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--brand-heading);
+    letter-spacing: -0.02em;
+    line-height: 1.3;
+    margin: 0 0 28px;
+  }
+  @media (min-width: 768px) { .md-pullquote-text { font-size: 42px; } }
+  .md-pullquote-sign {
+    display: inline-block;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--brand-primary);
+  }
+
+  /* ---------- ANTI-CLAIMS — czym NIE są ---------- */
+  .md-eyebrow--strawberry { color: var(--brand-accent); }
+  .md-em-strawberry { color: var(--brand-accent); }
+  .md-anti-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  @media (min-width: 768px) { .md-anti-grid { grid-template-columns: repeat(3, 1fr); gap: 24px; } }
+  .md-anti-card {
+    background: var(--brand-surface);
+    border: 1.5px solid var(--brand-border);
+    border-radius: 18px;
+    padding: 28px 26px;
+    position: relative;
+    transition: border-color 240ms ease, transform 240ms ease;
+  }
+  .md-anti-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 22px;
+    bottom: 22px;
+    width: 4px;
+    background: var(--brand-accent);
+    border-radius: 0 4px 4px 0;
+  }
+  .md-anti-card:hover {
+    border-color: var(--brand-accent);
+    transform: translateY(-2px);
+  }
+  .md-anti-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: var(--brand-accent-soft);
+    color: var(--brand-accent);
+    border-radius: 50%;
+    margin-bottom: 14px;
+  }
+  .md-anti-icon .material-symbols-outlined { font-size: 22px; }
+  .md-anti-card h3 {
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--brand-heading);
+    margin: 0 0 10px;
+    letter-spacing: -0.015em;
+  }
+  .md-anti-card h3 s {
+    color: var(--brand-accent);
+    text-decoration-thickness: 2px;
+    text-decoration-color: var(--brand-accent);
+  }
+  .md-anti-card p {
+    margin: 0;
+    font-size: 14.5px;
+    line-height: 1.55;
+    color: var(--brand-text);
+  }
+
+  /* ---------- USE CASE SCENARIOS — 6 cards ---------- */
+  .md-uses-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  @media (min-width: 640px) {
+    .md-uses-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  }
+  @media (min-width: 1024px) {
+    .md-uses-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  }
+  .md-use-card {
+    background: var(--brand-bg);
+    border: 1px solid var(--brand-border);
+    border-radius: 16px;
+    padding: 22px 22px 24px;
+    transition: border-color 220ms ease, transform 220ms ease, box-shadow 220ms ease;
+  }
+  .md-use-card:hover {
+    border-color: var(--brand-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 26px rgba(146, 194, 234, 0.12);
+  }
+  .md-use-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    background: var(--brand-primary-soft);
+    color: var(--brand-primary-hover);
+    border-radius: 12px;
+    margin-bottom: 14px;
+  }
+  .md-use-icon .material-symbols-outlined { font-size: 22px; }
+  .md-use-card h3 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--brand-heading);
+    margin: 0 0 6px;
+    letter-spacing: -0.015em;
+  }
+  .md-use-card p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--brand-text);
+  }
+
+  /* =====================================================
+     EXTRA 8 SECTIONS — final closing rhythm
+     ===================================================== */
+
+  /* ---------- EXTRA 01 — MAGAZINE SPREAD ---------- */
+  .md-mag-spread {
+    position: relative;
+    width: 100%;
+    min-height: 380px;
+    overflow: hidden;
+  }
+  @media (min-width: 768px) { .md-mag-spread { min-height: 520px; } }
+  .md-mag-img {
+    position: absolute;
+    inset: 0;
+  }
+  .md-mag-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .md-mag-img::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(42,45,39,0.78) 0%, rgba(42,45,39,0.55) 40%, rgba(42,45,39,0.20) 100%);
+  }
+  .md-mag-overlay {
+    position: relative;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 64px 24px;
+    color: #FFFCF7;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 380px;
+    max-width: 720px;
+  }
+  @media (min-width: 768px) {
+    .md-mag-overlay { padding: 96px 64px; min-height: 520px; }
+  }
+  .md-mag-eyebrow {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--brand-primary-soft);
+    margin-bottom: 18px;
+  }
+  .md-mag-overlay h2 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    line-height: 1.05;
+    margin: 0 0 18px;
+    color: #FFFCF7;
+  }
+  @media (min-width: 768px) { .md-mag-overlay h2 { font-size: 56px; } }
+  .md-mag-overlay p {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.6;
+    color: rgba(255,252,247,0.85);
+    max-width: 540px;
+  }
+  @media (min-width: 768px) { .md-mag-overlay p { font-size: 17px; } }
+
+  /* ---------- EXTRA 02 — FOUNDER STORY ---------- */
   .md-founder {
     display: grid;
     grid-template-columns: 1fr;
@@ -1234,15 +1774,17 @@ function extractPrice(p: any): number {
     border-radius: 2px;
   }
 
-  /* ---------- COMPARISON TABLE ---------- */
+  /* ---------- EXTRA 03 — COMPARISON TABLE ---------- */
   .md-compare-wrap {
     max-width: 1100px;
     margin: 0 auto;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    /* Fade na prawej krawędzi sygnalizujący że jest więcej content'u do scrolla */
     mask-image: linear-gradient(to right, black 0, black calc(100% - 24px), transparent 100%);
     -webkit-mask-image: linear-gradient(to right, black 0, black calc(100% - 24px), transparent 100%);
   }
+  /* Mobile-only swipe hint pod tabelą */
   .md-compare-hint {
     display: none;
     align-items: center;
@@ -1267,6 +1809,7 @@ function extractPrice(p: any): number {
     0%, 100% { transform: translateX(0); opacity: 0.7; }
     50% { transform: translateX(6px); opacity: 1; }
   }
+  /* Tylko mobile gdzie tabela się scrolluje (min-width: 580px wymusza overflow) */
   @media (max-width: 640px) {
     .md-compare-hint { display: inline-flex; }
   }
@@ -1322,7 +1865,7 @@ function extractPrice(p: any): number {
   .md-yes { color: var(--brand-primary); font-size: 24px !important; }
   .md-no { color: rgba(42,45,39,0.20); font-size: 24px !important; }
 
-  /* ---------- STATS — BENTO GRID ---------- */
+  /* ---------- STATS — BENTO GRID (asymetryczny, light bg) ---------- */
   .md-bento {
     max-width: 1100px;
     margin: 0 auto;
@@ -1352,6 +1895,7 @@ function extractPrice(p: any): number {
     transform: translateY(-3px);
     box-shadow: 0 18px 36px rgba(42,45,39,0.10);
   }
+  /* Featured XL cell — zajmuje 2 wiersze i 1 kolumnę na desktop */
   .md-bento-cell--xl {
     background: linear-gradient(160deg, var(--brand-primary) 0%, var(--brand-primary-hover) 100%);
     color: #FFFCF7;
@@ -1422,8 +1966,12 @@ function extractPrice(p: any): number {
   }
   .md-bento-cell--sage .md-bento-foot { color: var(--brand-primary-hover); opacity: 0.85; }
   .md-bento-cell--strawberry .md-bento-foot { color: var(--brand-accent-hover); opacity: 0.85; }
+  .md-bento-star {
+    color: #E8A317;
+    font-size: 15px !important;
+  }
 
-  /* ---------- PROBLEM → SOLUTION SPLIT ---------- */
+  /* ---------- SECTION 2 — PROBLEM → SOLUTION SPLIT ---------- */
   .md-problem-solve {
     max-width: 1100px;
     margin: 0 auto;
@@ -1443,13 +1991,7 @@ function extractPrice(p: any): number {
     background: var(--brand-bg);
     border: 1px solid var(--brand-border);
     border-radius: 22px;
-    padding: 28px 26px;
-    box-shadow: 0 4px 16px rgba(42,45,39,0.04);
-    transition: transform 240ms ease, box-shadow 240ms ease;
-  }
-  .md-ps-side:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 14px 32px rgba(42,45,39,0.08);
+    padding: 26px 24px;
   }
   .md-ps-side--solution {
     background: var(--brand-primary-soft);
@@ -1524,25 +2066,15 @@ function extractPrice(p: any): number {
   @media (min-width: 768px) {
     .md-ps-bridge { flex-direction: column; gap: 6px; }
   }
-  .md-ps-bridge-circle {
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    background: var(--brand-surface);
-    border: 2px solid var(--brand-primary);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 6px 18px rgba(146,194,234,0.25);
-  }
   .md-ps-bridge-arrow {
     font-size: 32px;
     line-height: 1;
     color: var(--brand-primary);
     font-weight: 300;
+    transform: rotate(0);
   }
   @media (min-width: 768px) {
-    .md-ps-bridge-arrow { font-size: 40px; }
+    .md-ps-bridge-arrow { transform: rotate(0); font-size: 40px; }
   }
   .md-ps-bridge-label {
     font-family: 'Outfit', sans-serif;
@@ -1552,47 +2084,192 @@ function extractPrice(p: any): number {
     text-transform: uppercase;
     color: var(--brand-primary-hover);
   }
-  .md-ps-head {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 18px;
+
+  /* ---------- EXTRA 05 — CARE FLOW (4 steps with arrows) ---------- */
+  .md-care-flow {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    align-items: stretch;
   }
-  .md-ps-emoji {
+  @media (min-width: 768px) {
+    .md-care-flow {
+      grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr;
+      gap: 14px;
+      align-items: center;
+    }
+  }
+  .md-care-step {
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-radius: 18px;
+    padding: 24px 22px 26px;
+    text-align: left;
+    position: relative;
+    transition: border-color 240ms ease, transform 240ms ease, box-shadow 240ms ease;
+  }
+  .md-care-step:hover {
+    border-color: var(--brand-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(146,194,234,0.12);
+  }
+  .md-care-icon {
+    width: 44px;
+    height: 44px;
+    background: var(--brand-primary-soft);
+    color: var(--brand-primary-hover);
+    border-radius: 12px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
+    margin-bottom: 14px;
+  }
+  .md-care-icon .material-symbols-outlined { font-size: 24px; }
+  .md-care-num {
+    position: absolute;
+    top: 22px;
+    right: 22px;
     font-family: 'Outfit', sans-serif;
-    font-size: 18px;
+    font-size: 22px;
     font-weight: 800;
-    line-height: 1;
+    color: var(--brand-primary);
+    letter-spacing: -0.02em;
+    opacity: 0.45;
   }
-  .md-ps-side--problem .md-ps-emoji {
-    background: var(--brand-accent-soft);
-    color: var(--brand-accent);
+  .md-care-step h3 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--brand-heading);
+    margin: 0 0 6px;
+    letter-spacing: -0.015em;
   }
-  .md-ps-side--solution .md-ps-emoji {
-    background: var(--brand-primary);
-    color: #FFFCF7;
-  }
-  .md-ps-foot {
-    margin: 20px 0 0;
-    padding-top: 16px;
-    border-top: 1px solid var(--brand-border);
-    font-size: 13.5px;
+  .md-care-step p {
+    margin: 0;
+    font-size: 14px;
     line-height: 1.5;
-    color: var(--brand-muted);
+    color: var(--brand-text);
+  }
+  .md-care-arrow {
+    display: none;
+    font-size: 28px;
+    color: var(--brand-primary);
+    font-weight: 300;
+  }
+  @media (min-width: 768px) { .md-care-arrow { display: inline-flex; align-items: center; justify-content: center; } }
+
+  /* ---------- EXTRA 06 — QUOTE WALL ---------- */
+  .md-quotes-wall {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  @media (min-width: 640px) { .md-quotes-wall { grid-template-columns: repeat(2, 1fr); gap: 20px; } }
+  @media (min-width: 1024px) { .md-quotes-wall { grid-template-columns: repeat(4, 1fr); gap: 18px; } }
+  .md-quote-card {
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-radius: 18px;
+    padding: 22px 22px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    transition: transform 240ms ease, box-shadow 240ms ease;
+  }
+  .md-quote-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 32px rgba(42,45,39,0.10);
+  }
+  .md-quote-stars {
+    display: inline-flex;
+    gap: 2px;
+    color: #E8A317;
+  }
+  .md-quote-stars .material-symbols-outlined { font-size: 16px; }
+  .md-quote-card p {
+    margin: 0;
+    flex: 1;
+    font-size: 14.5px;
+    line-height: 1.5;
+    color: var(--brand-heading);
     font-style: italic;
   }
-  .md-ps-side--solution .md-ps-foot { border-top-color: var(--brand-primary); opacity: 0.85; }
-  @media (max-width: 768px) {
-    .md-ps-bridge-circle .md-ps-bridge-arrow { transform: rotate(90deg); display: inline-block; }
+  .md-quote-author {
+    font-size: 13px;
+    color: var(--brand-muted);
+  }
+  .md-quote-author strong {
+    color: var(--brand-heading);
+    font-weight: 700;
+    font-style: normal;
   }
 
-  /* ---------- FINAL CTA — contained card ---------- */
+  /* ---------- EXTRA 07 — MATERIALS / SUSTAINABILITY ---------- */
+  .md-materials-grid {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  @media (min-width: 768px) { .md-materials-grid { grid-template-columns: repeat(3, 1fr); gap: 24px; } }
+  .md-material-card {
+    position: relative;
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-top: 4px solid var(--mat-color);
+    border-radius: 18px;
+    padding: 28px 26px 26px;
+    transition: transform 240ms ease, box-shadow 240ms ease;
+  }
+  .md-material-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 16px 32px rgba(42,45,39,0.10);
+  }
+  .md-material-tag {
+    display: inline-block;
+    padding: 5px 12px;
+    background: var(--mat-soft);
+    color: var(--mat-color);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    border-radius: 999px;
+    margin-bottom: 16px;
+  }
+  .md-material-card h3 {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--brand-heading);
+    letter-spacing: -0.02em;
+    margin: 0 0 10px;
+  }
+  .md-material-card p {
+    margin: 0 0 18px;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--brand-text);
+  }
+  .md-material-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-top: 16px;
+    border-top: 1px solid var(--brand-border);
+    font-size: 12.5px;
+    color: var(--brand-muted);
+  }
+  .md-material-meta strong {
+    color: var(--brand-heading);
+    font-weight: 700;
+    margin-right: 4px;
+  }
+
+  /* ---------- FINAL CTA — contained card (nie full-bg, daje breathing room z dark footerem) ---------- */
   .md-cta-card {
     max-width: 1100px;
     margin: 0 auto;
@@ -1712,7 +2389,169 @@ function extractPrice(p: any): number {
     color: var(--brand-primary);
   }
 
-  /* ---------- POLECANE PRODUKTY ---------- */
+  /* ---------- PROBLEM → SOLUTION — refined polish ---------- */
+  .md-ps-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .md-ps-emoji {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    font-family: 'Outfit', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .md-ps-side--problem .md-ps-emoji {
+    background: var(--brand-accent-soft);
+    color: var(--brand-accent);
+  }
+  .md-ps-side--solution .md-ps-emoji {
+    background: var(--brand-primary);
+    color: #FFFCF7;
+  }
+  .md-ps-side {
+    padding: 28px 26px;
+    border-radius: 22px;
+    box-shadow: 0 4px 16px rgba(42,45,39,0.04);
+    transition: transform 240ms ease, box-shadow 240ms ease;
+  }
+  .md-ps-side:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 32px rgba(42,45,39,0.08);
+  }
+  .md-ps-foot {
+    margin: 20px 0 0;
+    padding-top: 16px;
+    border-top: 1px solid var(--brand-border);
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--brand-muted);
+    font-style: italic;
+  }
+  .md-ps-side--solution .md-ps-foot { border-top-color: var(--brand-primary); opacity: 0.85; }
+  .md-ps-bridge-circle {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--brand-surface);
+    border: 2px solid var(--brand-primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 18px rgba(146,194,234,0.25);
+  }
+  .md-ps-bridge-circle .md-ps-bridge-arrow {
+    color: var(--brand-primary);
+    font-size: 28px;
+    font-weight: 600;
+    line-height: 1;
+  }
+  @media (max-width: 768px) {
+    .md-ps-bridge-circle .md-ps-bridge-arrow { transform: rotate(90deg); display: inline-block; }
+  }
+
+  /* ---------- STICKY MIN — refined polish ---------- */
+  .md-sticky-img .md-img-square {
+    position: relative;
+  }
+  .md-sticky-img-tag {
+    position: absolute;
+    bottom: 16px;
+    left: 16px;
+    background: rgba(42,45,39,0.85);
+    color: #FFFCF7;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    backdrop-filter: blur(8px);
+  }
+  .md-sticky-img-tag .material-symbols-outlined {
+    font-size: 14px;
+    color: var(--brand-primary-soft);
+  }
+  .md-sticky-block-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .md-sticky-meta {
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--brand-muted);
+  }
+  .md-sticky-tags {
+    list-style: none;
+    margin: 14px 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .md-sticky-tags li {
+    padding: 4px 10px;
+    background: var(--brand-primary-soft);
+    color: var(--brand-primary-hover);
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  /* ---------- POLECANE PRODUKTY — related products ---------- */
+  .md-related-head {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 28px;
+    align-items: flex-start;
+  }
+  @media (min-width: 768px) {
+    .md-related-head {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 24px;
+    }
+  }
+  .md-related-head h2 {
+    margin: 6px 0 0;
+  }
+  .md-related-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 18px;
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    color: var(--brand-heading);
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 200ms ease;
+  }
+  .md-related-all:hover {
+    background: var(--brand-primary);
+    color: #FFFCF7;
+    border-color: var(--brand-primary);
+    transform: translateY(-1px);
+  }
+  .md-related-all .material-symbols-outlined { font-size: 16px; }
   .md-related-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
@@ -1821,6 +2660,8 @@ function extractPrice(p: any): number {
     color: var(--brand-accent);
     font-size: 16px;
   }
+
+  /* Rating row pod nazwą produktu w polecanych */
   .md-related-rating {
     display: inline-flex;
     align-items: center;
@@ -1856,6 +2697,20 @@ function extractPrice(p: any): number {
     color: var(--brand-muted);
     font-size: 11.5px;
   }
+  .md-related-sale-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 2;
+    padding: 4px 10px;
+    background: var(--brand-accent);
+    color: #FFFFFF;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    border-radius: 9999px;
+    box-shadow: 0 3px 10px rgba(230, 57, 70, 0.35);
+  }
   .md-related-mobile-hint {
     display: inline-flex;
     align-items: center;
@@ -1875,16 +2730,19 @@ function extractPrice(p: any): number {
      MOBILE TUNING — wszystkie sekcje
      ===================================================== */
   @media (max-width: 640px) {
+    /* Section padding mniejszy na mobile */
     .md-section { padding: 40px 16px; }
     .md-section--compact { padding: 28px 16px; }
     .md-section--last { padding-bottom: 40px; }
 
+    /* H2 mniejsze */
     .md-center h2, .md-split h2, .md-section h2 {
       font-size: 26px !important;
       letter-spacing: -0.02em;
     }
     .md-body, .md-section p { font-size: 14.5px; line-height: 1.55; }
 
+    /* Problem/solve split — w pionie, bridge horyzontalny */
     .md-problem-solve { gap: 12px; }
     .md-ps-side { padding: 20px 18px; }
     .md-ps-list li { font-size: 14.5px; }
@@ -1892,26 +2750,36 @@ function extractPrice(p: any): number {
     .md-ps-bridge-arrow { transform: rotate(90deg); font-size: 28px; }
     .md-ps-bridge-label { font-size: 11px; }
 
+    /* Split sections — image first, then text */
     .md-split, .md-split--mirror { gap: 22px; }
     .md-split .md-img-square, .md-split--mirror .md-img-square { border-radius: 16px; }
 
+    /* Sticky scroll cards — mniejsze paddingi już są w base */
+
+    /* Variant showcase — pojedyncza kolumna na mobile */
     .md-variants-grid { gap: 14px; }
     .md-variant-card { border-radius: 18px; }
     .md-variant-body { padding: 18px 20px 22px; }
     .md-variant-card h3 { font-size: 19px; }
 
+    /* Trust strip — 2x2 grid */
     .md-trust-strip { padding: 20px 16px; }
 
+    /* Tabs */
     .md-tabs-nav { gap: 6px; flex-wrap: wrap; justify-content: center; }
     .md-tab-btn { font-size: 12.5px; padding: 8px 14px; }
 
+    /* Customer story (sage-soft) */
     .md-customer-quote { font-size: 18px; line-height: 1.4; }
 
+    /* Reviews — keep responsive */
     .md-reviews-big-num { font-size: 56px; }
 
+    /* Specyfikacja */
     .md-spec-card { gap: 22px; }
     .md-spec-list li { font-size: 13.5px; }
 
+    /* Founder */
     .md-founder { gap: 28px; }
     .md-founder-img { border-radius: 18px; }
     .md-founder-stamp {
@@ -1921,17 +2789,21 @@ function extractPrice(p: any): number {
     .md-founder-body h2 { font-size: 26px !important; }
     .md-founder-body .md-body { font-size: 14.5px; }
 
+    /* Comparison table — scrollowalna */
     .md-compare-table { font-size: 12.5px; min-width: 460px; }
     .md-compare-table th, .md-compare-table td { padding: 10px 8px; }
 
+    /* Bento stats — 1 col, większe paddings */
     .md-bento { gap: 12px; }
     .md-bento-cell { padding: 22px 22px 24px; border-radius: 18px; }
     .md-bento-cell--xl { padding: 28px 26px 30px; }
     .md-bento-cell--xl .md-bento-num { font-size: 48px; }
     .md-bento-num { font-size: 36px; }
 
+    /* FAQ — szczelniej */
     .md-faq-item summary { padding: 14px 18px; font-size: 14.5px; }
 
+    /* Final CTA card */
     .md-cta-card { border-radius: 20px; }
     .md-cta-card-img { aspect-ratio: 16 / 10; }
     .md-cta-card-body { padding: 24px 22px 28px; }

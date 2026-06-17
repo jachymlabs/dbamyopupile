@@ -230,7 +230,7 @@ export default function StickyATCBar({
           disabled={adding || success}
           className="shrink-0 inline-flex items-center justify-center gap-2 transition-all"
           style={{
-            background: error ? "#C8202E" : success ? "#5E7359" : "#7B9075",
+            background: error ? "#C8202E" : success ? "#6aa9dd" : "#92c2ea",
             color: "#FFFFFF",
             fontFamily: "Outfit, system-ui, sans-serif",
             fontWeight: 800,
@@ -244,7 +244,7 @@ export default function StickyATCBar({
             boxShadow:
               error || success
                 ? "none"
-                : "0 6px 20px rgba(123, 144, 117, 0.30), 0 2px 4px rgba(123, 144, 117, 0.15)",
+                : "0 6px 20px rgba(146, 194, 234, 0.30), 0 2px 4px rgba(146, 194, 234, 0.15)",
             cursor: adding ? "wait" : "pointer",
             border: "none",
             transition:
@@ -253,7 +253,7 @@ export default function StickyATCBar({
           onMouseEnter={(e) => {
             if (!adding && !success && !error) {
               (e.currentTarget as HTMLButtonElement).style.background =
-                "#5E7359";
+                "#6aa9dd";
               (e.currentTarget as HTMLButtonElement).style.transform =
                 "translateY(-1px)";
             }
@@ -261,7 +261,7 @@ export default function StickyATCBar({
           onMouseLeave={(e) => {
             if (!adding && !success && !error) {
               (e.currentTarget as HTMLButtonElement).style.background =
-                "#7B9075";
+                "#92c2ea";
               (e.currentTarget as HTMLButtonElement).style.transform =
                 "translateY(0)";
             }
