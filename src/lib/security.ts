@@ -10,8 +10,8 @@
  */
 
 const ALLOWED_FALLBACK_ORIGINS = [
-  'http://localhost:4321',
-  'http://127.0.0.1:4321',
+  "http://localhost:4321",
+  "http://127.0.0.1:4321",
 ];
 
 /**
@@ -33,44 +33,54 @@ const ALLOWED_FALLBACK_ORIGINS = [
  *   };
  */
 export function assertSameOrigin(request: Request): Response | null {
-  const origin = request.headers.get('origin');
+  const origin = request.headers.get("origin");
   if (!origin) {
     // No Origin header — rely on SameSite=Lax cookie. Common for:
     // - Same-origin GET (browsers don't send Origin on GET)
     // - Server-side fetch / curl
-    // For consistency, we let it through; CSRF is mitigated by cookie attributes.
     return null;
   }
 
-  const allowedOrigin = (
+  // PRIMARY CHECK: same-origin policy — Origin host == request host.
+  // Self-healing: dziala niezaleznie od env / aliasu / domeny / PUBLIC_SITE_URL.
+  // Browser zawsze wysyla Origin z hostu strony, wiec POST z dbamyopupile.pl na dbamyopupile.pl
+  // przejdzie automatycznie. Cross-origin POST (np. evil.com → dbamyopupile.pl) zawsze blokowany.
+  try {
+    const requestHost = new URL(request.url).host;
+    const originHost = new URL(origin).host;
+    if (originHost === requestHost) return null;
+  } catch {
+    // Malformed URL → fall through to allowlist
+  }
+
+  // SECONDARY CHECK: explicit allowlist z env (dla cross-origin scenarios np. iframe checkout, CDN).
+  const configuredOrigins = (
     import.meta.env.PUBLIC_SITE_URL ||
     process.env.PUBLIC_SITE_URL ||
-    ''
-  ).trim();
+    ""
+  )
+    .trim()
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
 
-  // Production: require PUBLIC_SITE_URL to be set.
-  if (!allowedOrigin) {
-    if (import.meta.env.PROD) {
-      console.error('[security] assertSameOrigin: PUBLIC_SITE_URL not set in production — rejecting request');
-      return new Response('Forbidden', { status: 403 });
-    }
-    // Dev fallback: accept localhost.
-    if (ALLOWED_FALLBACK_ORIGINS.includes(origin)) return null;
-    return new Response('Forbidden', { status: 403 });
+  for (const allowed of configuredOrigins) {
+    if (origin === allowed || origin.startsWith(allowed + "/")) return null;
   }
 
-  // Compare exact prefix (protocol + host[:port]). Avoids `https://evil-allowed.com` style bypass.
-  if (origin === allowedOrigin || origin.startsWith(allowedOrigin + '/')) {
-    return null;
-  }
-
-  // Dev: also allow localhost in addition to configured PUBLIC_SITE_URL.
+  // Dev fallback: localhost.
   if (!import.meta.env.PROD && ALLOWED_FALLBACK_ORIGINS.includes(origin)) {
     return null;
   }
 
-  console.warn('[security] assertSameOrigin: blocked origin', { origin, allowedOrigin });
-  return new Response('Forbidden', { status: 403 });
+  console.warn("[security] assertSameOrigin: blocked origin", {
+    origin,
+    requestUrl: request.url,
+  });
+  return new Response(JSON.stringify({ error: "Forbidden" }), {
+    status: 403,
+    headers: { "Content-Type": "application/json" },
+  });
 }
 
 // ─── Payment metadata sanitization ─────────────────────────────────
@@ -92,36 +102,38 @@ export function assertSameOrigin(request: Request): Response | null {
  *  - orderId          : PayU orderId
  */
 const PUBLIC_PAYMENT_METADATA_KEYS = new Set([
-  'redirectUri',
-  'statusCode',
-  'extOrderId',
-  'orderId',
-  'paymentId',
-  'transactionId',
+  "redirectUri",
+  "statusCode",
+  "extOrderId",
+  "orderId",
+  "paymentId",
+  "transactionId",
 ]);
 
 const FORBIDDEN_PAYMENT_METADATA_KEYS = new Set([
-  'blikCode',
-  'blikAuthCode',
-  'authCode',
-  'cardNumber',
-  'cvv',
-  'cvc',
+  "blikCode",
+  "blikAuthCode",
+  "authCode",
+  "cardNumber",
+  "cvv",
+  "cvc",
 ]);
 
 /**
  * Sanitize a single payment.metadata object — strip secrets, keep only whitelisted public keys.
  * Returns a NEW object; does not mutate input.
  */
-export function sanitizePaymentMetadata(metadata: unknown): Record<string, unknown> {
-  if (!metadata || typeof metadata !== 'object') return {};
+export function sanitizePaymentMetadata(
+  metadata: unknown,
+): Record<string, unknown> {
+  if (!metadata || typeof metadata !== "object") return {};
   const src = metadata as Record<string, unknown>;
   const out: Record<string, unknown> = {};
 
   // Top-level: only allow whitelisted public keys, never forbidden keys.
   for (const [key, val] of Object.entries(src)) {
     if (FORBIDDEN_PAYMENT_METADATA_KEYS.has(key)) continue;
-    if (key === 'public' && val && typeof val === 'object') {
+    if (key === "public" && val && typeof val === "object") {
       // Nested public object — also filter
       const pub = val as Record<string, unknown>;
       const cleanPub: Record<string, unknown> = {};
@@ -144,7 +156,12 @@ export function sanitizePaymentMetadata(metadata: unknown): Record<string, unkno
  * Sanitize an array of payment objects in-place-friendly (returns new array).
  * Use on `order.payments` before any logging/serialization to clients.
  */
-export function sanitizePaymentsArray<T extends { metadata?: unknown }>(payments: T[] | undefined | null): T[] {
+export function sanitizePaymentsArray<T extends { metadata?: unknown }>(
+  payments: T[] | undefined | null,
+): T[] {
   if (!Array.isArray(payments)) return [];
-  return payments.map((p) => ({ ...p, metadata: sanitizePaymentMetadata(p.metadata) }));
+  return payments.map((p) => ({
+    ...p,
+    metadata: sanitizePaymentMetadata(p.metadata),
+  }));
 }

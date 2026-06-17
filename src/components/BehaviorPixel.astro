@@ -1,0 +1,216 @@
+---
+/**
+ * BehaviorPixel.astro — behawioralny pixel (Warstwa 1), inline script.
+ *
+ * Wysyła minimalny `page_view` event do SAME-ORIGIN `/api/sp/collect`, który
+ * ustawia 1st-party cookie + forwarduje do Cockpitu. ZERO Meta — osobne od
+ * `MetaPixel.astro`. Brak PII, brak blokowania renderu — całość w try/catch.
+ *
+ * session_id: client-gen UUID trzymany w sessionStorage z TTL 30 min.
+ * Regenerowany TYLKO gdy wygasł LUB gdy bieżący URL niesie NOWE, niepuste
+ * źródło atrybucji różne od zapisanego (realna zmiana kampanii). Brak utm na
+ * stronie wewnętrznej = brak sygnału → sesja ZACHOWANA (nie rozjeżdża się na
+ * "direct" przy pierwszej nawigacji — fix C-1).
+ *
+ * Atrybucja (resolveAttribution): utm_source/utm_campaign → fbclid (→facebook)
+ * / gclid (→google) → host zewnętrznego referrera. Ustalana RAZ przy narodzinach
+ * sesji; wszystkie eventy sesji dziedziczą to źródło (fix M-10 + spójna atrybucja).
+ *
+ * is:inline + define:vars — bez bundlingu, brak zależności od hydration.
+ */
+const collectUrl = "/api/sp/collect";
+---
+
+<script is:inline define:vars={{ collectUrl }}>
+  (function () {
+    try {
+      var SID_KEY = "sp_sid";
+      var SID_TTL = 30 * 60 * 1000; // 30 min
+
+      function uuid() {
+        try {
+          return crypto.randomUUID();
+        } catch {
+          // Fallback dla starszych przeglądarek bez crypto.randomUUID.
+          return "sp-" + Date.now() + "-" + Math.random().toString(16).slice(2);
+        }
+      }
+
+      // Atrybucja na starcie sesji: utm_source/utm_campaign → fbclid/gclid →
+      // host zewnętrznego referrera. source = undefined gdy BRAK sygnału
+      // (direct / nawigacja wewnętrzna) — wtedy caller ZACHOWA sesję (C-1).
+      function resolveAttribution() {
+        try {
+          var p = new URLSearchParams(location.search);
+          var source = p.get("utm_source") || undefined;
+          var campaign = p.get("utm_campaign") || undefined;
+          if (!source) {
+            if (p.get("fbclid")) {
+              source = "facebook"; // klik z reklamy/posta FB/IG bez utm
+              campaign = campaign || "fbclid";
+            } else if (p.get("gclid")) {
+              source = "google"; // Google Ads autotagging bez utm
+              campaign = campaign || "gclid";
+            } else if (document.referrer) {
+              // Zewnętrzny referrer → host jako źródło (google.com, instagram.com…).
+              try {
+                var rh = new URL(document.referrer).hostname;
+                if (rh && rh !== location.hostname) {
+                  source = rh.replace(/^www\./, "");
+                }
+              } catch {}
+            }
+          }
+          return { source: source, campaign: campaign };
+        } catch {
+          return { source: undefined, campaign: undefined };
+        }
+      }
+
+      // Pobierz/odśwież sesję. Regeneruj TYLKO gdy wygasła LUB gdy bieżący URL
+      // niesie NOWE źródło różne od zapisanego (realna zmiana kampanii). Brak
+      // źródła = brak sygnału → ZACHOWAJ sesję + jej oryginalną atrybucję (C-1).
+      // Zwraca { id, source, campaign } — atrybucja SESJI (nie bieżącego URL).
+      function getSession(attr) {
+        var now = Date.now();
+        var stored;
+        try {
+          stored = JSON.parse(sessionStorage.getItem(SID_KEY) || "null");
+        } catch {
+          stored = null;
+        }
+
+        // Wstecznie zgodne ze starym kształtem { utm } (sesje sprzed deployu).
+        var storedAttr = stored ? stored.attr || stored.utm || null : null;
+        var fresh = stored && now - stored.ts < SID_TTL;
+        var hasSignal = attr.source != null;
+        var changedCampaign =
+          hasSignal &&
+          storedAttr &&
+          (storedAttr.source !== attr.source ||
+            storedAttr.campaign !== attr.campaign);
+
+        if (stored && fresh && !changedCampaign) {
+          stored.ts = now; // sliding TTL
+          // Backfill: sesja startowała bez źródła, a teraz pojawił się sygnał.
+          if (hasSignal && (!storedAttr || storedAttr.source == null)) {
+            storedAttr = { source: attr.source, campaign: attr.campaign };
+          }
+          stored.attr = storedAttr || {
+            source: undefined,
+            campaign: undefined,
+          };
+          delete stored.utm; // migracja do nowego kształtu
+          try {
+            sessionStorage.setItem(SID_KEY, JSON.stringify(stored));
+          } catch {}
+          return {
+            id: stored.id,
+            source: stored.attr.source,
+            campaign: stored.attr.campaign,
+          };
+        }
+
+        var next = {
+          id: uuid(),
+          ts: now,
+          attr: { source: attr.source, campaign: attr.campaign },
+        };
+        try {
+          sessionStorage.setItem(SID_KEY, JSON.stringify(next));
+        } catch {}
+        return { id: next.id, source: attr.source, campaign: attr.campaign };
+      }
+
+      var attribution = resolveAttribution();
+      var session = getSession(attribution);
+      var sessionId = session.id;
+      // Atrybucja efektywna = źródło SESJI (dziedziczone przez wszystkie eventy),
+      // NIE bieżący URL — inaczej eventy ze stron wewnętrznych (bez utm) leciałyby
+      // jako "direct" i rozjeżdżałyby atrybucję konwersji (C-1).
+      var attr = { source: session.source, campaign: session.campaign };
+
+      // Wyślij batch eventów do same-origin endpointu. keepalive → przetrwa
+      // unload strony (pagehide / nawigacja). Best-effort, błąd ignorowany.
+      function send(events) {
+        if (!events || !events.length) return;
+        try {
+          fetch(collectUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              session_id: sessionId,
+              events: events,
+              source: attr.source,
+              campaign: attr.campaign,
+            }),
+            keepalive: true,
+          }).catch(function () {});
+        } catch {}
+      }
+
+      // page_view na load.
+      var pageView = {
+        event_id: uuid(),
+        type: "page_view",
+        ts: Date.now(),
+        url: location.href,
+      };
+
+      var sent = false;
+      function flushPageView() {
+        if (sent) return;
+        sent = true;
+        send([pageView]);
+      }
+
+      // Flush krótko po load (nie blokuj critical path renderu) ...
+      if (document.readyState === "complete") {
+        setTimeout(flushPageView, 0);
+      } else {
+        window.addEventListener("load", function () {
+          setTimeout(flushPageView, 0);
+        });
+      }
+
+      // ... oraz na pagehide / przejście w tło (gwarancja dostarczenia przy
+      // szybkim opuszczeniu strony zanim setTimeout zdąży).
+      window.addEventListener("pagehide", flushPageView);
+      document.addEventListener("visibilitychange", function () {
+        if (document.visibilityState === "hidden") flushPageView();
+      });
+
+      // ── Publiczny helper window.sp.track(type, data) ──
+      // Konsumenci (PDP / sticky bar / checkout / potwierdzenie) wysyłają
+      // zdarzenia lejka (view_content / add_to_cart / initiate_checkout /
+      // purchase) reuse'ując send() — czyli sessionId + utm + keepalive.
+      //
+      // Kontrakt eventu (cockpit ingest): product_id na TOP-LEVEL → kolumna w
+      // bazie; reszta data → metadata (jsonb). Pole product_id z data trafia
+      // wyłącznie na top-level (nie dubluje się w metadata).
+      window.sp = window.sp || {};
+      window.sp.track = function (type, data) {
+        try {
+          data = data || {};
+          var meta = {};
+          for (var k in data) {
+            if (k !== "product_id" && data[k] != null) meta[k] = data[k];
+          }
+          var ev = {
+            event_id: uuid(),
+            type: type,
+            ts: Date.now(),
+            url: location.href,
+          };
+          if (data.product_id != null) ev.product_id = String(data.product_id);
+          if (Object.keys(meta).length) ev.metadata = meta;
+          send([ev]); // reuse istniejący send() — keepalive, sessionId, utm
+        } catch {
+          // track NIGDY nie może wywalić strony / akcji.
+        }
+      };
+    } catch {
+      // Pixel NIGDY nie może wywalić strony — połknij wszystko.
+    }
+  })();
+</script>

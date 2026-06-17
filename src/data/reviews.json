@@ -1,0 +1,2849 @@
+{
+  "_meta": {
+    "description": "Per-product reviews. Tone: lowercase, konwersacyjny, ADHD/sensory aware. Każdy obiekt: averageRating (decimal), totalCount, distribution (5/4/3/2/1 counts), items[].",
+    "schema": {
+      "name": "string",
+      "age": "number?",
+      "tag": "string? (ADHD/lęk/autyzm/praca/nauka/...)",
+      "stars": "1-5",
+      "title": "string?",
+      "body": "string",
+      "verified": "boolean",
+      "date": "DD.MM.YYYY"
+    }
+  },
+
+  "bryza": {
+    "averageRating": 4.68,
+    "totalCount": 289,
+    "distribution": { "5": 208, "4": 74, "3": 4, "2": 1, "1": 2 },
+    "items": [
+      {
+        "name": "Magdalena W.",
+        "tag": "golden retriever",
+        "stars": 5,
+        "title": "Wreszcie przechodzimy cały spacer w upał.",
+        "body": "Mój golden w lipcu po dziesięciu minutach kładł się w cień i nie chciał iść dalej. Namoczyłam Bryzę przed wyjściem, zawiązałam na szyi i przeszliśmy całą rundę nad rzeką bez ani jednej przerwy na leżenie. Po powrocie dyszał o połowę mniej niż zwykle. Dla mnie to różnica między spacerem a męczarnią.",
+        "verified": true,
+        "date": "18.07.2025"
+      },
+      {
+        "name": "Tomasz K.",
+        "tag": "labrador",
+        "stars": 5,
+        "title": "trzyma chłód naprawdę długo.",
+        "body": "spodziewałem się, że wyschnie po pół godziny jak mokry ręcznik, a trzymał wilgoć i chłód przez prawie trzy godziny na działce. labrador ma gęsty podszerstek i normalnie w upał jest nie do wyjścia, a tu spokojnie poległ w cieniu z bryzą na szyi. biorę drugą na zmianę.",
+        "verified": true,
+        "date": "02.08.2025"
+      },
+      {
+        "name": "Anna Lewandowska",
+        "tag": "buldog francuski",
+        "stars": 5,
+        "title": "Dla krótkiego pyska to konieczność.",
+        "body": "Mam buldoga francuskiego i wiadomo, jak takie psy znoszą upał, czyli fatalnie. Bryza nie zastąpi rozsądku i unikania słońca, ale realnie pomaga. Frania po założeniu szala jest spokojniejsza i mniej sapie. Zakładam już przy 25 stopniach. Materiał miły, zielona paisley śliczna.",
+        "verified": true,
+        "date": "29.06.2025"
+      },
+      {
+        "name": "piotr m.",
+        "stars": 5,
+        "title": "rewelacja na wyjazdy autem.",
+        "body": "jechaliśmy nad morze 6 godzin, pies w transporterze. zakładałem mu bryzę na każdym postoju, domaczałem na stacji. zero problemów, nie zagrzał się ani razu. wcześniej takie trasy to był dramat. polecam każdemu kto jeździ z psem na wakacje.",
+        "verified": true,
+        "date": "11.08.2025"
+      },
+      {
+        "name": "Karolina S.",
+        "tag": "border collie",
+        "stars": 5,
+        "title": "Idealne na trening w ciepłe dni.",
+        "body": "Border collie i upał to zła kombinacja, bo on i tak nie odpuszcza, choćby miał paść. Na treningu zakładam mu Bryzę i widzę, że dłużej wytrzymuje w pełnym skupieniu, zanim zacznie się przegrzewać. Wysyłka InPostem następnego dnia, super.",
+        "verified": true,
+        "date": "23.07.2025"
+      },
+      {
+        "name": "Grzegorz P.",
+        "tag": "owczarek niemiecki",
+        "stars": 5,
+        "body": "Sceptycznie podchodziłem do takich gadżetów, ale żona zamówiła i muszę przyznać, że działa. Owczarek z grubą sierścią wreszcie nie pada po kwadransie. Zakładamy mokrą, wykręconą i starcza na długi spacer. Solidnie uszyte, nie strzępi się po praniu.",
+        "verified": true,
+        "date": "05.08.2025"
+      },
+      {
+        "name": "Ewa",
+        "tag": "jamnik, seniorka",
+        "stars": 5,
+        "title": "Moja staruszka odżyła latem.",
+        "body": "Jamniczka ma 13 lat i ostatnie lato ledwo zniosła. W tym roku z Bryzą jest zupełnie inaczej, spokojnie leży na tarasie i nie dyszy całymi godzinami. Łagodny chłód, bez zimnego szoku, dokładnie tak jak pisaliście. Dziękuję, naprawdę.",
+        "verified": true,
+        "date": "30.07.2025"
+      },
+      {
+        "name": "Mateusz Z.",
+        "stars": 5,
+        "body": "Proste i genialne. Namoczyć, wykręcić, założyć. Pies nawet nie zauważa, że ma coś na szyi, a różnica w jego samopoczuciu w upał jest widoczna. Kupiłem czarną, bo mniej widać zabrudzenia.",
+        "verified": true,
+        "date": "14.06.2025"
+      },
+      {
+        "name": "Justyna R.",
+        "tag": "mops",
+        "stars": 5,
+        "title": "Mops przetrwał falę upałów.",
+        "body": "Przy 32 stopniach z mopsem to loteria. Bryza plus spacery o świcie i wieczorem uratowały nam ten lipiec. Szal namaczam zimną wodą, leciutko wykręcam i jest wilgotny, ale nie kapie na podłogę. Wezmę jeszcze jedną w innym kolorze.",
+        "verified": true,
+        "date": "21.07.2025"
+      },
+      {
+        "name": "Bartek",
+        "tag": "husky",
+        "stars": 5,
+        "body": "husky w polskim lecie to porażka, on jest stworzony do mrozu. bryza nie czyni cudów, ale wyraźnie mu ulżyło, mniej dyszy i chętniej idzie. domaczam w połowie spaceru przy fontannie i znów chłodzi. warto.",
+        "verified": true,
+        "date": "08.08.2025"
+      },
+      {
+        "name": "Aleksandra N.",
+        "stars": 5,
+        "title": "Ładny kolor i dobra jakość.",
+        "body": "Zielona paisley wygląda na żywo jeszcze ładniej niż na zdjęciach. Pies prezentuje się elegancko, a przy okazji jest schłodzony. Splot gruby, porządny, czuć że to nie jednorazówka. Po sezonie wyprałam ręcznie i jak nowa.",
+        "verified": true,
+        "date": "17.08.2025"
+      },
+      {
+        "name": "Damian W.",
+        "tag": "amstaff",
+        "stars": 5,
+        "body": "Krępy, umięśniony pies, szybko się grzeje na słońcu. Bryza rozmiar L pasuje idealnie na jego szyję, da się dobrze zawiązać. Chłodzi konkretnie przez dobre dwie, trzy godziny. Polecam, robi robotę.",
+        "verified": true,
+        "date": "26.06.2025"
+      },
+      {
+        "name": "Monika",
+        "stars": 5,
+        "body": "kupiłam dla dwóch psów, obie sztuki świetne. najfajniejsze jest to, że nie trzeba nic mrozić ani planować, woda z kranu i gotowe nawet w środku spaceru. lato bez zdyszanych psów, polecam serdecznie.",
+        "verified": true,
+        "date": "02.07.2025"
+      },
+      {
+        "name": "Robert J.",
+        "tag": "beagle",
+        "stars": 4,
+        "title": "Dobre, ale w skrajnym upale schnie szybciej.",
+        "body": "Działa zgodnie z opisem i pies wyraźnie lepiej znosi ciepło. Minus, że w naprawdę suchy, 33-stopniowy dzień trzeba domaczać częściej, mniej więcej co godzinę. Przy normalnych 26-28 stopniach trzyma dużo dłużej. Mimo wszystko polecam.",
+        "verified": true,
+        "date": "19.07.2025"
+      },
+      {
+        "name": "katarzyna p.",
+        "stars": 4,
+        "body": "fajny produkt, pies dobrze go znosi. zamówiłabym wcześniej rozmiar większy, bo na mojego dość sporego kundla M było trochę za ciasno do wygodnego zawiązania. poza tym bez zastrzeżeń, chłodzi jak należy.",
+        "verified": true,
+        "date": "12.08.2025"
+      },
+      {
+        "name": "Łukasz D.",
+        "stars": 4,
+        "title": "Spełnia zadanie.",
+        "body": "Robi dokładnie to, co ma robić. Odjąłbym gwiazdkę tylko za to, że chciałbym więcej ciemnych kolorów do wyboru, bo jasne szybko się brudzą od trawy. Chłodzenie na plus, wysyłka błyskawiczna.",
+        "verified": true,
+        "date": "28.07.2025"
+      },
+      {
+        "name": "Sylwia",
+        "tag": "cocker spaniel",
+        "stars": 4,
+        "body": "Cocker z długimi uszami i sporą sierścią, w upał cierpiał. Bryza pomaga, choć u nas efekt czuć głównie pierwsze dwie godziny. Materiał przyjemny, pies nie próbuje go zdejmować. Dobry zakup na lato.",
+        "verified": true,
+        "date": "06.08.2025"
+      },
+      {
+        "name": "Wojciech H.",
+        "stars": 4,
+        "body": "porządna rzecz w sensownej cenie. trzeba pamiętać żeby dobrze wykręcić, bo za pierwszym razem przesadziłem z wodą i kapało psu na klatkę. po wyciśnięciu nadmiaru jest idealnie. polecam.",
+        "verified": true,
+        "date": "15.07.2025"
+      },
+      {
+        "name": "Natalia K.",
+        "stars": 4,
+        "title": "Pies musiał się przyzwyczaić.",
+        "body": "Pierwszego dnia mój pies próbował go zsunąć, drugiego już w ogóle nie zwracał uwagi. Teraz spokojnie chodzi z Bryzą i widać, że jest mu chłodniej. Gdyby od razu zaakceptował, dałabym piątkę.",
+        "verified": true,
+        "date": "23.08.2025"
+      },
+      {
+        "name": "Adrian",
+        "stars": 4,
+        "body": "Solidny szal, dobrze trzyma chłód. Przydałaby się dokładniejsza tabela rozmiarów, bo trochę zgadywałem przy zamówieniu. Na szczęście trafiłem. Pies zadowolony, ja też.",
+        "verified": true,
+        "date": "01.08.2025"
+      },
+      {
+        "name": "Iwona M.",
+        "tag": "shih tzu",
+        "stars": 3,
+        "title": "U nas efekt umiarkowany.",
+        "body": "Mały pies, krótkie spacery, więc może dlatego nie odczułam wielkiej rewolucji. Chłodzi, owszem, ale spodziewałam się mocniejszego efektu. Jakość wykonania w porządku, samo wykonanie nie budzi zastrzeżeń. Dla większych psów pewnie sprawdza się lepiej.",
+        "verified": true,
+        "date": "10.08.2025"
+      },
+      {
+        "name": "pawel",
+        "stars": 3,
+        "body": "jest ok, ale nic odkrywczego. mokra szmatka na szyję w ładniejszej formie. działa najlepiej jak jest lekki wiatr, w stojącym powietrzu mniej. nie żałuję zakupu, ale bez fajerwerków.",
+        "verified": true,
+        "date": "27.07.2025"
+      },
+      {
+        "name": "Beata Sz.",
+        "stars": 3,
+        "title": "Kolor trochę inny niż myślałam.",
+        "body": "Zamawiałam zieloną i na zdjęciu wydawała się jaśniejsza, na żywo jest bardziej stonowana, oliwkowa. Nie jest źle, po prostu inaczej. Chłodzenie działa poprawnie. Trzy gwiazdki głównie za rozjazd koloru ze zdjęciem.",
+        "verified": true,
+        "date": "04.08.2025"
+      },
+      {
+        "name": "Krzysztof T.",
+        "stars": 3,
+        "body": "Spodziewałem się czegoś bardziej zimnego, w stylu wkładów chłodzących. To chłodzi łagodnie przez parowanie, więc efekt jest subtelny. Dla mojego psa wystarczający, ale jakbym wiedział, kupiłbym z innym nastawieniem.",
+        "verified": true,
+        "date": "16.08.2025"
+      },
+      {
+        "name": "Renata",
+        "stars": 2,
+        "title": "Rozmiar nietrafiony, mój błąd po części.",
+        "body": "Zamówiłam M dla średniego psa, a wyszło za małe na wygodne zawiązanie u mojego dość szyjastego boksera. Sam materiał i pomysł ok, ale ciężko go porządnie zamocować, ciągle się obluzowywał. Może przy większym rozmiarze byłoby lepiej.",
+        "verified": true,
+        "date": "09.07.2025"
+      },
+      {
+        "name": "marcin",
+        "stars": 1,
+        "body": "u mnie wyschło zdecydowanie za szybko, w upalny dzień po niecałej godzinie był suchy i trzeba było ciągle domaczać. może mam za gorący mikroklimat, ale spodziewałem się więcej. pies też niespecjalnie chciał go nosić.",
+        "verified": true,
+        "date": "31.07.2025"
+      },
+      {
+        "name": "Dorota A.",
+        "stars": 1,
+        "title": "Mój pies go nie zaakceptował.",
+        "body": "Niestety mój pies w ogóle nie tolerował niczego na szyi i po dwóch próbach dałam sobie spokój. To bardziej kwestia psa niż produktu, ale dla nas się nie sprawdziło. Wykonanie samego szala wygląda porządnie.",
+        "verified": true,
+        "date": "13.08.2025"
+      }
+    ]
+  },
+
+  "moodles": {
+    "averageRating": 4.72,
+    "totalCount": 310,
+    "distribution": { "5": 264, "4": 32, "3": 8, "2": 4, "1": 2 },
+    "items": [
+      {
+        "name": "Julia E.",
+        "age": 28,
+        "tag": "BFRB",
+        "stars": 5,
+        "title": "Po dwóch miesiącach łysiejące miejsce zaczęło zarastać.",
+        "body": "Od dziecka miałam problemy z wyrywaniem włosów. Próbowałam czapek, rękawiczek, terapii, nic nie pomagało na dłużej. Pewnego dnia koleżanka pokazała mi swoje Moodles przy kawie i nie mogłam przestać ich brać do ręki. Zamówiłam tego samego wieczoru. Pierwsze tygodnie głównie wieczorami, zamiast sięgać do włosów. Po dwóch miesiącach łysiejące miejsce zaczęło zarastać, pierwszy raz od liceum. Etui zawsze mam w torbie.",
+        "verified": true,
+        "date": "14.04.2026"
+      },
+      {
+        "name": "marek k.",
+        "age": 34,
+        "tag": "praca zdalna",
+        "stars": 5,
+        "title": "absolutnie bezgłośny.",
+        "body": "nie sądziłem, że taki mały gadżet może tak pomóc w koncentracji. jest absolutnie bezgłośny, co w pracy było kluczowe. jakość premium, czuć, że to nie tani plastik.",
+        "verified": true,
+        "date": "12.03.2026"
+      },
+      {
+        "name": "karolina w.",
+        "age": 41,
+        "tag": "rodzic dziecka z ADHD",
+        "stars": 5,
+        "title": "córka nosi w plecaku codziennie.",
+        "body": "kupiłam córce na nerwowe sytuacje w szkole. teraz nosi w plecaku codziennie. polecam każdemu rodzicowi dzieciaka z ADHD.",
+        "verified": true,
+        "date": "28.02.2026"
+      },
+      {
+        "name": "miłosz s.",
+        "age": 26,
+        "tag": "nauka",
+        "stars": 4,
+        "title": "działa świetnie.",
+        "body": "szybka dostawa, produkt zgodny z opisem. jakość wykonania ok, choć liczyłem na coś bardziej masywnego. mimo wszystko działa świetnie.",
+        "verified": true,
+        "date": "15.02.2026"
+      },
+      {
+        "name": "ola w.",
+        "age": 32,
+        "tag": "praca",
+        "stars": 5,
+        "title": "rzeczywiście pomaga przy zoomach.",
+        "body": "po raz pierwszy w życiu mam coś, co rzeczywiście pomaga przy zoomach. cichy, ładny, mieści się w kieszeni.",
+        "verified": true,
+        "date": "08.02.2026"
+      },
+      {
+        "name": "tomek k.",
+        "age": 40,
+        "tag": "rodzic",
+        "stars": 5,
+        "title": "wszyscy w domu mają swoje.",
+        "body": "kupiłem dla syna z ADHD. po tygodniu wszyscy w domu mają swoje. magnesy są addictive w dobrym sensie.",
+        "verified": true,
+        "date": "02.02.2026"
+      },
+      {
+        "name": "nat.",
+        "age": 24,
+        "tag": "spektrum",
+        "stars": 5,
+        "title": "tekstury są wszystkim.",
+        "body": "jestem na spektrum, dla mnie tekstury są wszystkim. cztery różne to dla mnie cała paleta. polecam.",
+        "verified": true,
+        "date": "29.01.2026"
+      },
+      {
+        "name": "magda r.",
+        "age": 36,
+        "tag": "wieczorny rytuał",
+        "stars": 5,
+        "title": "wieczorny rytuał zamiast scrollowania.",
+        "body": "obawiałam się, że to gadżet. okazało się, że używam codziennie 3-4 razy. wieczorny rytuał, zamiast scrollowania.",
+        "verified": true,
+        "date": "18.01.2026"
+      },
+      {
+        "name": "Anna S.",
+        "age": 31,
+        "tag": "ADHD",
+        "stars": 5,
+        "title": "Pomaga skupić się na spotkaniach.",
+        "body": "Pracuję zdalnie i mam ADHD. Na spotkaniach co minutę odpływałam. Od kiedy mam Moodles w ręce, ogarniam temat o 50% lepiej. Mały, dyskretny, mieści się w kieszeni.",
+        "verified": true,
+        "date": "08.05.2026"
+      },
+      {
+        "name": "Krzysztof B.",
+        "age": 42,
+        "tag": "stres w pracy",
+        "stars": 5,
+        "title": "Lepsze niż papieros.",
+        "body": "Rzucam palenie po 20 latach. Najgorsze były pierwsze tygodnie, ręce nie wiedziały co ze sobą zrobić. Moodles wypełnia tę pustkę. Trzy miesiące bez papierosa.",
+        "verified": true,
+        "date": "22.04.2026"
+      },
+      {
+        "name": "Ewa K.",
+        "stars": 5,
+        "title": "Mój syn nie obgryza już paznokci.",
+        "body": "Kupiłam dla 11-letniego syna z ADHD. Pierwszy raz od 3 lat ma normalne paznokcie. Wciąż używa codziennie, czasem podczas odrabiania lekcji.",
+        "verified": true,
+        "date": "30.04.2026"
+      },
+      {
+        "name": "Paweł M.",
+        "age": 27,
+        "tag": "lęki",
+        "stars": 5,
+        "title": "Etui w torbie zawsze.",
+        "body": "Mam zaburzenia lękowe. W metrze, w kolejce, na spotkaniach, wszędzie tam gdzie panikuję. Trzymam Moodles w kieszeni i jak czuję że zaczyna się atak, biorę do ręki. Pomaga sprowadzić mnie z powrotem.",
+        "verified": true,
+        "date": "12.05.2026"
+      },
+      {
+        "name": "Aneta D.",
+        "age": 38,
+        "tag": "BFRB",
+        "stars": 5,
+        "title": "Skubanka skóry.",
+        "body": "Skubałam skórę przy paznokciach do krwi. Psycholog polecił coś do trzymania w ręce. Moodles są idealne, różne tekstury, magnesy się łapią. Zajmują palce na długo.",
+        "verified": true,
+        "date": "03.05.2026"
+      },
+      {
+        "name": "Bartek P.",
+        "age": 19,
+        "tag": "matura",
+        "stars": 5,
+        "title": "Egzamin maturalny przeszedł!",
+        "body": "Stresowałem się maturą strasznie. Trzymałem Moodles podczas nauki i poza salą egzaminacyjną. Pomogło mi się skupić. Zdałem.",
+        "verified": true,
+        "date": "27.05.2026"
+      },
+      {
+        "name": "Iwona R.",
+        "age": 45,
+        "tag": "menopauza",
+        "stars": 5,
+        "title": "Uspokajają mnie w nocy.",
+        "body": "Budzę się w środku nocy z lękiem (menopauza, hormony). Sięgam po Moodles zamiast po telefon. Pomaga się wyciszyć, zasypiam szybciej.",
+        "verified": true,
+        "date": "15.05.2026"
+      },
+      {
+        "name": "Damian W.",
+        "age": 33,
+        "tag": "praca",
+        "stars": 4,
+        "title": "Dobre, ale magnesy słabsze niż myślałem.",
+        "body": "Świetnie się trzymają w dłoni, różne tekstury są fajne. Trochę mnie zawiodły magnesy, przyklejają się ale nie tak mocno jakbym chciał. Mimo to używam codziennie.",
+        "verified": true,
+        "date": "20.04.2026"
+      },
+      {
+        "name": "Jola Z.",
+        "age": 29,
+        "stars": 4,
+        "title": "Działa ale wolałabym więcej kolorów.",
+        "body": "Same kulki super, ale wybór kolorów ograniczony. Wzięłam lawendowe, chciałabym mieć też niebieskie albo różowe. Może rozwiniecie ofertę?",
+        "verified": true,
+        "date": "11.04.2026"
+      },
+      {
+        "name": "Tomasz L.",
+        "age": 51,
+        "stars": 4,
+        "title": "Dla starszych też pomocne.",
+        "body": "Nie spodziewałem się że w moim wieku coś takiego mi pomoże. Po udarze mam problemy z palcami, Moodles pomagają w rehabilitacji manualnej. Dobry pomysł, choć opakowanie mogłoby być bardziej luksusowe.",
+        "verified": true,
+        "date": "05.05.2026"
+      },
+      {
+        "name": "Beata S.",
+        "age": 34,
+        "tag": "praca biurowa",
+        "stars": 4,
+        "title": "Trochę pochlapane przy dostawie.",
+        "body": "Sam produkt świetny, używam codziennie w pracy. Niestety pudełko miało ślad od czegoś przy dostawie, kosmetyczna wada. Treść działa idealnie więc 4 gwiazdki.",
+        "verified": true,
+        "date": "25.04.2026"
+      },
+      {
+        "name": "Marcin K.",
+        "age": 24,
+        "stars": 4,
+        "title": "Pomaga ale nie cudowne.",
+        "body": "Trzymam się głównie w pracy. Działa lepiej niż nic, ale nie zastąpi dobrej terapii czy snu. Realne narzędzie, nie magia.",
+        "verified": true,
+        "date": "19.04.2026"
+      },
+      {
+        "name": "Patrycja N.",
+        "age": 26,
+        "tag": "ADHD",
+        "stars": 3,
+        "title": "Spodziewałam się więcej.",
+        "body": "Sama idea fajna, ale po dwóch tygodniach efekt minął, zaczęłam ich zapominać w torbie. Może to ja nie wykorzystałam dobrze. Produkt OK, ale nie cud.",
+        "verified": true,
+        "date": "16.04.2026"
+      },
+      {
+        "name": "Łukasz J.",
+        "age": 30,
+        "stars": 3,
+        "title": "Trochę za małe dla moich rąk.",
+        "body": "Mam duże dłonie, kulki Mini wydają się dla mnie za małe. Może wziąć Maxi, ale dla tej ceny oczekiwałem żeby pasowało wszystkim. Plus za pomysł, minus za rozmiar.",
+        "verified": true,
+        "date": "29.03.2026"
+      },
+      {
+        "name": "Renata B.",
+        "age": 40,
+        "stars": 3,
+        "title": "Mam mieszane uczucia.",
+        "body": "Kupiłam dla siebie i dla córki. Mi nie pomogło, wolę zwykłe pestki gniotka. Córka z ADHD używa codziennie i mówi że super. Dla niej 5 gwiazdek, dla mnie 2, średnia 3.",
+        "verified": true,
+        "date": "07.04.2026"
+      },
+      {
+        "name": "Wojciech T.",
+        "age": 36,
+        "stars": 2,
+        "title": "Nie wiem co miało się stać.",
+        "body": "Trzymałem przez tydzień, czekałem na ten 'efekt skupienia' o którym wszyscy piszą. Nic. Albo nie jestem grupą docelową, albo to jest po prostu fajna zabawka, nie narzędzie psychologiczne.",
+        "verified": true,
+        "date": "13.03.2026"
+      },
+      {
+        "name": "Justyna W.",
+        "age": 28,
+        "stars": 2,
+        "title": "Jedna kulka pękła po miesiącu.",
+        "body": "Po miesiącu użytkowania zielona kulka mi się rozpękła w połowie. Pisałam do sklepu, dostałam wymianę szybko (plus za obsługę) ale jakość materiału mnie martwi.",
+        "verified": true,
+        "date": "21.02.2026"
+      },
+      {
+        "name": "Robert M.",
+        "age": 47,
+        "stars": 1,
+        "title": "Zwrot.",
+        "body": "Nie pasowało mi. Zwrot w 30 dni działa bez problemu, pieniądze wróciły szybko. Produkt może być dla kogoś innego.",
+        "verified": true,
+        "date": "10.02.2026"
+      },
+      {
+        "name": "Karol N.",
+        "age": 22,
+        "stars": 1,
+        "title": "Dla mnie bez sensu.",
+        "body": "Spróbowałem na siłę przez 2 tygodnie. Nic mi to nie dało. Skubie palce dalej. Może działa na inne osoby, na mnie nie zadziałało.",
+        "verified": true,
+        "date": "18.01.2026"
+      }
+    ]
+  },
+
+  "wibblo": {
+    "averageRating": 4.65,
+    "totalCount": 142,
+    "distribution": { "5": 110, "4": 22, "3": 6, "2": 3, "1": 1 },
+    "items": [
+      {
+        "name": "ania p.",
+        "age": 29,
+        "tag": "lęk",
+        "stars": 5,
+        "title": "pierwsza rzecz, która rzeczywiście rozprasza panikę.",
+        "body": "kupiłam po ataku paniki w pracy. teraz mam wibblo w torebce i sięgam ilekroć czuję, że robi się gorąco. faktura silikonu jest hipnotyzująca, patrzysz na fale i mózg się reguluje.",
+        "verified": true,
+        "date": "08.04.2026"
+      },
+      {
+        "name": "krzysztof m.",
+        "age": 37,
+        "tag": "praca",
+        "stars": 5,
+        "title": "mieści się w dłoni idealnie.",
+        "body": "ergonomia top, kształt naturalnie pasuje do dłoni. używam podczas calli z klientami, nikt nie zauważa. polecam.",
+        "verified": true,
+        "date": "21.03.2026"
+      },
+      {
+        "name": "iga n.",
+        "age": 22,
+        "tag": "studentka",
+        "stars": 4,
+        "title": "spokojnie się uczy.",
+        "body": "biorę na zajęcia, mam co robić rękami przy wykładach. minus tylko za to, że gwiazda jest większa niż myślałam, nie do kieszeni.",
+        "verified": true,
+        "date": "11.03.2026"
+      },
+      {
+        "name": "patryk s.",
+        "age": 31,
+        "tag": "ADHD",
+        "stars": 5,
+        "title": "lepsze niż spinner.",
+        "body": "po latach klikania spinnerami w pracy nareszcie coś dorosłego. kolory są piękne, ciche, dyskretne. żałuję, że nie kupiłem 2 lata temu.",
+        "verified": true,
+        "date": "02.03.2026"
+      },
+      {
+        "name": "joanna d.",
+        "age": 45,
+        "tag": "dla syna",
+        "stars": 5,
+        "title": "syn śpi z nim pod poduszką.",
+        "body": "12-latek z lekkim niedoborem uwagi. teraz wibblo to jego \"asystent\" w odrabianiu lekcji. uspokaja się i kończy zadania szybciej.",
+        "verified": true,
+        "date": "19.02.2026"
+      },
+      {
+        "name": "klaudia b.",
+        "age": 27,
+        "stars": 5,
+        "title": "estetyka",
+        "body": "kupiłam dla wyglądu, używam dla efektu. leży na biurku jak ozdoba, sięgam między mailami. dwie rzeczy w jednym.",
+        "verified": true,
+        "date": "07.02.2026"
+      },
+      {
+        "name": "sebastian w.",
+        "age": 34,
+        "tag": "ADHD",
+        "stars": 5,
+        "title": "fidget dla dorosłych.",
+        "body": "miałem spinnery, kostki, długopisy klikające. wibblo to pierwsza rzecz która wygląda dobrze na biurku i nikt nie zwraca uwagi. silikon premium, faktura przyjemna.",
+        "verified": true,
+        "date": "14.05.2026"
+      },
+      {
+        "name": "marta k.",
+        "age": 31,
+        "tag": "praca biurowa",
+        "stars": 5,
+        "title": "moja terapia po pracy.",
+        "body": "wracam z biura, siadam na kanapie i biorę wibblo. 10 minut przepychania fal i głowa się resetuje. lepsze niż drinki.",
+        "verified": true,
+        "date": "23.04.2026"
+      },
+      {
+        "name": "filip g.",
+        "age": 38,
+        "stars": 5,
+        "title": "kupiłem dla żony, używam codziennie.",
+        "body": "prezent dla żony zostal moim ulubieńcem. żona też używa, więc kupiłem drugie. fajny pomysł, niezniszczalny silikon.",
+        "verified": true,
+        "date": "02.05.2026"
+      },
+      {
+        "name": "kasia s.",
+        "age": 26,
+        "tag": "studentka medycyny",
+        "stars": 5,
+        "title": "stresująca sesja.",
+        "body": "sesja na medycynie to koszmar. wibblo trzymam przy książkach, biorę do ręki przy trudniejszych zagadnieniach. pomaga zostać przy biurku.",
+        "verified": true,
+        "date": "11.05.2026"
+      },
+      {
+        "name": "agata p.",
+        "age": 42,
+        "tag": "menedżerka",
+        "stars": 5,
+        "title": "moje narzędzie przy trudnych rozmowach.",
+        "body": "prowadzę zespół 15 osób. trudne rozmowy z pracownikami są stresujące, wibblo trzymam pod biurkiem, ściskam dyskretnie. uspokaja.",
+        "verified": true,
+        "date": "20.05.2026"
+      },
+      {
+        "name": "tomek l.",
+        "age": 28,
+        "tag": "programista",
+        "stars": 5,
+        "title": "między bugami i deploys.",
+        "body": "siedzę 10 godzin przed monitorem, ręce stają sie sztywne. wibblo masuje palce i jednocześnie daje sensory feedback. dwa w jednym.",
+        "verified": true,
+        "date": "08.05.2026"
+      },
+      {
+        "name": "natalia r.",
+        "age": 24,
+        "tag": "lęk społeczny",
+        "stars": 5,
+        "title": "wszędzie ze mną.",
+        "body": "lęk społeczny od liceum. wibblo w torebce daje mi punkt zaczepienia kiedy czuję że za chwilę będzie atak. nikt nie wie że go używam.",
+        "verified": true,
+        "date": "16.05.2026"
+      },
+      {
+        "name": "michał d.",
+        "age": 36,
+        "stars": 5,
+        "title": "nie wiedziałem że potrzebuję.",
+        "body": "żona kupiła mi jako głupi prezent. okazało się że używam codziennie podczas oglądania filmów wieczorem. ręce zajęte, głowa spokojna.",
+        "verified": true,
+        "date": "27.04.2026"
+      },
+      {
+        "name": "ewelina o.",
+        "age": 33,
+        "tag": "ADHD",
+        "stars": 4,
+        "title": "działa, ale mam uwagi.",
+        "body": "sam silikon i kształt super, faktura przyjemna. minus za to, że łapie się kurz i sierść kota (mam dwa). częste czyszczenie jest konieczne.",
+        "verified": true,
+        "date": "13.05.2026"
+      },
+      {
+        "name": "bartosz f.",
+        "age": 41,
+        "stars": 4,
+        "title": "dobre ale za małe.",
+        "body": "mam duże dłonie, wibblo w pełni pasuje tylko częściowo. dla mnie wariant XL byłby idealny. mimo to używam codziennie.",
+        "verified": true,
+        "date": "06.05.2026"
+      },
+      {
+        "name": "magdalena j.",
+        "age": 39,
+        "stars": 4,
+        "title": "fajne, kolor mógłby być żywszy.",
+        "body": "kupiłam pastelowy róż, na zdjęciach wyglądał intensywniej. sam produkt świetny, kolor lekko zawodzi. nie zwracam, bo używam codziennie.",
+        "verified": true,
+        "date": "25.04.2026"
+      },
+      {
+        "name": "piotr w.",
+        "age": 30,
+        "tag": "praca",
+        "stars": 4,
+        "title": "dobrze ale nie magia.",
+        "body": "działa lepiej niż klikanie długopisem, ale nie powiedziałbym że zmienia życie. fajny dodatek do biurka, używam ale bez zachwytu.",
+        "verified": true,
+        "date": "18.04.2026"
+      },
+      {
+        "name": "ola s.",
+        "age": 27,
+        "stars": 4,
+        "title": "po miesiącu silikon trochę matowieje.",
+        "body": "świeży wibblo wyglądał śliczne, błyszczący. po miesiącu codziennego używania powierzchnia trochę matowieje. funkcjonalnie ok, estetycznie minus.",
+        "verified": true,
+        "date": "10.04.2026"
+      },
+      {
+        "name": "kacper m.",
+        "age": 25,
+        "stars": 4,
+        "title": "ok jak na cenę.",
+        "body": "spodziewałem się więcej wow, dostałem solidny produkt. dobrze że nie wydałem 200 zł. jako gadżet do biurka jest ok.",
+        "verified": true,
+        "date": "03.04.2026"
+      },
+      {
+        "name": "joanna m.",
+        "age": 35,
+        "tag": "praca z domu",
+        "stars": 3,
+        "title": "nie zachwyciło mnie.",
+        "body": "spodziewałam się czegoś bardziej hipnotyzującego. fale są fajne ale po 2 tygodniach efekt nowości minął i wróciłam do skubania paznokci. może to ja.",
+        "verified": true,
+        "date": "21.05.2026"
+      },
+      {
+        "name": "rafał s.",
+        "age": 32,
+        "stars": 3,
+        "title": "ok ale przereklamowane.",
+        "body": "kupiłem po reklamie na instagramie. działa, ale nie tak jak obiecują. zwykły fidget z lepszym designem, nie cudowny lek na stres.",
+        "verified": true,
+        "date": "09.04.2026"
+      },
+      {
+        "name": "andrzej k.",
+        "age": 48,
+        "stars": 3,
+        "title": "dla młodszych może lepiej.",
+        "body": "kupiłem żeby zobaczyć o co chodzi. nie czuje tego. może to nie dla mojego pokolenia. żona mówi że jej pomaga, więc został w domu.",
+        "verified": true,
+        "date": "29.03.2026"
+      },
+      {
+        "name": "wiktor b.",
+        "age": 22,
+        "stars": 2,
+        "title": "po dwóch tygodniach mi się znudziło.",
+        "body": "fajny początek, ale po dwóch tygodniach wibblo leży na biurku i go nie biorę. może jestem za niespokojny żeby coś takiego utrzymało moją uwagę.",
+        "verified": true,
+        "date": "12.04.2026"
+      },
+      {
+        "name": "ula j.",
+        "age": 29,
+        "stars": 2,
+        "title": "pęknięcie po 3 tygodniach.",
+        "body": "silikon przy jednej z fal pękł po 3 tygodniach. pisałam do obsługi, wymienili, ale jakość mnie zmartwiła. czekam jak długo wytrzyma nowy.",
+        "verified": true,
+        "date": "23.03.2026"
+      },
+      {
+        "name": "krystian o.",
+        "age": 26,
+        "stars": 1,
+        "title": "kompletnie nie dla mnie.",
+        "body": "wziąłem 3 razy do ręki, leży w szufladzie. nie czuję żadnego efektu, nie wiem co miało się stać. pieniądze na wiatr.",
+        "verified": true,
+        "date": "05.04.2026"
+      }
+    ]
+  },
+
+  "snapstones": {
+    "averageRating": 4.81,
+    "totalCount": 87,
+    "distribution": { "5": 75, "4": 9, "3": 2, "2": 1, "1": 0 },
+    "items": [
+      {
+        "name": "michał z.",
+        "age": 33,
+        "tag": "z dzieckiem",
+        "stars": 5,
+        "title": "gramy całą rodziną.",
+        "body": "kupiłem jako prezent dla córki (8 lat), gramy razem prawie codziennie. uczy strategii, cierpliwości, fajna alternatywa dla tabletu wieczorem.",
+        "verified": true,
+        "date": "30.03.2026"
+      },
+      {
+        "name": "ewa j.",
+        "age": 42,
+        "tag": "pedagog",
+        "stars": 5,
+        "title": "pracuję z dziećmi z ASD.",
+        "body": "używam na zajęciach terapeutycznych. magnesy są mocne ale bezpieczne (schowane w środku). dzieci szybko łapią zasady i wciągają się.",
+        "verified": true,
+        "date": "14.03.2026"
+      },
+      {
+        "name": "bartek o.",
+        "age": 25,
+        "tag": "weekend",
+        "stars": 5,
+        "title": "weekendowa gra.",
+        "body": "świetnie się gra ze znajomymi. nauka zasad to minuta, partia 15-20 min. ciężki materiał, solidne wykonanie.",
+        "verified": true,
+        "date": "28.02.2026"
+      },
+      {
+        "name": "ula t.",
+        "age": 38,
+        "stars": 4,
+        "title": "porządne wykonanie.",
+        "body": "kamienie są ciężkie, magnesy mocne, plansza solidna. brakuje mi tylko etui do przechowywania, wszystko w pudełku kartonowym.",
+        "verified": true,
+        "date": "12.02.2026"
+      },
+      {
+        "name": "kuba w.",
+        "age": 29,
+        "stars": 5,
+        "title": "myślałem, że to gadżet.",
+        "body": "myślałem, że to gadżet. po pierwszej partii, kupiłem mojemu bratu też. uzależniające.",
+        "verified": true,
+        "date": "01.02.2026"
+      },
+      {
+        "name": "adam k.",
+        "age": 36,
+        "tag": "tata 3 dzieci",
+        "stars": 5,
+        "title": "wieczory bez ekranów.",
+        "body": "wprowadzilismy zasadę 'gra wieczorem zamiast telewizora'. snapstones ratuje sytuację, dzieci 8, 10 i 12 lat wszystkie grają z chęcią.",
+        "verified": true,
+        "date": "18.05.2026"
+      },
+      {
+        "name": "monika w.",
+        "age": 44,
+        "tag": "nauczycielka",
+        "stars": 5,
+        "title": "kupiłam do klasy.",
+        "body": "używam na lekcjach matematyki jako narzędzie do logicznego myślenia. dzieciaki rywalizują, uczą się strategii bez świadomości. genialne.",
+        "verified": true,
+        "date": "11.05.2026"
+      },
+      {
+        "name": "patryk m.",
+        "age": 28,
+        "tag": "z dziewczyną",
+        "stars": 5,
+        "title": "randkowy wieczór.",
+        "body": "kupiliśmy z dziewczyną na 'gra wieczorem zamiast netflix'. gramy 2-3 razy w tygodniu. partia jest krótka, taktyka głęboka. polecamy.",
+        "verified": true,
+        "date": "29.04.2026"
+      },
+      {
+        "name": "ela b.",
+        "age": 35,
+        "tag": "rodzina",
+        "stars": 5,
+        "title": "rodzinny rytuał.",
+        "body": "niedziela po obiedzie = snapstones. dzieci czekają na to. dorośli też. jakość pierwsza klasa, wykonanie premium.",
+        "verified": true,
+        "date": "22.05.2026"
+      },
+      {
+        "name": "wojciech a.",
+        "age": 31,
+        "tag": "planszówkowy",
+        "stars": 5,
+        "title": "świeży powiew w planszówkach.",
+        "body": "mam kilkadziesiąt planszówek. snapstones wyróżnia się prostotą zasad i głębią strategii. ide na partię gdy nie chcę myśleć 30 minut nad ruchami.",
+        "verified": true,
+        "date": "15.05.2026"
+      },
+      {
+        "name": "klaudia n.",
+        "age": 27,
+        "stars": 5,
+        "title": "magnetyzm to klucz.",
+        "body": "klik magnesów przy każdym ruchu jest satysfakcjonujący. po prostu chce się robić ruchy żeby usłyszeć ten dźwięk. dziwne ale prawdziwe.",
+        "verified": true,
+        "date": "06.05.2026"
+      },
+      {
+        "name": "darek s.",
+        "age": 39,
+        "tag": "tata 2 córek",
+        "stars": 5,
+        "title": "moje córki nauczyły mnie grać.",
+        "body": "miały 7 i 9 lat. ja przegrywam regularnie. uczą mnie strategii. najlepszy zakup roku, czas spędzony razem bezcenny.",
+        "verified": true,
+        "date": "30.04.2026"
+      },
+      {
+        "name": "anita r.",
+        "age": 30,
+        "tag": "ze znajomymi",
+        "stars": 5,
+        "title": "imprezy wieczorne.",
+        "body": "zaprosiłam znajomych, wyciągnęłam snapstones. wszyscy wciągnięci. partia turniejowa do późna w noc. uzależniający w pozytywnym sensie.",
+        "verified": true,
+        "date": "13.04.2026"
+      },
+      {
+        "name": "robert m.",
+        "age": 47,
+        "stars": 5,
+        "title": "dziadek i wnuk grają.",
+        "body": "kupiłem wnukowi (11 lat). teraz on dzwoni do mnie żeby przyjechać i pograć. najlepszy pretekst do wizyt.",
+        "verified": true,
+        "date": "08.05.2026"
+      },
+      {
+        "name": "kasia d.",
+        "age": 33,
+        "stars": 4,
+        "title": "świetna gra, pudełko mogłoby być lepsze.",
+        "body": "sama gra rewelacja, ale opakowanie kartonowe wygląda biednie jak na ten poziom produktu. plansza i kamienie premium, pudełko nie pasuje.",
+        "verified": true,
+        "date": "20.05.2026"
+      },
+      {
+        "name": "marcin g.",
+        "age": 41,
+        "stars": 4,
+        "title": "zasady mogłyby być jaśniejsze.",
+        "body": "instrukcja jest krótka, musiałem 2 razy obejrzeć video na yt żeby ogarnąć. po pierwszej partii już wszyscy wiedzą, ale początek wymaga cierpliwości.",
+        "verified": true,
+        "date": "12.05.2026"
+      },
+      {
+        "name": "anna p.",
+        "age": 36,
+        "stars": 4,
+        "title": "podoba mi się ale za szybko się rozgrywa.",
+        "body": "partia trwa 15 min, czasem chciałabym dłuższych rozgrywek. fajna jako szybka gra wieczorem, ale na dłuższe wieczory potrzeba czegoś dodatkowego.",
+        "verified": true,
+        "date": "27.04.2026"
+      },
+      {
+        "name": "tomek r.",
+        "age": 32,
+        "stars": 3,
+        "title": "ok, ale przereklamowane.",
+        "body": "kupiłem po recenzjach które mówiły 'najlepsza gra roku'. jest dobra, ale nie cudowna. fajna na rodzinne wieczory, nie więcej. miałem wyższe oczekiwania.",
+        "verified": true,
+        "date": "16.05.2026"
+      },
+      {
+        "name": "olga k.",
+        "age": 29,
+        "stars": 3,
+        "title": "działa, nie zachwyca.",
+        "body": "grałam 4 razy z mężem. działa, ale nie wracamy do niej często. preferuję bardziej rozbudowane strategie. wykonanie ok, idea ok.",
+        "verified": true,
+        "date": "03.05.2026"
+      },
+      {
+        "name": "kacper l.",
+        "age": 24,
+        "stars": 2,
+        "title": "magnes się odlepił.",
+        "body": "po 2 tygodniach jeden z kamieni stracił magnes (chyba klej). grę używamy dalej ale jeden kamień jest bezużyteczny. szkoda za tę cenę.",
+        "verified": true,
+        "date": "19.04.2026"
+      }
+    ]
+  },
+
+  "brelok-fasola": {
+    "averageRating": 4.56,
+    "totalCount": 89,
+    "distribution": { "5": 60, "4": 22, "3": 5, "2": 1, "1": 1 },
+    "items": [
+      {
+        "name": "natalia k.",
+        "age": 23,
+        "tag": "studentka",
+        "stars": 5,
+        "title": "noszę zawsze przy kluczach.",
+        "body": "wyciskam fasolki w stresujących momentach, na egzaminach, w autobusie, w kolejce. zawsze pod ręką, bo jest na breloku. tania radość.",
+        "verified": true,
+        "date": "02.04.2026"
+      },
+      {
+        "name": "łukasz b.",
+        "age": 34,
+        "tag": "praca",
+        "stars": 5,
+        "title": "minimalistyczne i działa.",
+        "body": "5 minut z brelokiem między tasksami = wyłączyłem stres. silikon przyjemny, fasolki klikają cicho. polecam każdemu pracownikowi korpo.",
+        "verified": true,
+        "date": "18.03.2026"
+      },
+      {
+        "name": "kasia w.",
+        "age": 28,
+        "tag": "lęk",
+        "stars": 4,
+        "title": "lubię, ale szybko się rozciąga.",
+        "body": "świetna mała rzecz na codzienny stres. minus, po 2 miesiącach intensywnego używania silikon się trochę rozciąga, ale to chyba normalne dla tej ceny.",
+        "verified": true,
+        "date": "05.03.2026"
+      },
+      {
+        "name": "monika r.",
+        "age": 31,
+        "tag": "dla syna",
+        "stars": 5,
+        "title": "dla syna 9 lat.",
+        "body": "syn ma fasolki na plecaku do szkoły. nauczycielka mówi, że pomaga mu się skupić na lekcjach. radość, bo wyraźnie się uspokoił.",
+        "verified": true,
+        "date": "22.02.2026"
+      },
+      {
+        "name": "robert m.",
+        "age": 47,
+        "stars": 5,
+        "title": "prezent który trafia.",
+        "body": "kupiłem 3 sztuki na święta, żonie, córce, sobie. wszyscy używamy codziennie. dobra cena, dobra zabawa, działa.",
+        "verified": true,
+        "date": "10.02.2026"
+      },
+      {
+        "name": "magda p.",
+        "age": 26,
+        "tag": "ADHD",
+        "stars": 5,
+        "title": "noszę przy kluczach.",
+        "body": "fasolki przy kluczach to dla mnie zbawienie. w autobusie, w kolejce do kasy, na nudnym spotkaniu, ściskam i jest spokój. genialna mała rzecz.",
+        "verified": true,
+        "date": "12.05.2026"
+      },
+      {
+        "name": "filip a.",
+        "age": 19,
+        "tag": "matura",
+        "stars": 5,
+        "title": "fasolki przed egzaminem.",
+        "body": "ściskałem fasolki tuż przed wejściem na maturę z matmy. uspokoiło mnie. zdałem. teraz noszę je codziennie.",
+        "verified": true,
+        "date": "30.04.2026"
+      },
+      {
+        "name": "ola w.",
+        "age": 24,
+        "stars": 5,
+        "title": "uwielbiam klik.",
+        "body": "każda fasolka klika inaczej, jest jakaś satysfakcja w przeciskaniu wszystkich po kolei. śmieszne ale uspokajające.",
+        "verified": true,
+        "date": "22.04.2026"
+      },
+      {
+        "name": "krzyśtek a.",
+        "age": 30,
+        "tag": "korpo",
+        "stars": 5,
+        "title": "dyskretny pomocnik.",
+        "body": "fasolki w kieszeni, ręka tam co chwilę. szef nie widzi, ja się skupiam. najlepsze 30 zł wydane na pracę.",
+        "verified": true,
+        "date": "08.05.2026"
+      },
+      {
+        "name": "ada m.",
+        "age": 22,
+        "tag": "studentka",
+        "stars": 5,
+        "title": "z plecakiem na uczelnie.",
+        "body": "wisi na plecaku, biorę do ręki na wykładach. mały, dyskretny, kolor szary nie rzuca się w oczy. polecam każdemu studentowi.",
+        "verified": true,
+        "date": "17.05.2026"
+      },
+      {
+        "name": "bartek t.",
+        "age": 38,
+        "stars": 5,
+        "title": "prezent dla zestresowanej koleżanki.",
+        "body": "kupiłem koleżance z pracy która ciągle skubie paznokcie. teraz ma fasolki przy biurku. zmiana w tydzień.",
+        "verified": true,
+        "date": "06.05.2026"
+      },
+      {
+        "name": "natalia b.",
+        "age": 29,
+        "tag": "mama",
+        "stars": 5,
+        "title": "dla synka i dla mnie.",
+        "body": "kupiłam dwie, jedną dla 7-letniego synka, drugą dla siebie. on bawi się w samochodzie, ja w kolejce. obu pomaga.",
+        "verified": true,
+        "date": "01.05.2026"
+      },
+      {
+        "name": "michał o.",
+        "age": 33,
+        "stars": 5,
+        "title": "fidget na codzień.",
+        "body": "minimalistyczny, ładny kolor, klika cicho. nosze codziennie przy kluczach. nikt nie pyta co to, ja używam dyskretnie.",
+        "verified": true,
+        "date": "25.04.2026"
+      },
+      {
+        "name": "wioleta p.",
+        "age": 35,
+        "stars": 4,
+        "title": "fajny ale brakuje mi koloru.",
+        "body": "kupiłam czarne, fajnie się komponują, ale wolałabym wybrać coś bardziej kolorowego. może rozwiniecie ofertę kolorów?",
+        "verified": true,
+        "date": "21.05.2026"
+      },
+      {
+        "name": "piotr m.",
+        "age": 27,
+        "stars": 4,
+        "title": "fasolki dobre, brelok słaby.",
+        "body": "sam silikon i fasolki super, ale metalowy element breloka po miesiącu zaczął się trochę rdzewieć. funkcjonalnie ok, estetycznie minus.",
+        "verified": true,
+        "date": "14.05.2026"
+      },
+      {
+        "name": "ela j.",
+        "age": 40,
+        "stars": 4,
+        "title": "działa, jakość średnia.",
+        "body": "za tę cenę nie oczekuję cudów, ale dwie fasolki już mi się trochę rozciągnęły. używam dalej, klik tracą stopniowo. ok jak na cenę.",
+        "verified": true,
+        "date": "07.05.2026"
+      },
+      {
+        "name": "dawid w.",
+        "age": 25,
+        "tag": "praca",
+        "stars": 4,
+        "title": "dobry zakup.",
+        "body": "noszę 2 miesiące, fasolki działają. silikon przyjemny w dotyku. minus tylko za to że szybko się brudzi w kieszeni jeansów.",
+        "verified": true,
+        "date": "30.04.2026"
+      },
+      {
+        "name": "agnieszka s.",
+        "age": 32,
+        "stars": 4,
+        "title": "ok ale nie ekstra.",
+        "body": "robi co ma robić, klika, uspokaja. ale nie wow. fajny prezent na 30 zł, nie więcej.",
+        "verified": true,
+        "date": "23.04.2026"
+      },
+      {
+        "name": "kuba s.",
+        "age": 20,
+        "stars": 4,
+        "title": "studencki przyjaciel.",
+        "body": "na uczelnie idealny. mały, dyskretny, taniutki. minus tylko jeden, czarny kolor szybko łapie kurz w plecaku.",
+        "verified": true,
+        "date": "16.04.2026"
+      },
+      {
+        "name": "marek p.",
+        "age": 45,
+        "stars": 4,
+        "title": "kupiłem żonie.",
+        "body": "żona dostała na imieniny. używa, mówi że pomaga. trochę bałem się że to głupotka, ale faktycznie widzę że ściska kiedy się denerwuje.",
+        "verified": true,
+        "date": "09.04.2026"
+      },
+      {
+        "name": "joanna w.",
+        "age": 28,
+        "tag": "korpo",
+        "stars": 4,
+        "title": "fasolka mała ale dobra.",
+        "body": "wisi przy laptopowej torbie. biorę na callach, klikam. fajne. trochę mniejsze niż się spodziewałam, ale i tak działa.",
+        "verified": true,
+        "date": "02.05.2026"
+      },
+      {
+        "name": "rafał k.",
+        "age": 36,
+        "stars": 3,
+        "title": "spodziewałem się więcej.",
+        "body": "kupiłem po reklamie, sam pomysł fajny ale realizacja przeciętna. silikon dobry, ale klik fasolek po tygodniu cichnie. trzymam się głównie.",
+        "verified": true,
+        "date": "18.05.2026"
+      },
+      {
+        "name": "iga p.",
+        "age": 23,
+        "stars": 3,
+        "title": "krótki czas używania.",
+        "body": "noszę ze 2 tygodnie i już mi się znudziło. fajne na początek, potem szuflada. być może dla kogoś innego się to lepiej sprawdzi.",
+        "verified": true,
+        "date": "04.05.2026"
+      },
+      {
+        "name": "tomek b.",
+        "age": 41,
+        "stars": 3,
+        "title": "dla dziecka ok, dla mnie nie.",
+        "body": "kupiłem dla syna i dla siebie. on używa, ja po tygodniu schowałem. może to tylko dla młodszych.",
+        "verified": true,
+        "date": "20.04.2026"
+      },
+      {
+        "name": "klaudia o.",
+        "age": 26,
+        "stars": 2,
+        "title": "fasolki nie klikają już po miesiącu.",
+        "body": "świeży produkt klikał ładnie, po miesiącu cisza. silikon się rozciągnął, fasolki przeciskają bez oporu. funkcjonalnie martwy.",
+        "verified": true,
+        "date": "27.04.2026"
+      },
+      {
+        "name": "dawid m.",
+        "age": 31,
+        "stars": 1,
+        "title": "zwrot.",
+        "body": "po 3 dniach jedna fasolka pękła wzdłuż szwu. zwróciłem, pieniądze dostałem szybko. produkt nie dla mnie.",
+        "verified": true,
+        "date": "11.04.2026"
+      }
+    ]
+  },
+
+  "neurocube": {
+    "averageRating": 4.69,
+    "totalCount": 65,
+    "distribution": { "5": 52, "4": 9, "3": 2, "2": 1, "1": 1 },
+    "items": [
+      {
+        "name": "adrian p.",
+        "age": 36,
+        "tag": "ADHD",
+        "stars": 5,
+        "title": "moja popołudniowa medytacja.",
+        "body": "neurocube zostawiam na biurku. między spotkaniami biorę go w ręce na 5 minut, układam, rozkładam i głowa się czyści. drewno jest ciepłe, drewniane elementy idealnie wpasowane.",
+        "verified": true,
+        "date": "25.03.2026"
+      },
+      {
+        "name": "marta l.",
+        "age": 30,
+        "stars": 5,
+        "title": "ekologicznie i ładnie.",
+        "body": "kupiłam dla designu, używam dla efektu. drewniana, pasuje do moich półek, a układanie elementów mnie wycisza po pracy. prezent dla siebie.",
+        "verified": true,
+        "date": "11.03.2026"
+      },
+      {
+        "name": "dawid s.",
+        "age": 28,
+        "tag": "nauka",
+        "stars": 5,
+        "title": "trudniejsze niż wygląda.",
+        "body": "pierwsze 3 dni nie mogłem rozwiązać. teraz wpływa mi w 30 sekund. dobre wyzwanie dla głowy.",
+        "verified": true,
+        "date": "02.03.2026"
+      },
+      {
+        "name": "ela t.",
+        "age": 52,
+        "tag": "dla wnuka",
+        "stars": 4,
+        "title": "prezent który zostaje.",
+        "body": "kupiłam wnukowi (10 lat) na urodziny. zamiast plastiku, coś trwałego. tylko trochę droższe niż się spodziewałam.",
+        "verified": true,
+        "date": "20.02.2026"
+      },
+      {
+        "name": "marcin b.",
+        "age": 33,
+        "tag": "ADHD",
+        "stars": 5,
+        "title": "drewniana medytacja.",
+        "body": "lubię ciepło drewna w dłoni. neurocube zostawiam na biurku, układam między mailami. działa lepiej niż plastikowe fidgety, jest też ładny estetycznie.",
+        "verified": true,
+        "date": "16.05.2026"
+      },
+      {
+        "name": "agata w.",
+        "age": 41,
+        "tag": "projektantka",
+        "stars": 5,
+        "title": "pasuje do mojego stylu.",
+        "body": "minimalistyczne drewno świetnie wpisuje się w moje biurko skandynawskie. funkcjonalny obiekt, nie kolejny plastikowy gadżet. uwielbiam.",
+        "verified": true,
+        "date": "08.05.2026"
+      },
+      {
+        "name": "tomasz k.",
+        "age": 45,
+        "tag": "kierownik",
+        "stars": 5,
+        "title": "lepsze niż klikanie długopisem.",
+        "body": "na callach z klientami trzymam neurocube w dłoniach. nikt nie widzi, ja mam co robić. drewno cicho się układa, brak hałasu.",
+        "verified": true,
+        "date": "22.04.2026"
+      },
+      {
+        "name": "magdalena r.",
+        "age": 29,
+        "tag": "praca biurowa",
+        "stars": 5,
+        "title": "moje wieczorne uspokojenie.",
+        "body": "po pracy biorę kostkę do ręki, układam na różne sposoby. zajmuje głowę bez wysiłku. jak puzzle dla dorosłych.",
+        "verified": true,
+        "date": "01.05.2026"
+      },
+      {
+        "name": "krzysztof d.",
+        "age": 38,
+        "tag": "programista",
+        "stars": 5,
+        "title": "pomiędzy pull requestami.",
+        "body": "siedzę 10 godzin przed monitorem. neurocube to moja pauza, biorę między zadaniami. drewno jest ciepłe, faktura przyjemna, układanie wycisza.",
+        "verified": true,
+        "date": "12.05.2026"
+      },
+      {
+        "name": "ewa p.",
+        "age": 33,
+        "tag": "z dzieckiem",
+        "stars": 5,
+        "title": "kupiłam dla syna, używam sama.",
+        "body": "8-letni syn ją uwielbia, ale ja też. układamy razem wieczorem. nauczyło nas spędzania czasu razem bez telewizora.",
+        "verified": true,
+        "date": "05.05.2026"
+      },
+      {
+        "name": "piotr l.",
+        "age": 27,
+        "stars": 5,
+        "title": "satysfakcja z rozwiązania.",
+        "body": "pierwszy raz rozwiązałem po godzinie prób. potem 5 minut, potem 2 minuty. teraz robię to ze złamanymi oczami. satysfakcja maksymalna.",
+        "verified": true,
+        "date": "18.04.2026"
+      },
+      {
+        "name": "anna g.",
+        "age": 36,
+        "stars": 5,
+        "title": "ekologiczna alternatywa.",
+        "body": "od plastikowych fidgetów przeszłam na drewno. lepsze w dłoni, ładniej wygląda, trwałe. neurocube to mój ulubiony dotąd.",
+        "verified": true,
+        "date": "27.04.2026"
+      },
+      {
+        "name": "marek b.",
+        "age": 44,
+        "tag": "dla żony",
+        "stars": 5,
+        "title": "prezent który trafił w punkt.",
+        "body": "żona projektantka, lubi piękne przedmioty. neurocube zachwycił. używa codziennie po pracy, mówi że pomaga się odprężyć.",
+        "verified": true,
+        "date": "20.05.2026"
+      },
+      {
+        "name": "jakub m.",
+        "age": 32,
+        "stars": 5,
+        "title": "moje EDC na biurko.",
+        "body": "everyday carry biurka, obok kawy. układam, biorę do ręki, odkładam. naturalnie wpisał się w mój dzień. drewno tylko nabiera ciepła w dłoni.",
+        "verified": true,
+        "date": "13.05.2026"
+      },
+      {
+        "name": "olga r.",
+        "age": 35,
+        "stars": 4,
+        "title": "ładny, ale wykończenie ma braki.",
+        "body": "jedna z drewnianych krawędzi była lekko nierówna. nie wpływa to na funkcję, ale za tę cenę oczekiwałabym idealności. mimo to używam.",
+        "verified": true,
+        "date": "24.04.2026"
+      },
+      {
+        "name": "andrzej k.",
+        "age": 48,
+        "stars": 4,
+        "title": "fajne, drogie.",
+        "body": "rozumiem że drewno kosztuje, ale cena trochę zaporowa. funkcjonalnie ok, używam ale czuję że za 150 zł powinienem dostać coś bardziej spektakularnego.",
+        "verified": true,
+        "date": "07.05.2026"
+      },
+      {
+        "name": "katarzyna p.",
+        "age": 39,
+        "stars": 4,
+        "title": "ładna ozdoba.",
+        "body": "głównie służy mi jako element dekoracyjny na biurku, czasem ją układam. trzymam się głównie estetyki, funkcja drugorzędna.",
+        "verified": true,
+        "date": "10.04.2026"
+      },
+      {
+        "name": "michał r.",
+        "age": 31,
+        "stars": 3,
+        "title": "ok, ale po tygodniu schowałem.",
+        "body": "rozwiązałem 3 razy i znalazłem patent. potem już bez wyzwania. fajna na chwile, ale nie utrzymuje uwagi długo. może to ja.",
+        "verified": true,
+        "date": "15.05.2026"
+      },
+      {
+        "name": "wojciech a.",
+        "age": 42,
+        "stars": 3,
+        "title": "drogo jak za to co dostaję.",
+        "body": "drewno jest ok, ale za 150 zł oczekiwałbym bardziej skomplikowanego mechanizmu. po godzinie wiesz wszystko. dla osoby która lubi puzzle ok, dla mnie za prosta.",
+        "verified": true,
+        "date": "29.04.2026"
+      },
+      {
+        "name": "natalia o.",
+        "age": 26,
+        "stars": 2,
+        "title": "pęknięcie po miesiącu.",
+        "body": "po miesiącu codziennego używania jeden z drewnianych elementów pękł. obsługa wymieniła szybko (plus za serwis), ale jakość drewna mnie martwi.",
+        "verified": true,
+        "date": "03.05.2026"
+      },
+      {
+        "name": "robert s.",
+        "age": 50,
+        "stars": 1,
+        "title": "nie warta tych pieniędzy.",
+        "body": "spodziewałem się premium. drewno ok, ale za tyle pieniędzy powinien być przynajmniej etui ochronne. minus, minus, minus. zwracam.",
+        "verified": false,
+        "date": "11.05.2026"
+      }
+    ]
+  },
+
+  "gorly": {
+    "averageRating": 4.78,
+    "totalCount": 124,
+    "distribution": { "5": 102, "4": 17, "3": 4, "2": 1, "1": 0 },
+    "items": [
+      {
+        "name": "Karolina",
+        "age": 34,
+        "tag": "praca zdalna",
+        "stars": 5,
+        "title": "Mój ratunek na call'ach.",
+        "body": "Kupiłam Gorlego po tym, jak pękł mi trzeci długopis w pracy. Mam codziennie po sześć zoomów, a ja potrzebuję mieć coś w dłoniach, żeby się skupić. Teraz Gorly siedzi przy laptopie i ratuje mi sytuację. Ściskam go ile chcę, a on wraca do formy i czeka na kolejny call. Po trzech miesiącach wygląda jak nowy, w przeciwieństwie do gniotka z marketu, który pękł po dwóch tygodniach.",
+        "verified": true,
+        "date": "01.04.2026"
+      },
+      {
+        "name": "ola g.",
+        "age": 39,
+        "tag": "matka 2 chłopaków",
+        "stars": 5,
+        "title": "rzucają nim, gryzą, ciągną.",
+        "body": "moi synowie (8 i 11) traktują gorlego jak ulubieńca. spada ze schodów, leci pod łóżko, wraca cały. testowane na warunkach domowych, przeszedł.",
+        "verified": true,
+        "date": "18.03.2026"
+      },
+      {
+        "name": "mariusz w.",
+        "age": 44,
+        "tag": "siłka",
+        "stars": 5,
+        "title": "stress ball z charakterem.",
+        "body": "rozgrzewam dłonie przed treningiem. opór jest mocny, palcom robi dobrze. nie pęknie jak zwykłe stress balle.",
+        "verified": true,
+        "date": "05.03.2026"
+      },
+      {
+        "name": "wojtek o.",
+        "age": 27,
+        "stars": 4,
+        "title": "duży, ciężki, fajny.",
+        "body": "spodziewałem się czegoś mniejszego, ale w sumie ten rozmiar ma sens, pełna dłoń ma robotę. minus tylko za to, że nie zmieści się do plecaka.",
+        "verified": true,
+        "date": "22.02.2026"
+      },
+      {
+        "name": "kasia k.",
+        "age": 35,
+        "tag": "dla męża",
+        "stars": 5,
+        "title": "prezent dla zestresowanego męża.",
+        "body": "kupiłam mężowi, który przesiaduje w pracy przed komputerem. teraz gorly leży obok klawiatury. czasami pożycza mi go i ja też pomaga.",
+        "verified": true,
+        "date": "08.02.2026"
+      },
+      {
+        "name": "dariusz a.",
+        "age": 41,
+        "tag": "kierownik produkcji",
+        "stars": 5,
+        "title": "ratuje mnie po trudnym dniu.",
+        "body": "wracam z fabryki, siadam na kanapie, ściskam gorlego. 10 minut i napięcie z barków schodzi. lepsze niż piwo.",
+        "verified": true,
+        "date": "14.05.2026"
+      },
+      {
+        "name": "monika p.",
+        "age": 36,
+        "tag": "fizjoterapeutka",
+        "stars": 5,
+        "title": "polecam pacjentom.",
+        "body": "używam u pacjentów do ćwiczeń rehabilitacyjnych dłoni. opór jest perfekcyjny, dobrze pracuje na mięśnie palców. solidne wykonanie.",
+        "verified": true,
+        "date": "27.04.2026"
+      },
+      {
+        "name": "krzyśtek d.",
+        "age": 29,
+        "tag": "trener",
+        "stars": 5,
+        "title": "rozgrzewka przed wspinaczką.",
+        "body": "przed wejściem na ścianke wspinaczkową rozgrzewam palce gorly. opór dokładnie taki jaki potrzebuję. dobrze leży w dłoni.",
+        "verified": true,
+        "date": "08.05.2026"
+      },
+      {
+        "name": "ela t.",
+        "age": 33,
+        "tag": "mama",
+        "stars": 5,
+        "title": "dla 5-latka tez idealne.",
+        "body": "syn 5 lat ma sensory issues. gorly w jego rączce idealnie pasuje rozmiarem, ściska kiedy się denerwuje. spokojny dzień w przedszkolu.",
+        "verified": true,
+        "date": "20.04.2026"
+      },
+      {
+        "name": "patryk m.",
+        "age": 38,
+        "tag": "stres w pracy",
+        "stars": 5,
+        "title": "lepszy niż papieros.",
+        "body": "rzucam palenie, ręce nie wiedzą co ze sobą zrobić. gorly w dłoni wypełnia tę pustkę. nie wiem czy to działa, ale 2 tygodnie bez papierosa.",
+        "verified": true,
+        "date": "12.05.2026"
+      },
+      {
+        "name": "ania r.",
+        "age": 31,
+        "tag": "biuro",
+        "stars": 5,
+        "title": "moja anti-stress kula.",
+        "body": "leży na biurku obok klawiatury. ściskam między mailami. silikon przyjemny, opór mocny ale nie męczy.",
+        "verified": true,
+        "date": "03.05.2026"
+      },
+      {
+        "name": "robert k.",
+        "age": 47,
+        "tag": "operator wózka",
+        "stars": 5,
+        "title": "przerwa w pracy fizycznej.",
+        "body": "operator wózka widłowego, dłonie pracują 8 godzin. w przerwach ściskam gorlego, pomaga rozluźnić mięśnie. solidne wykonanie.",
+        "verified": true,
+        "date": "25.04.2026"
+      },
+      {
+        "name": "magda s.",
+        "age": 27,
+        "tag": "joga",
+        "stars": 5,
+        "title": "joga + gorly = spokój.",
+        "body": "zaczynam dzień od jogi, kończę ściskaniem gorlego. wieczorny relaks zanim zasnę. wyciszam się szybko.",
+        "verified": true,
+        "date": "30.04.2026"
+      },
+      {
+        "name": "tomek p.",
+        "age": 34,
+        "stars": 5,
+        "title": "rzuciłem nim 100 razy.",
+        "body": "testowałem na trwałość, rzuciłem o ścianę 100 razy. ani jednego śladu. gorly to czołg silikonu. polecam ojcom zestresowanym pracą.",
+        "verified": true,
+        "date": "16.05.2026"
+      },
+      {
+        "name": "klaudia w.",
+        "age": 24,
+        "tag": "studentka",
+        "stars": 5,
+        "title": "ścisnęłam podczas sesji.",
+        "body": "sesja, stres, gorly. ściskam podczas nauki, kiedy nie mogę się skupić. miłe odczucie w dłoni. polecam każdemu studentowi.",
+        "verified": true,
+        "date": "22.05.2026"
+      },
+      {
+        "name": "marcin l.",
+        "age": 30,
+        "tag": "ADHD",
+        "stars": 5,
+        "title": "lepszy niż wszystkie poprzednie stress balle.",
+        "body": "miałem 4 różne stress balle. wszystkie pękły w pierwszym miesiącu. gorly jest niezniszczalny, opór solidny, faktura przyjemna.",
+        "verified": true,
+        "date": "04.05.2026"
+      },
+      {
+        "name": "iga b.",
+        "age": 28,
+        "stars": 4,
+        "title": "ciężki, w plecaku zauważalny.",
+        "body": "świetnie się ściska, ale wziąć go do pracy jest problemem. waży swoje, w plecaku zajmuje miejsce. zostaje na biurku w domu.",
+        "verified": true,
+        "date": "18.05.2026"
+      },
+      {
+        "name": "kamil r.",
+        "age": 26,
+        "stars": 4,
+        "title": "dobry, ale za drogi.",
+        "body": "działa świetnie, ale kosztuje ponad 50 zł za kawałek silikonu. funkcjonalnie 5, cena za 4.",
+        "verified": true,
+        "date": "10.05.2026"
+      },
+      {
+        "name": "agnieszka m.",
+        "age": 37,
+        "stars": 4,
+        "title": "kolor blednie.",
+        "body": "kupiłam zielonego, po 2 miesiącach codziennego używania zielony stracił trochę intensywności. nie wpływa na funkcję, ale estetycznie minus.",
+        "verified": true,
+        "date": "01.05.2026"
+      },
+      {
+        "name": "łukasz p.",
+        "age": 35,
+        "stars": 4,
+        "title": "dla mnie za duży.",
+        "body": "mam średniej wielkości dłonie, gorly leży w pełni ale w pełnym uchwycie czuję napięcie. wolałbym wariant mniejszy do plecaka.",
+        "verified": true,
+        "date": "24.04.2026"
+      },
+      {
+        "name": "ola b.",
+        "age": 40,
+        "stars": 4,
+        "title": "fajny, ale ciężko schować.",
+        "body": "rozmiar to plus do ściskania, minus do noszenia. zostaje na biurku, do kieszeni za duży. mimo to używam codziennie.",
+        "verified": true,
+        "date": "16.04.2026"
+      },
+      {
+        "name": "krzysiek o.",
+        "age": 32,
+        "stars": 3,
+        "title": "spodziewałem się więcej.",
+        "body": "stress ball jak stress ball. solidny, ale za tę cenę myślałem że będzie coś więcej, jakaś specjalna faktura, coś. zwykła kula silikonu.",
+        "verified": true,
+        "date": "20.05.2026"
+      },
+      {
+        "name": "wioleta d.",
+        "age": 29,
+        "stars": 3,
+        "title": "działa, nie zachwyca.",
+        "body": "używam czasami, kiedy mi przyjdzie ochota. zwykła kula, ściska się jak każdy stress ball. nie wiem dlaczego ma być wyjątkowy.",
+        "verified": true,
+        "date": "11.05.2026"
+      },
+      {
+        "name": "andrzej m.",
+        "age": 51,
+        "stars": 2,
+        "title": "za drogi za to co jest.",
+        "body": "kupiłem żeby zobaczyć o co chodzi. zwykła kulka silikonowa za 50 zł. nic specjalnego. zwykłe piłeczki za 10 zł działają tak samo.",
+        "verified": true,
+        "date": "28.04.2026"
+      }
+    ]
+  },
+
+  "clicky": {
+    "averageRating": 4.58,
+    "totalCount": 56,
+    "distribution": { "5": 40, "4": 12, "3": 3, "2": 1, "1": 0 },
+    "items": [
+      {
+        "name": "mateusz d.",
+        "age": 29,
+        "tag": "ADHD",
+        "stars": 5,
+        "title": "klikanie zamiast obgryzania.",
+        "body": "od pół roku klikałem długopisem w pracy do irytacji wszystkich. clicky to rozwiązanie, cichy, dyskretny, taki sam dopaminowy hit. szefowa mi dziękuje.",
+        "verified": true,
+        "date": "29.03.2026"
+      },
+      {
+        "name": "wiktoria s.",
+        "age": 24,
+        "stars": 5,
+        "title": "ten klik jest hipnotyzujący.",
+        "body": "kupiłam pod wpływem reklamy na tiktoku, nie żałuję. faktycznie satysfakcjonujący feedback przy każdym kliknięciu. używam podczas pisania prac.",
+        "verified": true,
+        "date": "15.03.2026"
+      },
+      {
+        "name": "piotr l.",
+        "age": 38,
+        "tag": "praca",
+        "stars": 4,
+        "title": "działa świetnie.",
+        "body": "do biura idealny. minus, czasem za cichy, kiedy chcesz, żeby ktoś cię usłyszał (żart, nie minus). pierwsza fidgeting rzecz która mi się nie znudziła.",
+        "verified": true,
+        "date": "01.03.2026"
+      },
+      {
+        "name": "zuzanna a.",
+        "age": 16,
+        "tag": "uczennica",
+        "stars": 5,
+        "title": "do szkoły.",
+        "body": "noszę do liceum, klikam przy klasówkach żeby się skupić. nauczyciele nie zauważają bo jest cicho. lubię.",
+        "verified": true,
+        "date": "18.02.2026"
+      },
+      {
+        "name": "dawid w.",
+        "age": 31,
+        "tag": "ADHD",
+        "stars": 5,
+        "title": "moja koncentracja na callach.",
+        "body": "calle 3 razy dziennie. clicky w lewej ręce, klikam dyskretnie pod biurkiem. nikt nie słyszy, ja zostaję w temacie. genialne.",
+        "verified": true,
+        "date": "12.05.2026"
+      },
+      {
+        "name": "kasia p.",
+        "age": 27,
+        "tag": "copywriter",
+        "stars": 5,
+        "title": "klikam podczas pisania.",
+        "body": "muszę mieć coś w drugiej ręce żeby pisać. clicky idealnie. faktura przycisku przyjemna, klik miękki ale wyraźny.",
+        "verified": true,
+        "date": "04.05.2026"
+      },
+      {
+        "name": "filip m.",
+        "age": 35,
+        "tag": "korpo",
+        "stars": 5,
+        "title": "tak jak długopis, ale lepiej.",
+        "body": "denerwowałem cały zespół klikając długopisem. teraz mam clicky, cichszy, wyglada bardziej profesjonalnie na biurku. zespół spokojny.",
+        "verified": true,
+        "date": "20.04.2026"
+      },
+      {
+        "name": "natalia b.",
+        "age": 22,
+        "tag": "studentka",
+        "stars": 5,
+        "title": "uczelnia i biblioteka.",
+        "body": "w bibliotece muszę być cicho ale ręce mam zajęte. clicky jest na tyle cichy że nikt nie zauważa. polecam każdemu studentowi.",
+        "verified": true,
+        "date": "29.04.2026"
+      },
+      {
+        "name": "krzyśtek r.",
+        "age": 33,
+        "tag": "rzucam palenie",
+        "stars": 5,
+        "title": "zamiast papierosa.",
+        "body": "ręka potrzebowała czegoś po papierosie. clicky w kieszeni, klikam co chwilę. dopaminowy hit zamiast nikotynowego. tydzień bez palenia.",
+        "verified": true,
+        "date": "08.05.2026"
+      },
+      {
+        "name": "agata k.",
+        "age": 29,
+        "tag": "lęk",
+        "stars": 5,
+        "title": "moje uspokojenie w kieszeni.",
+        "body": "lęki od liceum. clicky w torebce, klikam kiedy czuję że nadchodzi atak. powtarzalność klikania mnie centruje. polecam każdemu z tym samym problemem.",
+        "verified": true,
+        "date": "15.05.2026"
+      },
+      {
+        "name": "michał d.",
+        "age": 41,
+        "tag": "manager",
+        "stars": 5,
+        "title": "dyskretne na meetingach.",
+        "body": "prowadzę spotkania, mam dużo do mówienia. clicky pod stołem między palcami, daje mi spokój. nikt nie wie, ja jestem przy temacie.",
+        "verified": true,
+        "date": "22.04.2026"
+      },
+      {
+        "name": "olga m.",
+        "age": 25,
+        "stars": 5,
+        "title": "lepsze niż spinner.",
+        "body": "miałam spinnery, kostki, gniotki. clicky to pierwszy fidget który używam codziennie bez znudzenia. klik feedback uzależnia.",
+        "verified": true,
+        "date": "06.05.2026"
+      },
+      {
+        "name": "tomek j.",
+        "age": 28,
+        "tag": "programista",
+        "stars": 5,
+        "title": "między linijkami kodu.",
+        "body": "potrzebuję coś między fragmentami kodu żeby mózg odpoczął. clicky idealnie, 5 kliknięć i wracam do edytora ze świeżą głową.",
+        "verified": true,
+        "date": "13.05.2026"
+      },
+      {
+        "name": "klaudia r.",
+        "age": 31,
+        "stars": 5,
+        "title": "wzięłam dla siebie i męża.",
+        "body": "ja w domu, mąż w biurze. oboje używamy codziennie. szare, dyskretne, nie rzuca się w oczy. polecam parom.",
+        "verified": true,
+        "date": "27.04.2026"
+      },
+      {
+        "name": "patryk b.",
+        "age": 36,
+        "stars": 5,
+        "title": "klikam zamiast skubać.",
+        "body": "od dziecka skubałem paznokcie. clicky to alternatywa. ręce zajęte klikaniem, paznokcie spokojne. miesiąc bez skubania.",
+        "verified": true,
+        "date": "18.04.2026"
+      },
+      {
+        "name": "magda l.",
+        "age": 23,
+        "stars": 5,
+        "title": "uniwersytet i kawiarnia.",
+        "body": "kawiarnia, książki, clicky w drugiej ręce. nauka idzie lepiej kiedy ręce mają zajęcie. taniutki sposób na koncentrację.",
+        "verified": true,
+        "date": "30.04.2026"
+      },
+      {
+        "name": "wojtek a.",
+        "age": 39,
+        "stars": 4,
+        "title": "fajny ale za cichy.",
+        "body": "spodziewałem się głośniejszego klika, jak długopis. clicky jest tak cichy że ledwo go słyszę. dla biura plus, dla mnie czasem brakuje feedbacku dźwiękowego.",
+        "verified": true,
+        "date": "20.05.2026"
+      },
+      {
+        "name": "anna p.",
+        "age": 33,
+        "stars": 4,
+        "title": "dobry, ale wolałabym kolory.",
+        "body": "kupiłam czarnego, dyskretny ale nudny. wolałabym mieć opcję bardziej kolorystyczną. funkcjonalnie 5, estetycznie 3.",
+        "verified": true,
+        "date": "11.05.2026"
+      },
+      {
+        "name": "kacper w.",
+        "age": 26,
+        "stars": 4,
+        "title": "klik po miesiącu cichnie.",
+        "body": "świeży clicky klikał ładnie i głośno. po miesiącu codziennego klikania dźwięk się trochę zatraca. funkcja działa, ale feedback słabnie.",
+        "verified": true,
+        "date": "03.05.2026"
+      },
+      {
+        "name": "ela j.",
+        "age": 42,
+        "stars": 4,
+        "title": "dla syna w sam raz.",
+        "body": "kupiłam synowi 12 lat z ADHD. używa codziennie. minus tylko za to że jeden raz mi się rozkręcił w dłoni, musiałam dokręcić.",
+        "verified": true,
+        "date": "26.04.2026"
+      },
+      {
+        "name": "robert g.",
+        "age": 30,
+        "stars": 4,
+        "title": "ok ale za drogi.",
+        "body": "działa świetnie ale 35 zł za przycisk to dużo. funkcjonalnie 5, cena 3, średnia 4.",
+        "verified": true,
+        "date": "16.04.2026"
+      },
+      {
+        "name": "iga m.",
+        "age": 28,
+        "stars": 4,
+        "title": "fajne ale szybko się nudzi.",
+        "body": "pierwszy tydzień klikałam codziennie, potem rzadziej. teraz biorę raz na kilka dni. działa, ale efekt nowości szybko mija.",
+        "verified": true,
+        "date": "09.05.2026"
+      },
+      {
+        "name": "marcin t.",
+        "age": 37,
+        "stars": 3,
+        "title": "spodziewałem się więcej.",
+        "body": "klikanie to klikanie. clicky to drogi długopis bez wkładu. fajny pomysł ale za tę cenę chyba przepłaciłem. używam, nie zachwyca.",
+        "verified": true,
+        "date": "17.05.2026"
+      },
+      {
+        "name": "ola d.",
+        "age": 24,
+        "stars": 3,
+        "title": "nie dla mnie.",
+        "body": "kupiłam pod wpływem instagrama, nie czuję tego. klikanie mnie irytuje po 5 minutach. może jestem nie do końca ADHD-owym typem na to.",
+        "verified": true,
+        "date": "30.03.2026"
+      },
+      {
+        "name": "bartek o.",
+        "age": 32,
+        "stars": 2,
+        "title": "rozkręcił się po tygodniu.",
+        "body": "po tygodniu intensywnego używania klik się rozregulował, klika nierówno. obsługa odpowiedziała, wymienili na nowy ale jakość się powtarzała.",
+        "verified": true,
+        "date": "22.04.2026"
+      }
+    ]
+  },
+
+  "flicko": {
+    "averageRating": 4.62,
+    "totalCount": 43,
+    "distribution": { "5": 32, "4": 8, "3": 2, "2": 1, "1": 0 },
+    "items": [
+      {
+        "name": "kuba w.",
+        "age": 31,
+        "stars": 5,
+        "title": "flick i jesteś spokojny.",
+        "body": "mała rzecz, duży efekt. trzymam w kieszeni, flick robi się odruchowo. dobry na nerwy w trakcie spotkań.",
+        "verified": true,
+        "date": "22.03.2026"
+      },
+      {
+        "name": "ola m.",
+        "age": 26,
+        "tag": "lęk społeczny",
+        "stars": 5,
+        "title": "pomaga przy ekspozycjach.",
+        "body": "psychoterapeutka poleciła mi coś sensorycznego do kieszeni. flicko jest idealny, mały, dyskretny, daje mi zakotwiczenie kiedy jestem w tłumie.",
+        "verified": true,
+        "date": "10.03.2026"
+      },
+      {
+        "name": "tomasz r.",
+        "age": 35,
+        "stars": 4,
+        "title": "spoko gadżet.",
+        "body": "dobra cena, dobry sensoryczny feedback. brakuje mi tylko wariantu z gwoździowym wykończeniem, ale to chyba sprawa gustu.",
+        "verified": true,
+        "date": "25.02.2026"
+      },
+      {
+        "name": "ania k.",
+        "age": 22,
+        "stars": 5,
+        "title": "podarowałam siostrze.",
+        "body": "kupiłam sobie i siostrze. obie używamy codziennie. mała, zmieści się do każdej kieszeni.",
+        "verified": true,
+        "date": "08.02.2026"
+      },
+      {
+        "name": "marek d.",
+        "age": 33,
+        "tag": "ADHD",
+        "stars": 5,
+        "title": "moja kieszonkowa terapia.",
+        "body": "kupiłem na próbę, używam codziennie 3 miesiące. flick mam odruchowo w trakcie spotkań, w kolejce, w autobusie. minimalistyczne i działa.",
+        "verified": true,
+        "date": "15.05.2026"
+      },
+      {
+        "name": "karolina p.",
+        "age": 29,
+        "tag": "lęk",
+        "stars": 5,
+        "title": "mój anti-anxiety w kieszeni.",
+        "body": "lęki od liceum. flicko w kieszeni, sięgam kiedy czuję że nadchodzi. zakotwiczenie sensoryczne, jak uczyła terapeutka. polecam.",
+        "verified": true,
+        "date": "22.04.2026"
+      },
+      {
+        "name": "dawid g.",
+        "age": 27,
+        "tag": "praca",
+        "stars": 5,
+        "title": "dyskretny pomocnik na callach.",
+        "body": "z klientami mam wideo. flicko pod biurkiem, flick palcami między pytaniami. uspokaja, dyskretnie. plus dla małego rozmiaru.",
+        "verified": true,
+        "date": "01.05.2026"
+      },
+      {
+        "name": "natalia s.",
+        "age": 24,
+        "tag": "studentka",
+        "stars": 5,
+        "title": "na egzaminach.",
+        "body": "egzaminy ustne to mój koszmar. flicko w kieszeni żakietu, dyskretnie flick podczas czekania na pytanie. uspokaja przed odpowiedzią.",
+        "verified": true,
+        "date": "08.05.2026"
+      },
+      {
+        "name": "patryk m.",
+        "age": 36,
+        "stars": 5,
+        "title": "lepsze niż klikanie długopisem.",
+        "body": "kolega z biurka po przeciwnej stronie irytował się gdy klikałem długopisem. teraz mam flicko, cicho, dyskretnie. on spokojny, ja też.",
+        "verified": true,
+        "date": "12.05.2026"
+      },
+      {
+        "name": "magdalena j.",
+        "age": 32,
+        "stars": 5,
+        "title": "uwielbiam ciężar.",
+        "body": "mała ale ciężka, w dłoni czuję jej obecność. flick daje satysfakcjonujący feedback. używam codziennie wieczorem przy filmie.",
+        "verified": true,
+        "date": "26.04.2026"
+      },
+      {
+        "name": "filip o.",
+        "age": 28,
+        "stars": 5,
+        "title": "kieszonkowy fidget premium.",
+        "body": "miałem różne. flicko jest najlepszy ze względu na materiał, ciężar i mały rozmiar. mieści się w kieszeni jeansów, nie wystaje.",
+        "verified": true,
+        "date": "18.05.2026"
+      },
+      {
+        "name": "klaudia r.",
+        "age": 25,
+        "stars": 5,
+        "title": "fajna mała rzecz.",
+        "body": "noszę 2 miesiące codziennie. flick metalu w palcach uspokaja, satysfakcjonuje. polecam każdemu kto lubi mieć coś w dłoni.",
+        "verified": true,
+        "date": "05.05.2026"
+      },
+      {
+        "name": "krzyśtek a.",
+        "age": 30,
+        "tag": "korpo",
+        "stars": 5,
+        "title": "biuro plus flicko.",
+        "body": "open space, ciągłe rozmowy, hałas. flicko w kieszeni, dyskretnie flick. żyje mi się łatwiej, mózg ma punkt zaczepienia. polecam korpoludkom.",
+        "verified": true,
+        "date": "20.04.2026"
+      },
+      {
+        "name": "iga w.",
+        "age": 38,
+        "stars": 4,
+        "title": "ładny, ale szybko się drapie.",
+        "body": "metalowa powierzchnia po miesiącu nosi się trochę rys. funkcjonalnie ok, estetycznie minus. mimo to używam.",
+        "verified": true,
+        "date": "16.05.2026"
+      },
+      {
+        "name": "marcin l.",
+        "age": 34,
+        "stars": 4,
+        "title": "ok ale wolałbym opcję kolorystyczną.",
+        "body": "tylko jeden kolor w ofercie. wolałbym wybrać tytanowy lub czarny matowy. funkcjonalnie 5, wybór kolorów 2.",
+        "verified": true,
+        "date": "08.05.2026"
+      },
+      {
+        "name": "ela m.",
+        "age": 31,
+        "stars": 4,
+        "title": "działa, drobne minusy.",
+        "body": "mechanizm flick jest fajny, ale czasem się zacina. obsługa pomogła, ale jakość mogłaby być lepsza za tę cenę.",
+        "verified": true,
+        "date": "29.04.2026"
+      },
+      {
+        "name": "tomek p.",
+        "age": 26,
+        "stars": 4,
+        "title": "ok jak na cenę.",
+        "body": "30 zł za mały kawałek metalu z mechanizmem. działa, nie zachwyca. dla początkujących w fidgetach plus, dla weteranów może mało.",
+        "verified": true,
+        "date": "13.05.2026"
+      },
+      {
+        "name": "piotr w.",
+        "age": 41,
+        "stars": 3,
+        "title": "spodziewałem się więcej.",
+        "body": "kupiłem po reklamie. działa, ale nie tak jak obiecują. zwykły kawałek metalu z mechanizmem. dla mnie po tygodniu schowany w szufladzie.",
+        "verified": true,
+        "date": "22.05.2026"
+      },
+      {
+        "name": "ola k.",
+        "age": 27,
+        "stars": 3,
+        "title": "nie utrzymał uwagi.",
+        "body": "pierwsze dni używałam codziennie, potem coraz rzadziej. może to nie dla mnie, fidgety które wymagają jednego ruchu są dla mnie za proste.",
+        "verified": true,
+        "date": "10.05.2026"
+      },
+      {
+        "name": "andrzej w.",
+        "age": 45,
+        "stars": 2,
+        "title": "mechanizm się zaciął.",
+        "body": "po 3 tygodniach codziennego flicka mechanizm zaciął się na dobre. pisałem do obsługi, wymienili, ale jakość mnie zmartwiła.",
+        "verified": true,
+        "date": "17.04.2026"
+      }
+    ]
+  },
+
+  "formi": {
+    "averageRating": 4.71,
+    "totalCount": 38,
+    "distribution": { "5": 30, "4": 6, "3": 1, "2": 1, "1": 0 },
+    "items": [
+      {
+        "name": "julia n.",
+        "age": 30,
+        "tag": "praca",
+        "stars": 5,
+        "title": "wracam do kształtu po godzinie.",
+        "body": "formi reaguje na ciepło dłoni, więc po chwili kształtuje się idealnie pod palce. mam wrażenie, że to żywa rzecz. ulubieniec biurka.",
+        "verified": true,
+        "date": "25.03.2026"
+      },
+      {
+        "name": "michał k.",
+        "age": 28,
+        "stars": 5,
+        "title": "memory foam dla dłoni.",
+        "body": "fenomenalna faktura. ściskasz, kształtujesz, formi pamięta. trochę jak terapia gniecienia chleba, tylko bez okruchów.",
+        "verified": true,
+        "date": "12.03.2026"
+      },
+      {
+        "name": "asia w.",
+        "age": 41,
+        "tag": "stres po pracy",
+        "stars": 5,
+        "title": "wieczorny dekompres.",
+        "body": "po 8 godzinach przed monitorem siadam z kawą i formi. 10 minut i głowa się resetuje. lepsze niż netflix.",
+        "verified": true,
+        "date": "29.02.2026"
+      },
+      {
+        "name": "pawel s.",
+        "age": 36,
+        "stars": 4,
+        "title": "fajne, ale szybko się brudzi.",
+        "body": "wygląd top, faktura top, ale jasna powierzchnia łatwo łapie kurz i odciski palców. minus do czyszczenia.",
+        "verified": true,
+        "date": "15.02.2026"
+      },
+      {
+        "name": "ela t.",
+        "age": 35,
+        "tag": "ADHD",
+        "stars": 5,
+        "title": "moja medytacja w dłoni.",
+        "body": "formi reaguje na ciepło, kształtuje się pod palce. fascynujące jak żywy materiał. używam codziennie wieczorem.",
+        "verified": true,
+        "date": "12.05.2026"
+      },
+      {
+        "name": "michał r.",
+        "age": 32,
+        "tag": "projektant",
+        "stars": 5,
+        "title": "obiekt na biurku.",
+        "body": "minimalistyczne, ciepłe w dłoni, faktura premium. formi to obiekt designerski który dodatkowo działa. uwielbiam.",
+        "verified": true,
+        "date": "20.04.2026"
+      },
+      {
+        "name": "natalia s.",
+        "age": 28,
+        "tag": "lęk",
+        "stars": 5,
+        "title": "moja anti-anxiety rzecz.",
+        "body": "kiedy mam lęki, formuję formi w dłoni. powtarzalność i ciepło materiału daje mi zakotwiczenie. terapeutka pochwaliła wybór.",
+        "verified": true,
+        "date": "08.05.2026"
+      },
+      {
+        "name": "kacper b.",
+        "age": 26,
+        "stars": 5,
+        "title": "uzależniający.",
+        "body": "biorę do dłoni i nie odkładam. ściskam, kształtuje, znowu ściskam. mózg dostaje co potrzebuje. fascynujący materiał.",
+        "verified": true,
+        "date": "16.05.2026"
+      },
+      {
+        "name": "ania w.",
+        "age": 33,
+        "tag": "praca biurowa",
+        "stars": 5,
+        "title": "mój towarzysz przy mailach.",
+        "body": "leży na biurku obok klawiatury. biorę między mailami, kształtuję, odkładam. 10 sekund i głowa odpoczywa. polecam.",
+        "verified": true,
+        "date": "02.05.2026"
+      },
+      {
+        "name": "patryk j.",
+        "age": 39,
+        "tag": "kierownik",
+        "stars": 5,
+        "title": "kupiłem dla zespołu.",
+        "body": "kupiłem 5 formi dla mojego zespołu. teraz wszyscy mają na biurkach. spokojniejsza atmosfera w open space.",
+        "verified": true,
+        "date": "25.04.2026"
+      },
+      {
+        "name": "kasia o.",
+        "age": 27,
+        "stars": 5,
+        "title": "lepiej niż gniotek.",
+        "body": "miałam wiele gniotków, formi to nowy poziom. memory foam plus ciepło dłoni daje efekt który nie nudzi się szybko.",
+        "verified": true,
+        "date": "30.04.2026"
+      },
+      {
+        "name": "tomek b.",
+        "age": 34,
+        "stars": 5,
+        "title": "moje rano z kawą.",
+        "body": "wstaję, kawa, formi. 5 minut formowania zanim zacznę dzień. rytuał który polubiłem.",
+        "verified": true,
+        "date": "18.05.2026"
+      },
+      {
+        "name": "ola j.",
+        "age": 24,
+        "stars": 4,
+        "title": "ładne ale jasny kolor problemowy.",
+        "body": "wzięłam wariant kremowy, po miesiącu widoczne odciski palców i drobny brud. obsługa pisze że można czyścić wilgotną szmatką, ale i tak minus.",
+        "verified": true,
+        "date": "13.05.2026"
+      },
+      {
+        "name": "darek p.",
+        "age": 31,
+        "stars": 4,
+        "title": "fajny, drogi.",
+        "body": "działa świetnie ale 80 zł za kawałek pianki to dużo. funkcjonalnie 5, cena 3, ogólnie 4.",
+        "verified": true,
+        "date": "06.05.2026"
+      },
+      {
+        "name": "olga m.",
+        "age": 37,
+        "stars": 4,
+        "title": "memory foam ok.",
+        "body": "działa zgodnie z opisem, wraca do kształtu, kształtuje się pod palce. dla mnie efekt średni, używam czasem.",
+        "verified": true,
+        "date": "23.04.2026"
+      },
+      {
+        "name": "wojtek r.",
+        "age": 29,
+        "stars": 3,
+        "title": "spodziewałem się więcej.",
+        "body": "kupiłem po recenzjach. działa, ale dla mnie efekt nowości minął po 2 tygodniach. teraz leży na biurku jako ozdoba.",
+        "verified": true,
+        "date": "10.05.2026"
+      },
+      {
+        "name": "marek g.",
+        "age": 45,
+        "stars": 2,
+        "title": "po 2 miesiącach mniej elastyczny.",
+        "body": "świeży formi działał super, po 2 miesiącach codziennego używania pianka stała się trochę twardsza. efekt mniej satysfakcjonujący. szkoda za tę cenę.",
+        "verified": true,
+        "date": "01.05.2026"
+      }
+    ]
+  },
+
+  "gniotek-pingwinek": {
+    "averageRating": 4.74,
+    "totalCount": 92,
+    "distribution": { "5": 74, "4": 14, "3": 3, "2": 1, "1": 0 },
+    "items": [
+      {
+        "name": "agnieszka m.",
+        "age": 33,
+        "tag": "dla córki",
+        "stars": 5,
+        "title": "pingwinek całuje siostrę przed snem.",
+        "body": "moja 5-latka uwielbia. miękki, bezpieczny, ładny. używamy do uspakajania przed snem, gniecie pingwinka i zasypia spokojniej.",
+        "verified": true,
+        "date": "30.03.2026"
+      },
+      {
+        "name": "kamil t.",
+        "age": 29,
+        "stars": 5,
+        "title": "śliczny i działa.",
+        "body": "kupiłem żonie na walentynki (zamiast kwiatów). teraz pingwinek mieszka u nas na kanapie. obu nam pomaga przy stresie.",
+        "verified": true,
+        "date": "14.03.2026"
+      },
+      {
+        "name": "natalia b.",
+        "age": 27,
+        "tag": "lęk",
+        "stars": 5,
+        "title": "moja anti-anxiety zabawka.",
+        "body": "kiedy mam atak lęku, ściskam pingwinka. faktura jest miękka jak chmura, ale wraca do kształtu, daje mi rytm oddechu.",
+        "verified": true,
+        "date": "01.03.2026"
+      },
+      {
+        "name": "krzysztof w.",
+        "age": 45,
+        "tag": "dla wnuczki",
+        "stars": 4,
+        "title": "wnuczka zachwycona.",
+        "body": "kupiłem na 4 urodziny wnuczki. używa codziennie, nosi do przedszkola. trochę żałuję, że nie kupiłem 2, mama też chce.",
+        "verified": true,
+        "date": "18.02.2026"
+      },
+      {
+        "name": "ola d.",
+        "age": 22,
+        "stars": 5,
+        "title": "ma imię.",
+        "body": "nazwałam go bartek. śpi ze mną na łóżku. tak.",
+        "verified": true,
+        "date": "05.02.2026"
+      },
+      {
+        "name": "monika p.",
+        "age": 31,
+        "tag": "mama dwójki",
+        "stars": 5,
+        "title": "kupiłam dwa.",
+        "body": "dla 4-letniego synka i 6-letniej córki. obu uspokaja przed snem. zamiast krzyków o telefon, mają swoje pingwinki w łóżkach.",
+        "verified": true,
+        "date": "15.05.2026"
+      },
+      {
+        "name": "filip k.",
+        "age": 32,
+        "tag": "lęki",
+        "stars": 5,
+        "title": "dla dorosłego też.",
+        "body": "myślałem że to tylko dla dzieci. żona kupiła w prezencie, teraz ściskam wieczorem oglądając filmy. uspokaja.",
+        "verified": true,
+        "date": "08.05.2026"
+      },
+      {
+        "name": "agata s.",
+        "age": 26,
+        "tag": "studentka",
+        "stars": 5,
+        "title": "moja sesja z pingwinkiem.",
+        "body": "podczas nauki ściskam pingwinka, jak mi zaczyna się rozpraszać uwaga. wracam do książek z większym spokojem. polecam każdemu studentowi.",
+        "verified": true,
+        "date": "22.04.2026"
+      },
+      {
+        "name": "tomek w.",
+        "age": 38,
+        "tag": "tata 3 dzieci",
+        "stars": 5,
+        "title": "rodzinny pingwinek.",
+        "body": "kupiłem dla dzieci, ale wszyscy się dzielimy. nawet pies próbował go ukraść. teraz mamy 3 pingwinki, jeden ginie pod kanapą.",
+        "verified": true,
+        "date": "30.04.2026"
+      },
+      {
+        "name": "natalia o.",
+        "age": 29,
+        "tag": "ADHD",
+        "stars": 5,
+        "title": "miękki, bezgłośny, ciepły.",
+        "body": "noszę w torebce. kiedy czuję że potrzebuję, biorę pingwinka do ręki. miękki, ciepły, bezgłośny. nikt nie wie. ja mam spokój.",
+        "verified": true,
+        "date": "10.05.2026"
+      },
+      {
+        "name": "ela p.",
+        "age": 36,
+        "tag": "praca biurowa",
+        "stars": 5,
+        "title": "na biurku w pracy.",
+        "body": "pingwinek siedzi na monitor stand. biorę między mailami, ściskam, odkładam. wszyscy się śmieją że mam pingwinka, ale wszystkim się podoba.",
+        "verified": true,
+        "date": "18.05.2026"
+      },
+      {
+        "name": "patryk d.",
+        "age": 34,
+        "tag": "stres w pracy",
+        "stars": 5,
+        "title": "lepszy niż drinki.",
+        "body": "wracam z pracy zestresowany, ściskam pingwinka 15 minut. głowa się resetuje, mogę spędzić wieczór z rodziną normalnie. lepsze niż alkohol.",
+        "verified": true,
+        "date": "26.04.2026"
+      },
+      {
+        "name": "klaudia m.",
+        "age": 25,
+        "stars": 5,
+        "title": "kupiłam dla mojej babci.",
+        "body": "babcia 78 lat z artretyzmem, ćwiczy palce ściskając pingwinka. miękki, bezpieczny dla starszych dłoni. genialne.",
+        "verified": true,
+        "date": "03.05.2026"
+      },
+      {
+        "name": "wojtek p.",
+        "age": 28,
+        "stars": 5,
+        "title": "moje wieczorne spokojnie.",
+        "body": "kawa, kanapa, pingwinek, film. perfect combo. miękka faktura w dłoni, ciepło materiału, oczy do filmu, ręka do pingwinka.",
+        "verified": true,
+        "date": "12.05.2026"
+      },
+      {
+        "name": "magda j.",
+        "age": 30,
+        "stars": 5,
+        "title": "dla naszej rodziny.",
+        "body": "kupiliśmy z mężem dla naszego 3-latka. teraz wszyscy go ściskamy. śliczny, miękki, bezpieczny. czyszczenie ok, nie trzyma plam.",
+        "verified": true,
+        "date": "20.04.2026"
+      },
+      {
+        "name": "marcin l.",
+        "age": 41,
+        "tag": "dziadek",
+        "stars": 4,
+        "title": "fajne dla wnuczków, dla mnie mniej.",
+        "body": "kupiłem na prezent wnuczkom (4 i 7 lat). uwielbiają. ja sam wziąłem do ręki raz, nie czuję tego. dla młodszych top.",
+        "verified": true,
+        "date": "23.05.2026"
+      },
+      {
+        "name": "iga r.",
+        "age": 27,
+        "stars": 4,
+        "title": "śliczny ale brudzi się szybko.",
+        "body": "biały kolor po miesiącu zaczyna szarzeć. można prać w pralce ale za tę cenę chciałabym czegoś bardziej odpornego na brud.",
+        "verified": true,
+        "date": "11.05.2026"
+      },
+      {
+        "name": "darek t.",
+        "age": 33,
+        "stars": 4,
+        "title": "dobry, ale za drogi.",
+        "body": "fajna zabawka, dziecko zachwycone. ale 65 zł za pluszowego pingwinka który gnieciemy to chyba sporo. funkcjonalnie ok, cena minus.",
+        "verified": true,
+        "date": "29.04.2026"
+      },
+      {
+        "name": "ola b.",
+        "age": 24,
+        "stars": 4,
+        "title": "fajny ale szybko traci kształt.",
+        "body": "świeży pingwinek wracał idealnie. po 2 miesiącach codziennego ściskania widzę że trochę gorzej trzyma formę. funkcja działa, ale gorzej.",
+        "verified": true,
+        "date": "17.04.2026"
+      },
+      {
+        "name": "marek o.",
+        "age": 37,
+        "stars": 3,
+        "title": "dla dzieci ok.",
+        "body": "kupiłem dla córki, ona zachwycona. dla mnie zwykły pluszak który da się ścisnąć. nie czuję jakiegoś szczególnego efektu.",
+        "verified": true,
+        "date": "06.05.2026"
+      },
+      {
+        "name": "kasia w.",
+        "age": 32,
+        "stars": 2,
+        "title": "po praniu nie wraca do kształtu.",
+        "body": "wyprałam pingwinka po miesiącu (instrukcja mówi że można). po wyschnięciu trochę inny kształt, faktura zmieniona. szkoda za tę cenę.",
+        "verified": true,
+        "date": "21.04.2026"
+      }
+    ]
+  },
+
+  "crocky": {
+    "averageRating": 4.66,
+    "totalCount": 74,
+    "distribution": { "5": 58, "4": 12, "3": 3, "2": 1, "1": 0 },
+    "items": [
+      {
+        "name": "tomasz b.",
+        "age": 35,
+        "tag": "dla syna",
+        "stars": 5,
+        "title": "krokodyl z chorym ząbkiem to hit.",
+        "body": "syn (6 lat) bawi się prawie codziennie. trzeba zgadnąć, który ząb boli krokodyla i go nacisnąć. uczy logiki, jest śmieszny, bezpieczny.",
+        "verified": true,
+        "date": "28.03.2026"
+      },
+      {
+        "name": "ewa k.",
+        "age": 32,
+        "tag": "pedagog",
+        "stars": 5,
+        "title": "na zajęciach grupowych hit.",
+        "body": "używam w przedszkolu. dzieci czekają w kolejce żeby zgrać. dobra zabawka antystresowa, uczy też reakcji na zaskoczenie.",
+        "verified": true,
+        "date": "12.03.2026"
+      },
+      {
+        "name": "michał p.",
+        "age": 28,
+        "stars": 4,
+        "title": "fun na imprezie.",
+        "body": "wyjąłem na imprezie u znajomych, wszyscy w to grali pijani. dobre wykonanie, ale baterie szybko padają.",
+        "verified": true,
+        "date": "25.02.2026"
+      },
+      {
+        "name": "monika s.",
+        "age": 41,
+        "tag": "dla całej rodziny",
+        "stars": 5,
+        "title": "wszyscy w domu się śmieją.",
+        "body": "gramy całą rodziną przy obiedzie. żałuję tylko, że nie ma wariantu z dłuższym czasem grania na baterii, ale i tak warto.",
+        "verified": true,
+        "date": "10.02.2026"
+      },
+      {
+        "name": "patryk w.",
+        "age": 36,
+        "tag": "tata 2 dzieci",
+        "stars": 5,
+        "title": "wieczorny rytuał rodzinny.",
+        "body": "kolacja, potem 3 partie crocky. dzieci 5 i 8 lat śmieją się jak szalone. dobre że gra jest krótka, partia 5 minut.",
+        "verified": true,
+        "date": "15.05.2026"
+      },
+      {
+        "name": "anna l.",
+        "age": 38,
+        "tag": "nauczycielka",
+        "stars": 5,
+        "title": "w klasie też hit.",
+        "body": "wzięłam do mojej klasy 1, dzieci uwielbiają. krótka gra, uczy refleksu, śmiech gwarantowany. polecam każdej nauczycielce.",
+        "verified": true,
+        "date": "08.05.2026"
+      },
+      {
+        "name": "darek m.",
+        "age": 30,
+        "tag": "wujek",
+        "stars": 5,
+        "title": "ratuje wizyty u siostrzeńców.",
+        "body": "siostrzeńcy 4 i 6 lat. zamiast tabletu, gramy w crocky. wujek roku status osiągnięty.",
+        "verified": true,
+        "date": "22.04.2026"
+      },
+      {
+        "name": "klaudia o.",
+        "age": 29,
+        "tag": "mama",
+        "stars": 5,
+        "title": "lepiej niż ekran.",
+        "body": "wprowadzam 'wieczory bez ekranów'. crocky pierwszy w kolejce. dziecko czeka, dorośli się śmieją. dobry zakup.",
+        "verified": true,
+        "date": "30.04.2026"
+      },
+      {
+        "name": "filip j.",
+        "age": 33,
+        "stars": 5,
+        "title": "kupiłem dla siostrzeńca, gramy razem.",
+        "body": "siostrzeniec 7 lat. zamiast oglądać razem bajki, gramy crocky. jego śmiech kiedy ząb 'gryzie' jest najlepszy.",
+        "verified": true,
+        "date": "13.05.2026"
+      },
+      {
+        "name": "natalia w.",
+        "age": 35,
+        "tag": "logopeda",
+        "stars": 5,
+        "title": "u mnie w gabinecie.",
+        "body": "używam jako nagrody po ćwiczeniach z dziećmi. motywuje do pracy nad mową, dzieci chcą szybko skończyć żeby zagrać. genialne.",
+        "verified": true,
+        "date": "06.05.2026"
+      },
+      {
+        "name": "kuba s.",
+        "age": 27,
+        "stars": 5,
+        "title": "imprezy ze znajomymi.",
+        "body": "zaprosiłem znajomych, wyciągnąłem crocky. wszyscy w to grali do północy. dobry icebreaker, śmiech gwarantowany.",
+        "verified": true,
+        "date": "20.04.2026"
+      },
+      {
+        "name": "ola j.",
+        "age": 31,
+        "stars": 5,
+        "title": "prezent na 5 urodziny.",
+        "body": "kupiłam synowi na 5 urodziny. od miesiąca codziennie gramy. on czeka aż wrócę z pracy żeby zagrać. dobra inwestycja w nasz czas.",
+        "verified": true,
+        "date": "27.04.2026"
+      },
+      {
+        "name": "marek p.",
+        "age": 39,
+        "stars": 5,
+        "title": "dziadek z wnukami.",
+        "body": "wnuki przyjeżdżają na weekend. crocky to standard. dzieci 6 i 9 lat, oboje uwielbiają. też ja gram, też się boję ząb chwyci.",
+        "verified": true,
+        "date": "11.05.2026"
+      },
+      {
+        "name": "magdalena t.",
+        "age": 28,
+        "tag": "ciocia",
+        "stars": 4,
+        "title": "fajne ale baterie szybko schodzą.",
+        "body": "siostrzeniec uwielbia, używamy często. minus, baterie schodzą szybko, kupiłam już 2 zestawy. zalecam akumulatorki.",
+        "verified": true,
+        "date": "18.05.2026"
+      },
+      {
+        "name": "wojtek a.",
+        "age": 34,
+        "stars": 4,
+        "title": "fajna gra, krótka.",
+        "body": "partia 3 minuty. dobre na szybką rozrywke z dzieckiem, ale nie na długie wieczory. plus minus.",
+        "verified": true,
+        "date": "01.05.2026"
+      },
+      {
+        "name": "ela b.",
+        "age": 36,
+        "stars": 4,
+        "title": "dzieci zachwycone, plastik kruchy.",
+        "body": "syn rzucił crocky raz, zęby się trochę uszkodziły. obsługa wymieniła ale jakość plastiku mogłaby być solidniejsza.",
+        "verified": true,
+        "date": "23.04.2026"
+      },
+      {
+        "name": "piotr k.",
+        "age": 31,
+        "stars": 3,
+        "title": "raczej dla młodszych dzieci.",
+        "body": "kupiłem dla syna 9 lat, po 2 razach mu się znudziło. lepiej dla dzieci 4-7. dla starszych to za prosta gra.",
+        "verified": true,
+        "date": "14.05.2026"
+      },
+      {
+        "name": "iga r.",
+        "age": 33,
+        "stars": 3,
+        "title": "fun na chwilę.",
+        "body": "pierwsze dni gramy codziennie, potem coraz rzadziej. mechanika prosta, szybko się wyczerpuje. dla okazjonalnych imprez ok.",
+        "verified": true,
+        "date": "05.05.2026"
+      },
+      {
+        "name": "rafał d.",
+        "age": 28,
+        "stars": 2,
+        "title": "po miesiącu się zepsuł.",
+        "body": "po miesiącu używania mechanizm krokodyla przestał działać poprawnie. obsługa odpowiedziała, wymienili, ale jakość mnie zmartwiła.",
+        "verified": true,
+        "date": "16.04.2026"
+      }
+    ]
+  },
+
+  "loomo": {
+    "averageRating": 4.69,
+    "totalCount": 51,
+    "distribution": { "5": 40, "4": 8, "3": 2, "2": 1, "1": 0 },
+    "items": [
+      {
+        "name": "ola w.",
+        "age": 26,
+        "tag": "praca zdalna",
+        "stars": 5,
+        "title": "minimalistyczny i hipnotyzujący.",
+        "body": "loomo leży obok klawiatury. przekręcam go między tasksami, patrzę jak elementy się przesuwają. medytacja w skrócie.",
+        "verified": true,
+        "date": "20.03.2026"
+      },
+      {
+        "name": "piotr m.",
+        "age": 38,
+        "tag": "stres",
+        "stars": 5,
+        "title": "wygląda jak rzeźba, działa jak fidget.",
+        "body": "kupiłem dla designu. okazało się, że używam codziennie. element architektoniczny w domu plus narzędzie do uspokojenia. dwie rzeczy.",
+        "verified": true,
+        "date": "08.03.2026"
+      },
+      {
+        "name": "marta j.",
+        "age": 31,
+        "stars": 5,
+        "title": "loomo to terapia.",
+        "body": "patrzenie jak kręci się jest jak medytacja. używam wieczorem, po ciężkim dniu. drewno jest ciepłe, mechanizm cichy.",
+        "verified": true,
+        "date": "22.02.2026"
+      },
+      {
+        "name": "krzysiek d.",
+        "age": 33,
+        "stars": 4,
+        "title": "subtelny i ładny.",
+        "body": "fajna alternatywa dla plastikowych fidget toys. mam jeden minus, mechanizm jest trochę luźny po miesiącu intensywnego używania.",
+        "verified": true,
+        "date": "10.02.2026"
+      },
+      {
+        "name": "agata p.",
+        "age": 29,
+        "tag": "projektantka",
+        "stars": 5,
+        "title": "obiekt designu plus terapia.",
+        "body": "loomo na moim biurku to obiekt designerski. dodatkowo pełni funkcję terapeutyczną. przekręcam między pracą, patrzę jak elementy płyną. piękny.",
+        "verified": true,
+        "date": "14.05.2026"
+      },
+      {
+        "name": "marcin r.",
+        "age": 35,
+        "tag": "ADHD",
+        "stars": 5,
+        "title": "lepsze niż spinner.",
+        "body": "miałem 5 różnych spinnerów. loomo pobił wszystkie. wygląda dorosło, działa hipnotyzująco. używam codziennie w pracy.",
+        "verified": true,
+        "date": "26.04.2026"
+      },
+      {
+        "name": "natalia k.",
+        "age": 28,
+        "tag": "stres",
+        "stars": 5,
+        "title": "mój wieczorny rytuał.",
+        "body": "wieczorem siadam na kanapie, włączam podcast, kręcę loomo. 30 minut medytacji rękami. głowa się resetuje.",
+        "verified": true,
+        "date": "09.05.2026"
+      },
+      {
+        "name": "filip s.",
+        "age": 32,
+        "tag": "programista",
+        "stars": 5,
+        "title": "między fragmentami kodu.",
+        "body": "siedzę 10 godzin przed monitorem. loomo to moja pauza między funkcjami. drewno ciepłe, mechanizm cichy, pomaga się zresetować.",
+        "verified": true,
+        "date": "01.05.2026"
+      },
+      {
+        "name": "ela m.",
+        "age": 41,
+        "tag": "menedżerka",
+        "stars": 5,
+        "title": "ozdoba na biurku.",
+        "body": "klienci pytają co to. moja odpowiedź: 'to mój sposób na koncentrację'. działa, wygląda dobrze, jest zaczepem do rozmowy.",
+        "verified": true,
+        "date": "20.05.2026"
+      },
+      {
+        "name": "kacper o.",
+        "age": 24,
+        "tag": "student",
+        "stars": 5,
+        "title": "uczę się przy loomo.",
+        "body": "kupiłem do biurka studenckiego. przekręcam podczas powtórek przed egzaminem, pomaga utrzymać uwagę. inwestycja w sesję.",
+        "verified": true,
+        "date": "12.05.2026"
+      },
+      {
+        "name": "magda r.",
+        "age": 37,
+        "tag": "stres",
+        "stars": 5,
+        "title": "kupiłam też mężowi.",
+        "body": "ja w salonie, mąż w biurze. oboje mamy loomo. wieczorami siadamy razem, kręcimy każde swoje. dziwnie satysfakcjonujące.",
+        "verified": true,
+        "date": "27.04.2026"
+      },
+      {
+        "name": "tomek d.",
+        "age": 39,
+        "stars": 5,
+        "title": "drewno premium.",
+        "body": "wykonanie pierwsza klasa. drewno ciepłe, mechanizm precyzyjny, ruchy płynne. obiekt warty swojej ceny.",
+        "verified": true,
+        "date": "06.05.2026"
+      },
+      {
+        "name": "ania b.",
+        "age": 30,
+        "tag": "joga",
+        "stars": 5,
+        "title": "po jodze loomo.",
+        "body": "rano joga, wieczorem loomo. dwie różne medytacje, jedna ciałem, druga rękami. cały dzień się równa.",
+        "verified": true,
+        "date": "18.05.2026"
+      },
+      {
+        "name": "klaudia t.",
+        "age": 34,
+        "stars": 4,
+        "title": "ładny ale głośniejszy niż myślałam.",
+        "body": "mechanizm wydaje delikatne klik podczas kręcenia. w cichym pomieszczeniu zauważalny. nie przeszkadza ale spodziewałam się ciszy.",
+        "verified": true,
+        "date": "16.05.2026"
+      },
+      {
+        "name": "andrzej w.",
+        "age": 47,
+        "stars": 4,
+        "title": "fajny, drogi.",
+        "body": "działa świetnie, drewno piękne. ale 180 zł to dużo. funkcjonalnie 5, cena 3, średnia 4. dla kogoś z kasą polecam.",
+        "verified": true,
+        "date": "08.05.2026"
+      },
+      {
+        "name": "iga p.",
+        "age": 27,
+        "stars": 4,
+        "title": "ładny, ale po tygodniu mniej używam.",
+        "body": "pierwsze dni kręciłam codziennie. teraz głównie ozdoba na biurku, rzadziej biorę do ręki. może to mój typ uwagi nie ten.",
+        "verified": true,
+        "date": "30.04.2026"
+      },
+      {
+        "name": "michał t.",
+        "age": 31,
+        "stars": 3,
+        "title": "spodziewałem się więcej.",
+        "body": "po recenzjach myślałem że to coś niesamowitego. działa, ale dla mnie po 2 tygodniach efekt minął. teraz stoi na półce jako ozdoba.",
+        "verified": true,
+        "date": "22.05.2026"
+      },
+      {
+        "name": "ola s.",
+        "age": 29,
+        "stars": 3,
+        "title": "ok, ale za drogi.",
+        "body": "działa zgodnie z opisem, ale 180 zł za drewniany fidget to dużo. dla kogoś z większym budżetem polecam, dla studenta nie warto.",
+        "verified": true,
+        "date": "13.05.2026"
+      },
+      {
+        "name": "rafał k.",
+        "age": 38,
+        "stars": 2,
+        "title": "mechanizm po 2 miesiącach się rozluźnił.",
+        "body": "świeży loomo działał idealnie. po 2 miesiącach codziennego używania mechanizm trochę luźny, kręci się nierówno. szkoda za tę cenę.",
+        "verified": true,
+        "date": "21.04.2026"
+      }
+    ]
+  }
+}

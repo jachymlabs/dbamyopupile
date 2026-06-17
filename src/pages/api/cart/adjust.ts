@@ -5,7 +5,7 @@ import {
   buildResponse,
   ORDER_FRAGMENT,
 } from '@/lib/vendure-api';
-import { withCartGuards, parseCartBody } from '@/lib/cart-helpers';
+import { withCartGuards, parseCartBody, reconcileCart, isBonusLineId } from '@/lib/cart-helpers';
 
 const ADJUST = `mutation Adjust($lineId: ID!, $quantity: Int!) {
   adjustOrderLine(orderLineId: $lineId, quantity: $quantity) {
@@ -37,6 +37,12 @@ export const POST: APIRoute = withCartGuards(
       return buildResponse({ order: null, error: 'Quantity must be between 1 and 99' });
     }
 
+    // Blok: ebook gratis nie może być zmieniany manualnie — qty zawsze 1,
+    // zarządzane przez reconcileBonus na bazie trigger qty.
+    if (await isBonusLineId(lineId, token)) {
+      return buildResponse({ order: null, error: 'Ebook gratis ma stałą ilość 1' });
+    }
+
     let { data, newToken } = await vendureQuery(
       ADJUST,
       { lineId, quantity: qty },
@@ -58,6 +64,11 @@ export const POST: APIRoute = withCartGuards(
     }
 
     if (result?.__typename === 'Order') {
+      // Reconcile po adjust — jeśli user zmienił qty Moodles, bonus + free shipping
+      // mogą wymagać dodania lub usunięcia.
+      const synced = await reconcileCart(result, activeToken);
+      result = synced.order || result;
+      activeToken = synced.activeToken || activeToken;
       return buildResponse({ order: result }, activeToken);
     }
     return buildResponse({ order: null, error: result?.message }, activeToken);

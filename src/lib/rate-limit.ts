@@ -75,13 +75,20 @@ function getLimiter(route: string, max: number, windowMs: number): Ratelimit | n
 const MAX_ENTRIES = 10_000;
 const hits = new Map<string, { count: number; resetAt: number }>();
 
-// Cleanup stale entries every 5 minutes
-setInterval(() => {
-    const now = Date.now();
-    for (const [key, val] of hits) {
-        if (now >= val.resetAt) hits.delete(key);
-    }
-}, 5 * 60 * 1000);
+// LOW-2: Cleanup stale entries every 5 minutes — TYLKO w dev / non-prod.
+// W serverless (Vercel prod) lambda hibernuje, setInterval nie ma sensu i
+// trzyma event-loop ref do timera (tutaj defensywnie .unref() jako fallback).
+// W produkcji UPSTASH_REDIS_REST_URL/TOKEN sa ustawione → in-memory check
+// prawie nigdy nie pali, MAX_ENTRIES = 10k chronni przed leak.
+if (!import.meta.env.PROD) {
+    const cleanup = setInterval(() => {
+        const now = Date.now();
+        for (const [key, val] of hits) {
+            if (now >= val.resetAt) hits.delete(key);
+        }
+    }, 5 * 60 * 1000);
+    cleanup.unref?.();
+}
 
 function inMemoryCheck(
     ip: string,

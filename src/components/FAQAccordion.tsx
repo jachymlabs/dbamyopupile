@@ -71,7 +71,7 @@ function AccordionItem({
   );
 }
 
-export default function FAQAccordion({ items, title = 'Czesto zadawane pytania' }: Props) {
+export default function FAQAccordion({ items, title = 'Często zadawane pytania' }: Props) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   const handleToggle = useCallback((index: number) => {

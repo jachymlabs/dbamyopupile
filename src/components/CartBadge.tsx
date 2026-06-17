@@ -15,7 +15,8 @@ export default function CartBadge({ initialQuantity = 0 }: Props) {
     <button
       type="button"
       onClick={openCart}
-      className="relative flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-900 transition-colors min-w-[44px] min-h-[44px] justify-center"
+      style={{ cursor: 'pointer' }}
+      className="relative flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-900 transition-colors min-w-[44px] min-h-[44px] justify-center cursor-pointer"
       aria-label={`Koszyk${quantity > 0 ? `, ${quantity} produktów` : ''}`}
     >
       <svg

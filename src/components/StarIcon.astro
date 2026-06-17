@@ -1,0 +1,58 @@
+---
+/**
+ * Reusable SVG star icon — bypassuje Material Symbols FILL axis issues które
+ * konsekwentnie nie renderowały filled state'u na produkcji.
+ *
+ * Props:
+ *  - kind: 'full' | 'half' | 'empty' (default 'full')
+ *  - size: number w px (default 18)
+ *  - id: unique identifier dla half-star linearGradient (wymagane przy half)
+ *  - color: override gold dla full (default #F5B544)
+ *  - emptyColor: override gray dla empty (default #D6CEBE)
+ *
+ * Użycie:
+ *   <StarIcon kind="full" size={20} />
+ *   <StarIcon kind="half" size={18} id="rev-3-half" />
+ *   <StarIcon kind="empty" />
+ */
+
+interface Props {
+  kind?: 'full' | 'half' | 'empty';
+  size?: number;
+  id?: string;
+  color?: string;
+  emptyColor?: string;
+}
+
+const {
+  kind = 'full',
+  size = 18,
+  id = `star-${Math.random().toString(36).slice(2, 8)}`,
+  color = '#F5B544',
+  emptyColor = '#D6CEBE',
+} = Astro.props;
+
+const PATH = 'M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z';
+---
+
+{kind === 'full' && (
+  <svg viewBox="0 0 24 24" width={size} height={size} fill={color} xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d={PATH} />
+  </svg>
+)}
+{kind === 'half' && (
+  <svg viewBox="0 0 24 24" width={size} height={size} xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs>
+      <linearGradient id={id}>
+        <stop offset="50%" stop-color={color} />
+        <stop offset="50%" stop-color={emptyColor} />
+      </linearGradient>
+    </defs>
+    <path d={PATH} fill={`url(#${id})`} />
+  </svg>
+)}
+{kind === 'empty' && (
+  <svg viewBox="0 0 24 24" width={size} height={size} fill={emptyColor} xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d={PATH} />
+  </svg>
+)}

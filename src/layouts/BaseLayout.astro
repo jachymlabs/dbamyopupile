@@ -3,6 +3,7 @@ import PromoBar from '@/components/PromoBar.astro';
 import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
 import MetaPixel from '@/components/MetaPixel.astro';
+import BehaviorPixel from '@/components/BehaviorPixel.astro';
 import CookieConsent from '@/components/CookieConsent.astro';
 import CartDrawer from '@/components/CartDrawer';
 import { getStoreConfig } from '@/lib/store-config';
@@ -18,6 +19,7 @@ interface Props {
   noindex?: boolean;
   hideCart?: boolean;
   hideFooter?: boolean;
+  hideHeader?: boolean;
 }
 
 const config = await getStoreConfig(Astro.request);
@@ -31,21 +33,31 @@ const {
   noindex = false,
   hideCart = false,
   hideFooter = false,
+  hideHeader = false,
 } = Astro.props;
 
 const siteName = config.storeName;
-const fullTitle = title ? `${title} | ${siteName}` : `${siteName} — Sklep internetowy`;
-const canonicalUrl = canonical || Astro.url.href;
+// Smart title: nie dokładaj sufiksu jeśli strona już go ma (np. "Regulamin sklepu ZmyjSmugi.pl").
+// Zapobiega duplikatom typu "X | ZmyjSmugi.pl | ZmyjSmugi.pl" w title.
+const fullTitle = title
+  ? (title.includes(siteName) ? title : `${title} | ${siteName}`)
+  : `${siteName} — Sklep internetowy`;
+// Canonical bez query params — Google indexer nie traktuje wariantów ?utm_*
+// jako duplicate content. PUBLIC_SITE_URL daje stabilny origin.
+const canonicalUrl = canonical || `${(import.meta.env.PUBLIC_SITE_URL || 'https://dbamyopupile.pl').replace(/\/$/, '')}${Astro.url.pathname}`;
 const siteUrl = (import.meta.env.PUBLIC_SITE_URL || 'http://localhost:4321').trim();
-const ogImageUrl = ogImage ? (ogImage.startsWith('http') ? ogImage : `${siteUrl}${ogImage}`) : undefined;
+// OG image: własny ogImage albo brand fallback (logo z tłem). Fallback sprawia
+// że KAŻDA strona (też artykuły poradnika bez własnego obrazka) ma og:image
+// → social share pokazuje brand zamiast pustej karty.
+const OG_FALLBACK = '/logo/dbamyopupilekwadratztem.png';
+const ogImageRaw = ogImage || OG_FALLBACK;
+const ogImageUrl = ogImageRaw.startsWith('http') ? ogImageRaw : `${siteUrl}${ogImageRaw}`;
 const freeShippingThreshold = config.freeShippingThreshold;
 
-// CAPI: PageView (server-side) — consent-gated
+// CAPI: PageView (server-side)
 // eventId shared with browser pixel for deduplication
 const pageViewEventId = generateEventId();
-const cookies = Astro.request.headers.get('cookie') || '';
-const hasConsent = cookies.includes('cookie_consent=accepted');
-if (hasConsent && config.metaPixelId) {
+if (config.metaPixelId) {
   const userData = await buildUserData(Astro.request);
   sendCAPIEvent({
     event_name: 'PageView',
@@ -57,59 +69,26 @@ if (hasConsent && config.metaPixelId) {
   }, config.metaDatasetId);
 }
 
-// ============================================================
-// H9 (Sprint 2): Content Security Policy — ENFORCED
-// ============================================================
-// Sprint 1 deploył w trybie Report-Only (tylko log w console). Sprint 2:
-// przełączamy na enforced — przeglądarka BLOKUJE zasoby spoza whitelist.
-// Sklep nie jest jeszcze produkcyjny, więc ryzyko OK.
-//
-// Po deploy: monitoruj DevTools console. Każdy "Refused to load/execute"
-// = należy dodać domenę do whitelist (NIE wracać do Report-Only).
-//
-// Brak `report-uri` — violations widoczne tylko w przeglądarce
-// (console: "Refused to ... because it violates CSP directive ...").
-//
-// Hosty wpisane na podstawie obecnego stanu:
-//   - script: connect.facebook.net (pixel), geowidget.inpost.pl (geowidget SDK)
-//   - style/font: fonts.googleapis.com / fonts.gstatic.com
-//   - img: data:, https: (Vendure assets, Meta tracking pixel beacons)
-//   - frame: secure.payu.com (PayU widgets), geowidget.inpost.pl (mapa)
-//   - form-action: secure.payu.com (PayU redirect/PAYPO)
-//   - connect: facebook (CAPI/pixel beacon), inpost API, Vendure asset host
-//
-// 'unsafe-inline' w script-src i style-src konieczne — używamy
-// <script is:inline define:vars={...}> (checkout, layout) i Tailwind
-// generuje arbitrary inline styles. Future: nonce-based + remove unsafe.
-const csp = [
-  "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://connect.facebook.net https://geowidget.inpost.pl",
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "font-src 'self' https://fonts.gstatic.com data:",
-  "img-src 'self' data: blob: https:",
-  "connect-src 'self' https://connect.facebook.net https://www.facebook.com https://geowidget.inpost.pl https://api-shipx-pl.easypack24.net",
-  "frame-src 'self' https://secure.payu.com https://secure.snd.payu.com https://merch-prod.snd.payu.com https://geowidget.inpost.pl",
-  "form-action 'self' https://secure.payu.com https://secure.snd.payu.com",
-  "frame-ancestors 'none'",
-  "base-uri 'self'",
-  "object-src 'none'",
-].join('; ');
-
-Astro.response.headers.set('Content-Security-Policy', csp);
+// CSP + bezpieczne security headers ustawiane w `src/middleware.ts`
+// (Vercel SSR adapter ignoruje response.headers.set z page frontmatter).
 ---
 
 <!doctype html>
 <html lang="pl">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    {/* viewport-fit=cover: iOS safe-area-inset działa (notch / home indicator).
+        interactive-widget=resizes-content: Chrome mobile — gdy address bar
+        collapses/expands, layout viewport TEŻ się resize'uje. Bez tego sticky
+        elementy "ucinały" się + na dole pojawiała się dziura, bo layout
+        viewport nie nadążał za visual viewport. */}
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content" />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonicalUrl} />
     {noindex && <meta name="robots" content="noindex, nofollow" />}
-    <link rel="icon" type="image/png" href="/logo/dbamyopupilekwadratbezta.png" />
+    <link rel="icon" type="image/png" href="/logo/dbamyopupilekwadratztem.png" />
     <link rel="apple-touch-icon" href="/logo/dbamyopupilekwadratztem.png" />
-    <link rel="preload" as="image" href="/logo/dbamyopupileprostokatbezta.png" fetchpriority="high" />
 
     <!-- Open Graph -->
     <meta property="og:type" content={ogType} />
@@ -128,43 +107,90 @@ Astro.response.headers.set('Content-Security-Policy', csp);
     <!-- Preconnect to Vendure asset server -->
     <link rel="preconnect" href={import.meta.env.VENDURE_API_URL?.replace('/shop-api', '') || 'http://localhost:3001'} />
 
-    <!-- Inter font (non-blocking: preload + onload swap) -->
+    <!-- Outfit + Material Symbols Outlined (Stitch design system) — non-blocking: preload + onload swap -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="preload"
       as="style"
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap"
       onload="this.onload=null;this.rel='stylesheet'"
     />
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" /></noscript>
-
-    <!-- Anti-FOUC: ukryj PromoBar od razu jeśli był wcześniej zamknięty (zapobiega skoku po hydratacji) -->
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" /></noscript>
+    <!-- Material Symbols z display=block — icons invisible aż się załadują (max 3s), żeby NIE rendrować się jako tekst który zmienia layout -->
+    <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block"
+      onload="this.onload=null;this.rel='stylesheet'"
+    />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" /></noscript>
+    <!-- Anti-FOUC dla material-symbols: ukryj ikony aż się załadują font (zapobiega flicker "photo_camera" → camera icon) -->
+    <style is:inline>
+      .material-symbols-outlined {
+        font-family: 'Material Symbols Outlined';
+        font-weight: normal;
+        font-style: normal;
+        font-size: inherit;
+        line-height: 1;
+        letter-spacing: normal;
+        text-transform: none;
+        display: inline-block;
+        white-space: nowrap;
+        word-wrap: normal;
+        direction: ltr;
+        -webkit-font-feature-settings: 'liga';
+        font-feature-settings: 'liga';
+        -webkit-font-smoothing: antialiased;
+        font-display: block;
+        /* Zanim font się załaduje — tekst niewidoczny żeby nie flicker'ował layout */
+        visibility: hidden;
+      }
+      .fonts-loaded .material-symbols-outlined { visibility: visible; }
+    </style>
     <script is:inline>
-      (function () {
-        try {
-          if (localStorage.getItem('promo-dismissed-promo-bar') === '1') {
-            document.documentElement.classList.add('promo-dismissed');
-          }
-        } catch (e) {}
-      })();
+      // Mark .fonts-loaded gdy Material Symbols się załaduje
+      if ('fonts' in document) {
+        document.fonts.load('24px "Material Symbols Outlined"').then(function () {
+          document.documentElement.classList.add('fonts-loaded');
+        }).catch(function () {
+          setTimeout(function () { document.documentElement.classList.add('fonts-loaded'); }, 3000);
+        });
+      } else {
+        document.documentElement.classList.add('fonts-loaded');
+      }
+
+      // Auto-hide PromoBar + Header na DESKTOP (≥768px) przy scroll down,
+      // show przy scroll up. Na mobile zostają widoczne (mniej miejsca jest
+      // krytyczne, ale na PC schowanie daje content więcej oddechu).
+      // Auto-hide nav JS DISABLED — user pref: nav ZAWSZE widoczny na PC.
+      // (Kod zostaje commented out na wypadek powrotu do auto-hide w przyszłości.)
     </script>
 
-    <!-- Meta Pixel (consent-gated, ID from Channel config) -->
+    {/* Auto-hide nav/promo DISABLED — user pref: nav zawsze widoczny na PC żeby
+        klient mógł kliknąć koszyk w każdej chwili. Style + JS poniżej zostawione
+        w pliku ale nieaktywne (selectory .nav-hidden nigdy nie są dodawane). */}
+
+    {/* PromoBar nie jest już dismissible — anti-FOUC script usunięty */}
+
+    <!-- Meta Pixel (ID from Channel config) -->
     <MetaPixel pixelId={config.metaPixelId} pageViewEventId={pageViewEventId} />
 
     <!-- Extra head content -->
     <slot name="head" />
   </head>
-  <body data-free-shipping={freeShippingThreshold}>
-    {!hideCart && config.promoBarText && <PromoBar text={config.promoBarText} href={config.promoBarLink || '/#produkty'} linkText="Kup teraz" />}
-    <Header storeName={config.storeName} hideCart={hideCart} />
+  <body data-free-shipping={freeShippingThreshold} class={!hideHeader ? 'has-fixed-nav' : ''}>
+    {/* PromoBar — zawsze widoczny, rotujące wiadomości (4 domyślne brand messages) */}
+    {!hideHeader && <PromoBar />}
+    {!hideHeader && <Header storeName={config.storeName} hideCart={hideCart} />}
     <main>
       <slot />
     </main>
     {!hideFooter && <Footer storeName={config.storeName} storeTagline={config.storeTagline} contactEmail={config.contactEmail} />}
     {!hideCart && <CartDrawer client:only="react" />}
     <CookieConsent />
+    {/* Behawioralny pixel (Warstwa 1) — osobny od MetaPixel, same-origin reverse-proxy */}
+    <BehaviorPixel />
     <script is:inline>
     (function() {
       var orig = document.title;

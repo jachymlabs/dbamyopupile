@@ -7,7 +7,7 @@ interface Props {
   storeName?: string;
   hideCart?: boolean;
 }
-const { storeName = 'dbamyopupile.pl', hideCart = false } = Astro.props;
+const { storeName = 'dbamyopupile', hideCart = false } = Astro.props;
 
 let cartQuantity = 0;
 try {
@@ -27,7 +27,7 @@ interface NavLink {
 }
 const navLinks: NavLink[] = [
   { href: '/', label: 'Strona główna', match: (p) => p === '/' },
-  { href: '/produkty/bryza', label: 'Bryza', match: (p) => p.startsWith('/produkty/bryza') },
+  { href: '/sklep', label: 'Sklep', match: (p) => p === '/sklep' || p.startsWith('/produkty') },
   { href: '/kontakt', label: 'Kontakt', match: (p) => p.startsWith('/kontakt') },
 ];
 ---
@@ -36,7 +36,7 @@ const navLinks: NavLink[] = [
   <div class="dop-header-inner">
     <!-- Logo -->
     <a href="/" class="dop-logo" aria-label={storeName}>
-      <img src="/logo/dbamyopupileprostokatbezta.png" alt={storeName} width="160" height="44" fetchpriority="high" decoding="sync" />
+      <img src="/logo/dbamyopupileprostokatbezta.png" alt={storeName} class="dop-logo-img" width="120" height="49" />
     </a>
 
     <!-- Desktop nav -->
@@ -78,69 +78,345 @@ const navLinks: NavLink[] = [
       </button>
     </div>
   </div>
-
-  <!-- Mobile drawer -->
-  <div class="dop-drawer-backdrop" id="dop-drawer-backdrop" aria-hidden="true"></div>
-  <aside
-    class="dop-drawer"
-    id="dop-mobile-drawer"
-    role="dialog"
-    aria-modal="true"
-    aria-label="Menu mobilne"
-    aria-hidden="true"
-  >
-    <div class="dop-drawer-head">
-      <a href="/" class="dop-drawer-logo">
-        <img src="/logo/dbamyopupileprostokatbezta.png" alt={storeName} width="140" height="38" />
-      </a>
-      <button type="button" class="dop-drawer-close" aria-label="Zamknij menu" id="dop-drawer-close">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="18" y1="6" x2="6" y2="18"/>
-          <line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-      </button>
-    </div>
-
-    <nav class="dop-drawer-nav" aria-label="Menu mobilne">
-      {navLinks.map((link) => {
-        const active = link.match(path);
-        return (
-          <a
-            href={link.href}
-            class={`dop-drawer-link${active ? ' is-active' : ''}`}
-            aria-current={active ? 'page' : undefined}
-          >
-            <span class="dop-drawer-link-label">
-              {link.label}
-              {link.badge && <span class="dop-drawer-link-badge">{link.badge}</span>}
-            </span>
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="9 18 15 12 9 6"/>
-            </svg>
-          </a>
-        );
-      })}
-    </nav>
-
-    <div class="dop-drawer-contact">
-      <p class="dop-drawer-contact-label">Kontakt</p>
-      <a href="tel:577723506" class="dop-drawer-contact-link">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.33 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/>
-        </svg>
-        577 723 506
-      </a>
-      <a href="mailto:sklep@dbamyopupile.pl" class="dop-drawer-contact-link">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-          <polyline points="22,6 12,13 2,6"/>
-        </svg>
-        sklep@dbamyopupile.pl
-      </a>
-    </div>
-  </aside>
 </header>
 
+<!-- Mobile drawer (root-level, NIE w środku <header> — header tworzy sticky stacking
+     context z z-index 90, drawer wewnątrz nie eskapuje globalnie i wisiał pod innymi
+     fixed elementami. Tutaj jest na root i jego z-index 110 jest naprawdę globalny). -->
+<div class="dop-drawer-backdrop" id="dop-drawer-backdrop" aria-hidden="true"></div>
+<aside
+  class="dop-drawer"
+  id="dop-mobile-drawer"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Menu mobilne"
+  aria-hidden="true"
+>
+  <div class="dop-drawer-head">
+    <a href="/" class="dop-drawer-logo">
+      <img src="/logo/dbamyopupileprostokatbezta.png" alt="dbamyopupile" class="dop-logo-img" width="120" height="49" />
+    </a>
+    <button type="button" class="dop-drawer-close" aria-label="Zamknij menu" id="dop-drawer-close">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <nav class="dop-drawer-nav" aria-label="Menu mobilne">
+    {navLinks.map((link) => {
+      const active = link.match(path);
+      return (
+        <a
+          href={link.href}
+          class={`dop-drawer-link${active ? ' is-active' : ''}`}
+          aria-current={active ? 'page' : undefined}
+        >
+          <span class="dop-drawer-link-label">
+            {link.label}
+            {link.badge && <span class="dop-drawer-link-badge">{link.badge}</span>}
+          </span>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </a>
+      );
+    })}
+  </nav>
+
+  <div class="dop-drawer-contact">
+    <p class="dop-drawer-contact-label">Kontakt</p>
+    <a href="tel:577723506" class="dop-drawer-contact-link">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.33 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/>
+      </svg>
+      577 723 506
+    </a>
+    <a href="mailto:sklep@dbamyopupile.pl" class="dop-drawer-contact-link">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+        <polyline points="22,6 12,13 2,6"/>
+      </svg>
+      sklep@dbamyopupile.pl
+    </a>
+  </div>
+</aside>
+
+
+<style is:global>
+  /* Header fixed top:36px (pod PromoBar). Solid background bez backdrop-filter
+     na obu viewportach — blur podczas scroll na Chrome desktop re-renderował
+     się dla każdej klatki co dawało wizualnie "rozciąganie" / flicker baru. */
+  .dop-header {
+    position: fixed;
+    /* top = PromoBar height = 36px (mobile) + safe-area (iPhone notch).
+       Bez safe-area Header lądował BEZPOŚREDNIO pod notchem na iPhone X+,
+       overlap z PromoBar. */
+    top: calc(36px + env(safe-area-inset-top, 0px));
+    left: 0;
+    right: 0;
+    z-index: 90;
+    background: #FFFCF7;
+    border-bottom: 1px solid var(--brand-border);
+    /* Top shrink podczas scroll — sync z PromoBar shrunk height (38→30px) */
+    transition: top 240ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  /* Mobile: solid bg bez backdrop-filter — iOS Safari rendering glassmorphismu
+     na sticky podczas scrolla powoduje że content z tyłu prześwituje przez
+     header → wygląda jakby pasek był ucięty / cienki. Solid #FFFCF7 = clean. */
+  @media (max-width: 767.98px) {
+    .dop-header {
+      background: #FFFCF7;
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+  }
+  @media (min-width: 768px) {
+    .dop-header { top: calc(38px + env(safe-area-inset-top, 0px)); }
+    /* Desktop scroll shrink — TYLKO header top podąża za PromoBar (38→30).
+       Padding-y i logo-height shrink usunięte bo powodowały recompute
+       layoutu flex container'a (nav items recentered) i micro-shift w bok,
+       który user odbierał jako "animacja w lewo zamiast w górę". */
+    body.is-scrolled .dop-header { top: calc(30px + env(safe-area-inset-top, 0px)); }
+  }
+  /* USER PREF: Header zawsze widoczny — scroll-hide wyłączony
+     .dop-header.is-hidden { transform: translateY(-100%); } */
+
+  .dop-header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 10px 16px;
+  }
+  @media (min-width: 768px) { .dop-header-inner { padding: 12px 32px; } }
+
+  .dop-logo { display: inline-flex; align-items: center; }
+  .dop-logo-img {
+    height: 38px;
+    width: auto;
+    display: block;
+  }
+  @media (min-width: 768px) { .dop-logo-img { height: 44px; } }
+
+  /* Desktop nav */
+  .dop-nav-desktop {
+    display: none;
+    flex: 1 1 auto;
+    justify-content: center;
+    gap: 24px;
+  }
+  @media (min-width: 900px) { .dop-nav-desktop { display: flex; } }
+  .dop-nav-link {
+    color: var(--brand-heading);
+    font-family: 'Outfit', sans-serif;
+    font-weight: 500;
+    font-size: 14.5px;
+    letter-spacing: 0.01em;
+    text-decoration: none;
+    padding: 8px 14px;
+    border-radius: 999px;
+    transition: color 200ms ease, background-color 200ms ease;
+  }
+  .dop-nav-link:hover { color: var(--brand-primary); }
+  .dop-nav-link.is-active { color: var(--brand-primary-hover); background: var(--brand-primary-soft); }
+  .dop-nav-badge {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 2px 6px;
+    background: #FF7A66;
+    color: #FFFFFF;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    border-radius: 4px;
+  }
+
+  .dop-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  .dop-cart-slot { display: inline-flex; align-items: center; }
+
+  /* Hamburger button */
+  .dop-hamburger {
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    background: transparent;
+    border: 1px solid var(--brand-border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 200ms ease, border-color 200ms ease;
+  }
+  .dop-hamburger:hover { background: var(--brand-primary-soft); border-color: var(--brand-primary); }
+  .dop-hamburger span {
+    display: block;
+    width: 18px;
+    height: 2px;
+    background: var(--brand-heading);
+    border-radius: 2px;
+    transition: transform 240ms ease, opacity 200ms ease;
+  }
+  .dop-hamburger[aria-expanded="true"] span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .dop-hamburger[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+  .dop-hamburger[aria-expanded="true"] span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+  @media (min-width: 900px) { .dop-hamburger { display: none; } }
+
+  /* Drawer backdrop */
+  .dop-drawer-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(42,45,39,0.55);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 280ms ease, visibility 0s linear 280ms;
+  }
+  .dop-drawer-backdrop.is-open {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 280ms ease, visibility 0s linear 0s;
+  }
+
+  /* Drawer panel —
+     - top: 0 + height: 100dvh: pełen viewport, dvh handle iOS Safari chrome
+     - overscroll-behavior: contain: blokuje iOS rubber-band leak (źródło "poświaty"
+       na górze/dole — body bg pokazywało się przez krawędzie scrolla)
+     - box-shadow tylko X offset bez Y blur leak: 0 0 → -8px 0 z mniejszym blur
+     - safe-area-inset padding wewnątrz contact section (iPhone home indicator) */
+  .dop-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100vh; /* fallback */
+    height: 100dvh;
+    width: 86vw;
+    max-width: 360px;
+    background: #FFFFFF;
+    box-shadow: none;
+    z-index: 110;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 320ms cubic-bezier(0.32,0.72,0.20,1), box-shadow 320ms ease, visibility 0s linear 320ms;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    visibility: hidden;
+  }
+  .dop-drawer.is-open {
+    transform: translateX(0);
+    /* Shadow tylko po lewej, mniejszy blur (40px → 18px) żeby nie rozlewało się
+       na górę/dół. Bez Y offset, bez bleed past viewport edges. */
+    box-shadow: -8px 0 18px rgba(15,22,32,0.14);
+    visibility: visible;
+    transition: transform 320ms cubic-bezier(0.32,0.72,0.20,1), box-shadow 320ms ease, visibility 0s linear 0s;
+  }
+
+  .dop-drawer-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--brand-border);
+  }
+  .dop-drawer-logo .dop-logo-img { height: 36px; }
+  .dop-drawer-close {
+    width: 40px; height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid var(--brand-border);
+    border-radius: 10px;
+    color: var(--brand-heading);
+    cursor: pointer;
+    transition: background 200ms ease;
+  }
+  .dop-drawer-close:hover { background: var(--brand-primary-soft); }
+
+  .dop-drawer-nav {
+    display: flex;
+    flex-direction: column;
+    padding: 8px 0;
+  }
+  .dop-drawer-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 22px;
+    color: var(--brand-heading);
+    text-decoration: none;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+    border-bottom: 1px solid var(--brand-border);
+    transition: background 200ms ease, color 200ms ease;
+  }
+  .dop-drawer-link:hover, .dop-drawer-link:focus { background: var(--brand-primary-soft); color: var(--brand-primary-hover); }
+  .dop-drawer-link.is-active { color: var(--brand-primary-hover); background: var(--brand-primary-soft); }
+  .dop-drawer-link svg { color: var(--brand-muted); flex-shrink: 0; }
+  .dop-drawer-link-label { display: inline-flex; align-items: center; gap: 8px; }
+  .dop-drawer-link-badge {
+    padding: 2px 7px;
+    background: var(--brand-accent, #E63946);
+    color: #FFFFFF;
+    font-size: 10.5px;
+    font-weight: 700;
+    border-radius: 4px;
+  }
+
+  .dop-drawer-contact {
+    margin-top: auto;
+    /* Padding-bottom uwzględnia safe-area-inset (iPhone home indicator) — bez tego
+       contact section znika pod systemowym paskiem na dole. */
+    padding: 22px 22px calc(22px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--brand-border);
+    background: var(--brand-primary-soft);
+  }
+  /* Head też dostaje safe-area na górze (iPhone notch / status bar). */
+  .dop-drawer-head {
+    padding-top: calc(14px + env(safe-area-inset-top));
+  }
+  .dop-drawer-contact-label {
+    margin: 0 0 12px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--brand-muted);
+  }
+  .dop-drawer-contact-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    color: var(--brand-heading);
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    font-size: 14.5px;
+    text-decoration: none;
+    width: 100%;
+  }
+  .dop-drawer-contact-link:hover { color: var(--brand-primary); }
+  .dop-drawer-contact-link svg { color: var(--brand-primary); flex-shrink: 0; }
+
+  :global(body.dop-drawer-open) { overflow: hidden; }
+</style>
 
 <script is:inline>
   (function () {
@@ -181,5 +457,41 @@ const navLinks: NavLink[] = [
     drawer.querySelectorAll('a').forEach(a => {
       a.addEventListener('click', close);
     });
+  })();
+
+  // USER PREF: Header zawsze widoczny (sticky bez scroll-hide) — JS wyłączony
+
+  // Scroll shrink — body.is-scrolled gdy scrollY > 30px. CSS w PromoBar +
+  // Header reaguje przez @media (min-width: 768px) — mobile bez efektu.
+  // Threshold 30px (zmniejszony z 50) — shrink uruchamia się wcześniej, mniej
+  // skokowo dla user'a. Hysteresis +20px na drogę powrotną żeby uniknąć
+  // jitter przy crossing threshold (typowy bug scroll listenerów).
+  (function () {
+    const SHRINK_AT = 30;
+    const EXPAND_AT = 10;
+    let isScrolled = false;
+    let ticking = false;
+
+    function update() {
+      const y = window.scrollY;
+      let shouldBeScrolled = isScrolled;
+      if (!isScrolled && y > SHRINK_AT) shouldBeScrolled = true;
+      else if (isScrolled && y < EXPAND_AT) shouldBeScrolled = false;
+      if (shouldBeScrolled !== isScrolled) {
+        isScrolled = shouldBeScrolled;
+        document.body.classList.toggle('is-scrolled', isScrolled);
+      }
+      ticking = false;
+    }
+
+    window.addEventListener('scroll', function () {
+      if (!ticking) {
+        window.requestAnimationFrame(update);
+        ticking = true;
+      }
+    }, { passive: true });
+
+    // Initial check (np. user reload w środku strony — scroll position niezerowy)
+    update();
   })();
 </script>

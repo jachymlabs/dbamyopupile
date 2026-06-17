@@ -11,21 +11,76 @@ interface Props {
 const { items } = Astro.props;
 ---
 
-<nav aria-label="Breadcrumb" class="py-3">
-  <ol class="flex items-center gap-1.5 text-sm text-gray-500">
+<nav aria-label="Breadcrumb" class="dop-breadcrumbs">
+  <ol class="dop-breadcrumbs-list">
     {items.map((item, index) => (
-      <li class="flex items-center gap-1.5">
+      <li class="dop-breadcrumbs-item">
         {index > 0 && (
-          <span class="text-gray-300" aria-hidden="true">/</span>
+          <span class="material-symbols-outlined dop-breadcrumbs-sep" aria-hidden="true">chevron_right</span>
         )}
         {item.href ? (
-          <a href={item.href} class="hover:text-gray-900 transition-colors no-underline">
-            {item.label}
-          </a>
+          <a href={item.href} class="dop-breadcrumbs-link">{item.label}</a>
         ) : (
-          <span class="text-gray-900 font-medium">{item.label}</span>
+          <span class="dop-breadcrumbs-current">{item.label}</span>
         )}
       </li>
     ))}
   </ol>
 </nav>
+
+<style>
+  .dop-breadcrumbs {
+    padding: 8px 0;
+    font-family: 'Outfit', system-ui, sans-serif;
+  }
+  .dop-breadcrumbs-list {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-size: 13.5px;
+  }
+  .dop-breadcrumbs-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .dop-breadcrumbs-link {
+    color: var(--brand-muted);
+    text-decoration: none;
+    padding: 4px 8px;
+    margin: -4px -8px;
+    border-radius: 8px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    transition: background 180ms ease, color 180ms ease;
+  }
+  .dop-breadcrumbs-link:hover {
+    color: var(--brand-primary-hover);
+    background: var(--brand-primary-soft);
+  }
+  .dop-breadcrumbs-current {
+    color: var(--brand-heading);
+    font-weight: 600;
+    padding: 4px 8px;
+    margin: -4px -8px;
+    border-radius: 8px;
+    background: var(--brand-surface-2);
+    letter-spacing: 0.01em;
+    max-width: 60vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .dop-breadcrumbs-sep {
+    color: var(--brand-border-strong);
+    font-size: 16px !important;
+    flex-shrink: 0;
+  }
+  @media (min-width: 768px) {
+    .dop-breadcrumbs-list { font-size: 14px; gap: 6px; }
+  }
+</style>

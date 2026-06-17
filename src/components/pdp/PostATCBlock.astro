@@ -1,0 +1,255 @@
+---
+/**
+ * PostATCBlock — blok pod przyciskiem "dodaj do koszyka" na PDP.
+ *
+ *  - Bonus ebook gratis — TYLKO dla Moodles (prop showEbookBonus)
+ *  - Mini FAQ (3 pytania w accordionie)
+ *
+ * Trust micro-bar (ssl/fv/wsparcie) usunięty na życzenie usera.
+ */
+interface Props {
+  showEbookBonus?: boolean;
+}
+const { showEbookBonus = false } = Astro.props;
+---
+
+<div class="pdp-post-atc">
+
+  {showEbookBonus && (
+    <div class="pdp-bonus">
+      <div class="pdp-bonus-icon">
+        <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true" style="width:24px;height:24px;"><path d="M3 3h6a4 4 0 0 1 4 4v14H5a2 2 0 0 1-2-2zM21 3h-6a4 4 0 0 0-4 4v14h8a2 2 0 0 0 2-2z" opacity="0.92"/></svg>
+      </div>
+      <div class="pdp-bonus-body">
+        <p class="pdp-bonus-eyebrow">Prezent w zestawie</p>
+        <p class="pdp-bonus-title">
+          Kup <strong>2 zestawy Moodles</strong> i otrzymaj ebook gratis!
+        </p>
+        <p class="pdp-bonus-desc">
+          <em>Miniprzewodnik o sztuce relaksu</em> został zaprojektowany, żeby dopełnić chwilę przy Moodles.
+        </p>
+      </div>
+    </div>
+  )}
+
+  {/* === MINI FAQ (3 pytania) === */}
+  <div class="pdp-mini-faq">
+    <details class="pdp-mini-faq-item">
+      <summary>
+        <span class="pdp-mini-faq-q">
+          <span class="material-symbols-outlined">local_shipping</span>
+          Kiedy dostanę zamówienie?
+        </span>
+        <span class="material-symbols-outlined pdp-mini-faq-chev">expand_more</span>
+      </summary>
+      <p>Wysyłamy InPostem, dostawa 24h dla każdego zamówienia. Zamówienia złożone do 12:00 wysyłamy tego samego dnia, pozostałe następnego dnia roboczego. Darmowa wysyłka od 99 zł.</p>
+    </details>
+    <details class="pdp-mini-faq-item">
+      <summary>
+        <span class="pdp-mini-faq-q">
+          <span class="material-symbols-outlined">published_with_changes</span>
+          Jak wygląda zwrot?
+        </span>
+        <span class="material-symbols-outlined pdp-mini-faq-chev">expand_more</span>
+      </summary>
+      <p>Masz 14 dni od dostawy, żeby zwrócić zamówienie. Wystarczy do nas napisać mailem. Odsyłamy całą kwotę, bez pytań i bez tłumaczeń.</p>
+    </details>
+    <details class="pdp-mini-faq-item">
+      <summary>
+        <span class="pdp-mini-faq-q">
+          <span class="material-symbols-outlined">favorite</span>
+          Dlaczego warto wybrać dbamyopupile?
+        </span>
+        <span class="material-symbols-outlined pdp-mini-faq-chev">expand_more</span>
+      </summary>
+      <p>Wszystko zaczęło się od naszych własnych psów. Miska znikała w sekundy, brzuch tego nie nadążał, a w upały spacer kończył się po kilku minutach. Próbowaliśmy domowych sposobów — spowalniać karmę ręcznie, rozsypywać po podłodze, mokre ręczniki latem. Półśrodki. Dlatego zaczęliśmy szukać i testować akcesoria, które naprawdę działają, i każde sprawdzamy najpierw na własnych pupilach. Tak powstało dbamyopupile.pl.</p>
+    </details>
+  </div>
+
+</div>
+
+<style is:global>
+  /* =====================================================
+     POST-ATC BLOCK
+     ===================================================== */
+  .pdp-post-atc {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* ---------- Bonus ebook card ---------- */
+  .pdp-bonus {
+    background: linear-gradient(135deg, var(--brand-primary-soft) 0%, var(--brand-surface) 100%);
+    border: 1px solid var(--brand-primary);
+    border-radius: 18px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    position: relative;
+    overflow: hidden;
+  }
+  .pdp-bonus::before {
+    content: '';
+    position: absolute;
+    top: -20px; right: -20px;
+    width: 80px; height: 80px;
+    background: var(--brand-primary);
+    opacity: 0.08;
+    border-radius: 9999px;
+  }
+  .pdp-bonus-icon {
+    width: 44px; height: 44px;
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-primary);
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+  .pdp-bonus-icon .material-symbols-outlined {
+    color: var(--brand-primary) !important;
+    font-size: 22px !important;
+  }
+  .pdp-bonus-body {
+    flex: 1;
+    position: relative;
+    z-index: 1;
+  }
+  .pdp-bonus-eyebrow {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    color: var(--brand-primary);
+    text-transform: uppercase;
+    margin: 0 0 4px;
+  }
+  .pdp-bonus-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--brand-heading);
+    line-height: 1.35;
+    margin: 0 0 6px;
+  }
+  .pdp-bonus-title strong {
+    color: var(--brand-primary);
+    font-weight: 800;
+  }
+  .pdp-bonus-desc {
+    font-size: 13px;
+    color: var(--brand-text);
+    line-height: 1.5;
+    margin: 0;
+  }
+  .pdp-bonus-desc em {
+    color: var(--brand-heading);
+    font-weight: 600;
+    font-style: normal;
+  }
+
+  /* ---------- Mini FAQ ---------- */
+  .pdp-mini-faq {
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-radius: 18px;
+    overflow: hidden;
+  }
+  .pdp-mini-faq-item {
+    border-bottom: 1px solid var(--brand-border);
+  }
+  .pdp-mini-faq-item:last-child { border-bottom: none; }
+  .pdp-mini-faq-item summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    transition: background 200ms;
+    /* Domyślny webkit tap highlight (przeźroczysty czarny overlay) na mobile dawał
+       dziwny migoczący efekt przy klik. Wyłączamy, własne :active state. */
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    outline: none;
+  }
+  .pdp-mini-faq-item summary::-webkit-details-marker { display: none; }
+  .pdp-mini-faq-item summary:hover { background: var(--brand-primary-soft); }
+  .pdp-mini-faq-item summary:active {
+    background: var(--brand-primary-soft);
+  }
+  .pdp-mini-faq-item summary:focus-visible {
+    background: var(--brand-primary-soft);
+    box-shadow: inset 0 0 0 2px var(--brand-primary);
+  }
+  .pdp-mini-faq-item[open] summary {
+    background: var(--brand-primary-soft);
+  }
+  .pdp-mini-faq-item[open] .pdp-mini-faq-q {
+    color: var(--brand-primary-hover);
+  }
+  .pdp-mini-faq-item[open] .pdp-mini-faq-chev {
+    color: var(--brand-primary) !important;
+  }
+  .pdp-mini-faq-q {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--brand-heading);
+  }
+  .pdp-mini-faq-q .material-symbols-outlined {
+    color: var(--brand-primary);
+    font-size: 18px !important;
+    flex-shrink: 0;
+  }
+  .pdp-mini-faq-chev {
+    color: var(--brand-muted) !important;
+    font-size: 18px !important;
+    transition: transform 220ms ease;
+  }
+  .pdp-mini-faq-item[open] .pdp-mini-faq-chev {
+    transform: rotate(180deg);
+  }
+  .pdp-mini-faq-item p {
+    margin: 0;
+    padding: 0 18px 14px 46px;
+    font-size: 13px;
+    color: var(--brand-text);
+    line-height: 1.55;
+  }
+
+  /* ---------- Micro trust bar ---------- */
+  .pdp-micro-trust {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 4px 0;
+    font-size: 12px;
+    color: var(--brand-muted);
+  }
+  .pdp-micro-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: 600;
+  }
+  .pdp-micro-item .material-symbols-outlined {
+    color: var(--brand-primary) !important;
+    font-size: 15px !important;
+  }
+  .pdp-micro-sep {
+    color: var(--brand-border-strong);
+    font-weight: 400;
+  }
+</style>

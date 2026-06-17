@@ -165,27 +165,51 @@ export function getCAPIConfig(channelDatasetId?: string | null): CAPIConfig | nu
 
 /**
  * Send a single event to Meta Conversions API.
- * Fire-and-forget — never blocks page render.
- * Silently fails if credentials are not configured.
+ * Returns a Promise so callers w handlerach kończących się redirectem mogą
+ * `await` przed `Astro.redirect(...)` — Vercel serverless aborts pending
+ * fetches po response.send, więc bez `await` event by przepadał.
+ *
+ * Pattern:
+ *   - Render-path (BaseLayout PageView, PDP ViewContent): caller pomija
+ *     await — funkcja czeka na render HTML, więc beacon ma czas wylecieć.
+ *   - Action-path (POST → redirect: AddToCart, InitiateCheckout, Purchase):
+ *     caller MUSI `await sendCAPIEvent(...)` przed redirectem.
+ *
+ * Silently fails (returns immediately) jeśli credentials missing — nie
+ * blokuje checkout/page render.
  *
  * @param event - The CAPI event to send
- * @param channelDatasetId - Optional datasetId from Channel custom fields (takes priority over env var)
+ * @param channelDatasetId - Optional datasetId z Channel custom fields (priority over env var)
  */
-export function sendCAPIEvent(event: CAPIEvent, channelDatasetId?: string | null): void {
+export async function sendCAPIEvent(event: CAPIEvent, channelDatasetId?: string | null): Promise<void> {
   const capiConfig = getCAPIConfig(channelDatasetId);
   if (!capiConfig) return;
 
-  // Fire-and-forget: do NOT await
-  fetch(`https://graph.facebook.com/${GRAPH_API_VERSION}/${capiConfig.datasetId}/events`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      data: [event],
-      access_token: capiConfig.accessToken,
-    }),
-  }).catch(() => {
-    // Silently fail — do not block checkout/page render
-  });
+  const testEventCode = (import.meta.env.META_CAPI_TEST_EVENT_CODE || '').trim();
+
+  const payload: Record<string, unknown> = {
+    data: [event],
+    access_token: capiConfig.accessToken,
+  };
+  if (testEventCode) payload.test_event_code = testEventCode;
+
+  // Timeout 3s — Meta Graph API normalnie odpowiada w ~200-500ms. 3s zabezpiecza
+  // przed zawieszeniem checkout flow gdy Meta jest powolna/down.
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+  try {
+    await fetch(`https://graph.facebook.com/${GRAPH_API_VERSION}/${capiConfig.datasetId}/events`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    });
+  } catch {
+    // Silently fail — nigdy nie block render/redirect z powodu Meta API issue
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 // ─── Helper: generate event ID ──────────────────────────────────────

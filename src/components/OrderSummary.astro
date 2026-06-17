@@ -1,28 +1,68 @@
 ---
 import Price from '@/components/Price.astro';
 import { buildAssetUrl } from '@/lib/utils';
+import { getCouponDisplayName, isHiddenCoupon } from '@/lib/coupon-labels';
 import type { VendureOrder, VendureOrderLine, VendureDiscount } from '@/types/vendure';
 
 interface Props {
   order: VendureOrder;
   class?: string;
+  hasFreeShippingPromo?: boolean;
+  readonly?: boolean;
 }
 
-const { order, class: className = '' } = Astro.props;
+const { order, class: className = '', hasFreeShippingPromo = false, readonly = false } = Astro.props;
 const lines = order?.lines ?? [];
+// Bonus gifty = ebook 'miniprzewodnik' + brelok 'brelok-fasola'. Oba: GRATIS,
+// bez ceny, bez qty/remove. Friendly names + ukrywanie internal kodów
+// (np. FREE_SHIP_99 duplikujący Dostawe Gratis) zarządzane w coupon-labels.ts.
+const BONUS_SLUGS = ['miniprzewodnik', 'brelok-fasola'];
+const isBonusLine = (l: any) => BONUS_SLUGS.includes(l?.productVariant?.product?.slug);
+// Raw subtotal — sum line totals BEFORE distributed order-level promotions, ale BEZ
+// bonus ebooka (gratis — wliczanie 29,99 dawałoby visual lukę po ukryciu kuponu).
+const rawSubtotal = lines
+  .filter((l: any) => !isBonusLine(l))
+  .reduce((s: number, l: any) => s + (l.linePriceWithTax ?? 0), 0);
+// Total quantity excluding bonus — żeby "Produkty (N)" odzwierciedlało płatne pozycje.
+const visibleQuantity = lines
+  .filter((l: any) => !isBonusLine(l))
+  .reduce((s: number, l: any) => s + (l.quantity ?? 0), 0);
+const shippingLines = ((order as any)?.shippingLines ?? []);
+const hasShippingMethod = shippingLines.length > 0;
+// UI tweak: pelna cena metody dostawy (Vendure zeruje shippingWithTax po
+// free-shipping promo, ale shippingLines[0].priceWithTax zachowuje pelna cene
+// — single source of truth dla strikethrough).
+const fullShippingPrice = shippingLines[0]?.priceWithTax ?? 0;
+// CRITICAL-4: precyzyjny helper detekcji free-shipping dyskontu (strict regex
+// po poczatku description + sanity check ze amount matchuje cene metody).
+const isFreeShippingDiscount = (d: any): boolean => {
+  if (!d) return false;
+  const desc = (d.description || '').toLowerCase().trim();
+  const matchesName = /^darmowa dostawa\b/.test(desc) || /^free shipping\b/.test(desc);
+  if (!matchesName) return false;
+  if (shippingLines.length > 0) {
+    const methodPrice = shippingLines[0]?.priceWithTax ?? 0;
+    return methodPrice === 0 || Math.abs(d.amountWithTax || 0) === methodPrice;
+  }
+  return true;
+};
 ---
 
 <div id="order-summary" class:list={['', className]}>
   {/* Line items */}
   <ul class="divide-y divide-gray-100" id="order-lines">
     {lines.map((line: VendureOrderLine) => {
-      const productImage = line.productVariant?.product?.featuredAsset?.preview;
+      // Prefer variant's own featuredAsset (per-variant zdjęcie z Vendure), fallback do product.
+      const productImage = (line.productVariant as any)?.featuredAsset?.preview ?? line.productVariant?.product?.featuredAsset?.preview;
       const productName = line.productVariant?.product?.name || line.productVariant?.name;
-      const variantName = line.productVariant?.name;
-      const showVariant = variantName && variantName !== productName;
+      const options = (line.productVariant as any)?.options ?? [];
+      // Bonus gift (ebook/brelok) — bez qty buttons (qty zawsze 1, zarządzany przez reconcile).
+      const lineSlug = line.productVariant?.product?.slug ?? '';
+      const isBonus = BONUS_SLUGS.includes(lineSlug);
+      const isBrelokBonus = lineSlug === 'brelok-fasola';
 
       return (
-        <li class="flex gap-3 py-3" data-line={line.id}>
+        <li class="flex gap-3 py-3" data-line={line.id} data-bonus={isBonus ? '1' : '0'}>
           <div class="h-16 w-16 shrink-0 overflow-hidden rounded-md bg-gray-100">
             {productImage ? (
               <img
@@ -42,20 +82,43 @@ const lines = order?.lines ?? [];
           </div>
 
           <div class="flex flex-1 flex-col min-w-0">
-            <p class="text-sm font-medium text-gray-900 truncate">{productName}</p>
-            {showVariant && (
-              <p class="text-xs text-gray-500">{variantName}</p>
+            <p class="text-sm font-medium text-gray-900 truncate">
+              {productName}
+              {isBonus && <span class="ml-1.5 inline-flex items-center rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700">prezent</span>}
+            </p>
+            {!isBonus && options.length > 0 && (
+              <ul class="mt-1 space-y-0.5">
+                {options.map((o: any) => (
+                  <li class="text-xs text-gray-500">
+                    <span class="font-medium text-gray-600">{o.group?.name}:</span> <span class="text-gray-800">{o.name}</span>
+                  </li>
+                ))}
+              </ul>
             )}
-            <div class="flex items-center gap-2 mt-1">
-              <button type="button" data-adjust-qty data-line-id={line.id} data-delta="-1" class="w-6 h-6 flex items-center justify-center rounded border border-gray-300 text-gray-500 hover:bg-gray-100 text-xs leading-none">-</button>
-              <span data-qty class="text-xs text-gray-700 min-w-[1.2rem] text-center">{line.quantity}</span>
-              <button type="button" data-adjust-qty data-line-id={line.id} data-delta="1" class="w-6 h-6 flex items-center justify-center rounded border border-gray-300 text-gray-500 hover:bg-gray-100 text-xs leading-none">+</button>
-              <span class="text-xs text-gray-400 ml-1">x <Price price={line.unitPriceWithTax} class="text-xs font-normal" /></span>
-            </div>
+            {isBonus && (
+              <p class="mt-1 text-xs text-emerald-700">
+                {isBrelokBonus ? 'Dodajemy gratis przy 5 zestawach Moodles' : 'Dodajemy gratis przy 2+ zestawach Moodles'}
+              </p>
+            )}
           </div>
 
-          <div class="shrink-0 text-right">
-            <span data-line-total class="text-sm font-semibold text-gray-900"><Price price={line.linePriceWithTax} class="text-sm" /></span>
+          <div class="shrink-0 text-right flex flex-col items-end gap-2">
+            {isBonus ? (
+              <span data-line-total class="inline-flex items-center text-sm font-semibold text-emerald-700">Gratis</span>
+            ) : (
+              <>
+                <span data-line-total class="text-sm font-semibold text-gray-900"><Price price={line.linePriceWithTax} class="text-sm" /></span>
+                {readonly ? (
+                  <span class="text-xs text-gray-700">{line.quantity} szt.</span>
+                ) : (
+                  <div class="inline-flex items-center gap-0">
+                    <button type="button" data-adjust-qty data-line-id={line.id} data-delta="-1" class="w-6 h-6 flex items-center justify-center rounded-l border border-gray-300 text-gray-500 hover:bg-gray-100 text-xs leading-none">-</button>
+                    <span data-qty class="px-2 h-6 inline-flex items-center justify-center text-xs text-gray-700 min-w-[1.6rem] border-t border-b border-gray-300">{line.quantity}</span>
+                    <button type="button" data-adjust-qty data-line-id={line.id} data-delta="1" class="w-6 h-6 flex items-center justify-center rounded-r border border-gray-300 text-gray-500 hover:bg-gray-100 text-xs leading-none">+</button>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </li>
       );
@@ -63,28 +126,53 @@ const lines = order?.lines ?? [];
   </ul>
 
   {/* Totals */}
-  <dl class="mt-4 space-y-2 border-t border-gray-200 pt-4 text-sm">
+  <dl class="mt-4 space-y-2 border-t border-gray-200 pt-4 text-sm" data-has-free-shipping={hasFreeShippingPromo ? 'true' : 'false'}>
     <div class="flex justify-between">
-      <dt class="text-gray-500">Produkty (<span id="summary-qty">{order.totalQuantity}</span>)</dt>
-      <dd id="summary-subtotal"><Price price={order.subTotalWithTax} /></dd>
+      <dt class="text-gray-500">Produkty (<span id="summary-qty">{visibleQuantity}</span>)</dt>
+      <dd id="summary-subtotal" data-grosze={rawSubtotal}><Price price={rawSubtotal} /></dd>
     </div>
 
     <div class="flex justify-between" id="summary-shipping-row">
       <dt class="text-gray-500">Dostawa</dt>
-      <dd id="summary-shipping">{order.shippingWithTax > 0 ? <Price price={order.shippingWithTax} /> : <span class="text-green-600 font-medium">Gratis</span>}</dd>
+      <dd id="summary-shipping">
+        {!hasShippingMethod ? (
+          <span class="text-gray-400">—</span>
+        ) : hasFreeShippingPromo && fullShippingPrice > 0 ? (
+          <><s class="text-gray-400 text-xs mr-1"><Price price={fullShippingPrice} class="text-xs font-normal" /></s><span class="text-green-600 font-medium">Gratis</span></>
+        ) : order.shippingWithTax > 0 ? (
+          <Price price={order.shippingWithTax} />
+        ) : (
+          <span class="text-green-600 font-medium">Gratis</span>
+        )}
+      </dd>
     </div>
 
-    {order.discounts?.length > 0 && order.discounts.map((d: VendureDiscount) => {
-      return (
-        <div class="flex items-center justify-between gap-3 py-1">
-          <dt class="flex items-center gap-2 text-gray-700 min-w-0">
-            <svg class="w-4 h-4 shrink-0 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-            <span class="truncate">{d.description}</span>
-          </dt>
-          <dd class="shrink-0 font-semibold text-emerald-700 tabular-nums">-<Price price={Math.abs(d.amountWithTax)} /></dd>
-        </div>
-      );
-    })}
+    <div id="summary-discounts">
+      {order.discounts?.length > 0 && order.discounts
+        .filter((d: VendureDiscount) => Math.abs(d.amountWithTax || 0) > 0)
+        .filter((d: VendureDiscount) => !isFreeShippingDiscount(d))
+        .filter((d: VendureDiscount) => !isHiddenCoupon(d.description))
+        .map((d: VendureDiscount) => {
+        const displayName = getCouponDisplayName(d.description);
+        // HIGH-6: word-boundary regex — "ebook" lub "prezent" jako pelne slowo,
+        // unikamy false-positive na "Gratis"/"darmowy" (ktore moga pojawic sie
+        // w discount description niezwiazanym z prezentem).
+        const isGift = /\bebook\b|\bprezent\b/i.test(displayName);
+        return (
+          <div class="flex items-center justify-between gap-3 py-1" data-discount-row>
+            <dt class="flex items-center gap-2 text-gray-700 min-w-0">
+              {isGift ? (
+                <svg class="w-4 h-4 shrink-0 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+              ) : (
+                <svg class="w-4 h-4 shrink-0 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+              )}
+              <span class="truncate">{displayName}</span>
+            </dt>
+            <dd class="shrink-0 font-semibold text-emerald-700 tabular-nums">-<Price price={Math.abs(d.amountWithTax)} /></dd>
+          </div>
+        );
+      })}
+    </div>
 
     <div class="flex justify-between pt-2 border-t border-gray-200 text-base font-semibold text-gray-900">
       <dt>Razem</dt>
@@ -94,9 +182,16 @@ const lines = order?.lines ?? [];
 </div>
 
 <script>
+  import { getCouponDisplayName, isHiddenCoupon } from '@/lib/coupon-labels';
+
   function fmtPrice(grosze: number): string {
     return (grosze / 100).toLocaleString('pl-PL', { style: 'currency', currency: 'PLN', minimumFractionDigits: 2 });
   }
+
+  // Bonus helper (server-side ma swoj scope, duplikujemy minimalnie).
+  // Friendly names + ukrywanie internal kuponów → coupon-labels.ts (imported wyżej).
+  const BONUS_SLUGS_JS = ['miniprzewodnik', 'brelok-fasola'];
+  const isBonusLineJs = (l: any) => BONUS_SLUGS_JS.includes(l?.productVariant?.product?.slug);
 
   function updateSummaryFromOrder(order: any) {
     if (!order) return;
@@ -106,10 +201,12 @@ const lines = order?.lines ?? [];
     for (const line of lines) {
       const li = document.querySelector(`[data-line="${line.id}"]`);
       if (!li) continue;
+      const isBonus = li.getAttribute('data-bonus') === '1';
       const qtyEl = li.querySelector('[data-qty]');
       const totalEl = li.querySelector('[data-line-total]');
       if (qtyEl) qtyEl.textContent = String(line.quantity);
-      if (totalEl) totalEl.textContent = fmtPrice(line.linePriceWithTax);
+      // Bonus line — "Gratis" zostaje, nie nadpisuj sformatowaną ceną (0,00 zł).
+      if (totalEl) totalEl.textContent = isBonus ? 'Gratis' : fmtPrice(line.linePriceWithTax);
     }
 
     // Remove lines that no longer exist
@@ -117,6 +214,18 @@ const lines = order?.lines ?? [];
       const id = li.getAttribute('data-line');
       if (!lines.find((l: any) => String(l.id) === id)) li.remove();
     });
+
+    // NEW: jeśli pojawiła się NOWA linia (reconcileBonus dodał ebooka po qty change)
+    // — frontend nie ma jej w DOM, więc reload jest najczystszym rozwiązaniem.
+    const renderedIds = new Set(
+      Array.from(document.querySelectorAll('[data-line]'))
+        .map(el => el.getAttribute('data-line')),
+    );
+    const newLineAppeared = lines.some((l: any) => !renderedIds.has(String(l.id)));
+    if (newLineAppeared) {
+      window.location.reload();
+      return;
+    }
 
     // If cart is empty, redirect to home
     if (lines.length === 0) {
@@ -130,14 +239,76 @@ const lines = order?.lines ?? [];
     const shipEl = document.getElementById('summary-shipping');
     const totalEl = document.getElementById('summary-total');
 
-    if (qtyEl) qtyEl.textContent = String(order.totalQuantity);
-    if (subEl) subEl.textContent = fmtPrice(order.subTotalWithTax);
+    // qty + subtotal excluding bonus line (ebook gratis nie wlicza się do "Produkty (N): price")
+    const payableLines = (order.lines || []).filter((l: any) => !isBonusLineJs(l));
+    const visibleQty = payableLines.reduce((s: number, l: any) => s + (l.quantity ?? 0), 0);
+    if (qtyEl) qtyEl.textContent = String(visibleQty);
+    // Raw subtotal — sum of linePriceWithTax (pre-distribution), bez bonus ebook
+    const rawSub = payableLines.reduce((s: number, l: any) => s + (l.linePriceWithTax ?? 0), 0);
+    if (subEl) {
+      subEl.textContent = fmtPrice(rawSub);
+      // HIGH-1: data-grosze = single source of truth (parsing locale-formatted text byl lamliwy)
+      subEl.setAttribute('data-grosze', String(rawSub));
+    }
+    // CRITICAL-4: precyzyjny helper detekcji free-shipping (strict regex + sanity check
+    // na shippingLine price). Unikamy false-positive na promocje typu "Bonus przy
+    // darmowej dostawie".
+    const isFreeShippingDiscount = (d: any) => {
+      if (!d) return false;
+      const desc = (d.description || '').toLowerCase().trim();
+      const matchesName = /^darmowa dostawa\b/.test(desc) || /^free shipping\b/.test(desc);
+      if (!matchesName) return false;
+      if (order.shippingLines?.length > 0) {
+        const methodPrice = order.shippingLines[0]?.priceWithTax ?? 0;
+        return methodPrice === 0 || Math.abs(d.amountWithTax || 0) === methodPrice;
+      }
+      return true;
+    };
+    const hasFreeShippingPromo = (order.discounts || []).some(isFreeShippingDiscount);
+    // MEDIUM-1 follow-up: sync data-has-free-shipping na <dl> zeby refreshSummaryShipping
+    // (w checkout.astro) widzial promotion-based free shipping przy qty change.
+    const dlEl = document.querySelector('[data-has-free-shipping]') as HTMLElement | null;
+    if (dlEl) dlEl.dataset.hasFreeShipping = hasFreeShippingPromo ? 'true' : 'false';
     if (shipEl) {
-      shipEl.innerHTML = order.shippingWithTax > 0
-        ? fmtPrice(order.shippingWithTax)
-        : '<span class="text-green-600 font-medium">Gratis</span>';
+      const hasShipMethod = (order.shippingLines || []).length > 0;
+      const shippingPrice = order.shippingWithTax ?? 0;
+      // UI tweak: pelna cena z shippingLines (Vendure zeruje shippingWithTax po promo)
+      const fullShippingPrice = order.shippingLines?.[0]?.priceWithTax ?? 0;
+      if (!hasShipMethod) {
+        shipEl.innerHTML = '<span class="text-gray-400">—</span>';
+      } else if (hasFreeShippingPromo && fullShippingPrice > 0) {
+        shipEl.innerHTML = `<s class="text-gray-400 text-xs mr-1">${fmtPrice(fullShippingPrice)}</s><span class="text-green-600 font-medium">Gratis</span>`;
+      } else if (shippingPrice > 0) {
+        shipEl.textContent = fmtPrice(shippingPrice);
+      } else {
+        shipEl.innerHTML = '<span class="text-green-600 font-medium">Gratis</span>';
+      }
     }
     if (totalEl) totalEl.textContent = fmtPrice(order.totalWithTax);
+
+    // Dispatch event so other components (shipping method labels, etc.) can react
+    document.dispatchEvent(new CustomEvent('cart:updated', { detail: { order } }));
+
+    // Re-render discounts list — pomijamy free-shipping (juz w Dostawie) + zerowe (MEDIUM-6)
+    // + internal coupony oznaczone jako ukryte w coupon-labels.ts.
+    const discountsEl = document.getElementById('summary-discounts');
+    if (discountsEl) {
+      const discounts = (order.discounts || [])
+        .filter((d: any) => Math.abs(d.amountWithTax || 0) > 0)
+        .filter((d: any) => !isFreeShippingDiscount(d))
+        .filter((d: any) => !isHiddenCoupon(d.description));
+      discountsEl.innerHTML = discounts.map((d: any) => {
+        const displayName = getCouponDisplayName(d.description).replace(/[<>]/g, '');
+        const amount = fmtPrice(Math.abs(d.amountWithTax || 0));
+        return `<div class="flex items-center justify-between gap-3 py-1" data-discount-row>
+          <dt class="flex items-center gap-2 text-gray-700 min-w-0">
+            <svg class="w-4 h-4 shrink-0 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+            <span class="truncate">${displayName}</span>
+          </dt>
+          <dd class="shrink-0 font-semibold text-emerald-700 tabular-nums">-${amount}</dd>
+        </div>`;
+      }).join('');
+    }
   }
 
   function bindQtyButtons() {

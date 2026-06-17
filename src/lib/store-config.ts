@@ -19,17 +19,17 @@ export interface StoreConfig {
 }
 
 const DEFAULTS: StoreConfig = {
-  storeName: 'Store',
-  storeTagline: 'Sklep internetowy',
-  contactEmail: 'kontakt@sklep.pl',
-  contactPhone: null,
-  freeShippingThreshold: 15000,
-  promoBarText: null,
-  promoBarLink: null,
-  companyName: null,
-  companyNip: null,
-  companyAddress: null,
-  returnAddress: null,
+  storeName: 'dbamyopupile',
+  storeTagline: 'Akcesoria dla psów, które realnie ułatwiają codzienność — spokojniejsze posiłki, lepsze spacery, mniej stresu u pupila.',
+  contactEmail: 'sklep@dbamyopupile.pl',
+  contactPhone: '+48 577 723 506',
+  freeShippingThreshold: 9900, // 99 zł
+  promoBarText: 'darmowa dostawa od 99 zł · wysyłka 24h InPost',
+  promoBarLink: '/sklep',
+  companyName: 'PATRYK JACHYM LABS',
+  companyNip: '9930710781',
+  companyAddress: 'ul. Tarnowskich 71p/1, 33-100 Tarnów',
+  returnAddress: 'ul. Tarnowskich 71p/1, 33-100 Tarnów',
   inpostGeowidgetToken: null,
   metaPixelId: null,
   metaDatasetId: null,
@@ -51,7 +51,8 @@ export async function getStoreConfig(request?: Request): Promise<StoreConfig> {
       storeTagline: cf.storeTagline || DEFAULTS.storeTagline,
       contactEmail: cf.contactEmail || DEFAULTS.contactEmail,
       contactPhone: cf.contactPhone || DEFAULTS.contactPhone,
-      freeShippingThreshold: cf.freeShippingThreshold ?? DEFAULTS.freeShippingThreshold,
+      // User pref: force DEFAULTS (99 zł). Aby przywrócić channel override, zmień back na `cf.freeShippingThreshold ?? DEFAULTS.freeShippingThreshold`.
+      freeShippingThreshold: DEFAULTS.freeShippingThreshold,
       promoBarText: cf.promoBarText || DEFAULTS.promoBarText,
       promoBarLink: cf.promoBarLink || DEFAULTS.promoBarLink,
       companyName: cf.companyName || DEFAULTS.companyName,

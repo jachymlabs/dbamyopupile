@@ -3,11 +3,21 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
 import OrderSummary from '@/components/OrderSummary.astro';
 import { shopApi } from '@/lib/vendure';
 import { GET_ORDER_BY_CODE } from '@/lib/queries';
+import { sendCAPIEvent, buildUserData } from '@/lib/meta-capi';
+import { getStoreConfig } from '@/lib/store-config';
 // Security note: orderByCode in Vendure Shop API requires active session —
 // it only returns orders belonging to the current customer/session, preventing IDOR.
 // Combined with 16-char alphanumeric codes, brute force is impractical.
 
+const storeConfig = await getStoreConfig(Astro.request);
+
 const code = Astro.url.searchParams.get('code');
+
+// Marker z BLIK waiting screen (manual cancel button). PayU IPN webhook ma
+// 30s-2min latency, więc bez tego query param pokazalibyśmy PENDING UI
+// niezgodnie z user intent ("kliknąłem anuluj w aplikacji bankowej").
+// Po IPN payment.state przejdzie do Cancelled — system eventual consistent.
+const manualCancel = Astro.url.searchParams.get('manualCancel') === '1';
 
 if (!code) {
   return Astro.redirect('/');
@@ -28,545 +38,1115 @@ if (!order) {
 const customer = order.customer;
 const address = order.shippingAddress;
 const shippingMethod = order.shippingLines?.[0]?.shippingMethod?.name;
+
+// ──────────────────────────────────────────────────────────────────────
+// PAYMENT STATE LOGIC — audit Patryka 2026-05-26
+// ──────────────────────────────────────────────────────────────────────
+// Problem: PayU return URL ZAWSZE redirectuje na /potwierdzenie?code=XXX,
+// niezależnie od tego czy user kliknął "Zapłać" czy "Anuluj". Stary kod
+// pokazywał "Dziękujemy za zakup" w obu przypadkach.
+//
+// Fix: rozróżniamy 3 stany na podstawie order.payments[].state:
+//   - Settled (lub COD) → thank-you
+//   - Authorized / Created → pending (polling /api/payment/status co 3s)
+//   - Cancelled / Error / Declined → failed (CTA "spróbuj ponownie")
+//
+// Edge case: brak payments[] (rzadkie, np. order zatrzymany w
+// ArrangingPayment przed addPaymentToOrder) → showUnknown (treat as pending).
+const payments: Array<{ id: string; state: string; method: string }> = order.payments ?? [];
+const payuPayment = payments.find((p) => p.method === 'payu');
+const codPayment = payments.find((p) => p.method === 'cod');
+
+// COD: order Settled od razu po addPaymentToOrder (brak online flow).
+// Jeśli COD payment istnieje — niezależnie od state — traktujemy jako sukces.
+const isCod = !payuPayment && !!codPayment;
+
+// PayU states (Vendure standard PaymentState union: Created, Authorized, Settled, Declined, Cancelled, Error, Refunded)
+const isSettled = payuPayment?.state === 'Settled';
+const isPending = payuPayment?.state === 'Authorized' || payuPayment?.state === 'Created';
+const isFailed =
+  payuPayment?.state === 'Cancelled' ||
+  payuPayment?.state === 'Error' ||
+  payuPayment?.state === 'Declined' ||
+  // manual cancel z BLIK waiting screen — pokazujemy failed UI od razu,
+  // bez czekania na IPN. `&& !isSettled` żeby nie zoverridować rzadkiego
+  // edge case'u "user kliknął anuluj ale platnosc i tak przeszla".
+  (manualCancel && payuPayment?.state !== 'Settled');
+
+const showThankYou = isCod || isSettled;
+// PRIORYTET: failed > pending. Manual cancel z BLIK ustawia isFailed=true
+// PRZED IPN webhook od PayU, ale payment.state w Vendure dalej jest 'Authorized'
+// → isPending=true. Bez priorytetu pokazaliby_smy OBIE sekcje (failed UI nad
+// pending UI), co Patryk reportowal w teście 2026-05-26.
+const showFailed = isFailed;
+const showPending = isPending && !showFailed;
+// Fallback dla edge case'u "brak payments[]" — pokazujemy pending z polling.
+// Po Settled webhook reload pokaże thank-you, po timeout (5min) user może odświeżyć.
+const showUnknown = !showThankYou && !showPending && !showFailed;
+const showPendingOrUnknown = showPending || showUnknown;
+
+// ──────────────────────────────────────────────────────────────────────
+// CAPI Purchase event SSR — TYLKO gdy showThankYou
+// ──────────────────────────────────────────────────────────────────────
+// Deterministic event_id `purchase-{code}` zapobiega double-count z:
+//   - checkout.astro CAPI (COD only) — ten sam event_id
+//   - browser fbq Purchase poniżej (skrypt na końcu pliku) — ten sam eventID
+// Meta deduplikuje po event_id w 7-dniowym oknie (CAPI/browser pair = 1 event).
+if (showThankYou) {
+  const purchaseUserData = await buildUserData(Astro.request, {
+    email: customer?.emailAddress,
+    phone: customer?.phoneNumber,
+    firstName: customer?.firstName,
+    lastName: customer?.lastName,
+    city: address?.city,
+    postalCode: address?.postalCode,
+  });
+
+  await sendCAPIEvent(
+    {
+      event_name: 'Purchase',
+      event_time: Math.floor(Date.now() / 1000),
+      event_id: `purchase-${order.code}`,
+      event_source_url: Astro.url.href,
+      action_source: 'website',
+      user_data: purchaseUserData,
+      custom_data: {
+        value: (order.totalWithTax ?? 0) / 100,
+        currency: order.currencyCode ?? 'PLN',
+        order_id: order.code,
+        num_items: order.totalQuantity ?? 0,
+        content_type: 'product',
+        content_ids:
+          order.lines?.map((l: any) => l.productVariant?.sku).filter(Boolean) ?? [],
+        contents:
+          order.lines?.map((l: any) => ({
+            id: l.productVariant?.sku,
+            quantity: l.quantity,
+            item_price: (l.unitPriceWithTax ?? 0) / 100,
+          })) ?? [],
+      },
+    },
+    storeConfig.metaDatasetId,
+  );
+}
+
+// Browser fbq dataset — przekazywane do <script define:vars>
+const browserPixelData = showThankYou
+  ? {
+      orderCode: order.code,
+      value: (order.totalWithTax ?? 0) / 100,
+      // SP pixel (lejek): produkty z VAT BEZ dostawy — spójne z ATC/IC. M-5.
+      // (Meta fbq/CAPI dalej używają value=totalWithTax = realny przychód.)
+      spValue: (order.subTotalWithTax ?? order.totalWithTax ?? 0) / 100,
+      currency: order.currencyCode ?? 'PLN',
+      contentIds:
+        order.lines?.map((l: any) => l.productVariant?.sku).filter(Boolean) ?? [],
+      contents:
+        order.lines?.map((l: any) => ({
+          id: l.productVariant?.sku,
+          quantity: l.quantity,
+          item_price: (l.unitPriceWithTax ?? 0) / 100,
+        })) ?? [],
+      numItems: order.totalQuantity ?? 0,
+      // Behawioralny pixel — lista pozycji (product_id = Vendure productId,
+      // TEN SAM klucz co view_content na PDP → JOIN „obejrzenia↔zakupy" w cockpicie).
+      items:
+        order.lines?.map((l: any) => ({
+          product_id: l.productVariant?.productId,
+          name: l.productVariant?.product?.name,
+          qty: l.quantity,
+          price: (l.unitPriceWithTax ?? 0) / 100,
+        })) ?? [],
+    }
+  : null;
+
+// Title/noindex per state — żeby crawler nie indeksował "Dziękujemy" gdy faktycznie payment failed
+const pageTitle = showThankYou
+  ? 'Dziękujemy za zamówienie'
+  : showFailed
+    ? 'Płatność nieudana'
+    : 'Sprawdzamy płatność…';
 ---
 
-<BaseLayout title="Dziękujemy za zamówienie" noindex>
-  <div class="ty-page">
-    <div class="ty-wrap">
+<BaseLayout title={pageTitle} noindex>
+  <div class="thx">
 
-      {/* HERO — checkmark + powitanie */}
-      <section class="ty-hero">
-        <div class="ty-checkmark-wrap">
-          <svg class="ty-checkmark-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" aria-hidden="true">
-            <circle class="ty-checkmark-bg" cx="40" cy="40" r="38" fill="#B8D8E8" />
-            <path class="ty-checkmark-path" d="M24 40 L36 52 L58 28" fill="none" stroke="#1E3A5F" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
-        </div>
-        <p class="ty-eyebrow">Płatność potwierdzona</p>
-        <h1 class="ty-title">Dziękujemy za zamówienie!</h1>
-        <p class="ty-subtitle">
-          Numer zamówienia: <span class="ty-order-code">{order.code}</span>
-        </p>
-        {customer?.emailAddress && (
-          <p class="ty-email">
-            Potwierdzenie wysłaliśmy na <strong>{customer.emailAddress}</strong>
-          </p>
-        )}
-      </section>
+    {/* ============================================================
+       STATE: FAILED — PayU Cancelled / Error / Declined
+       ============================================================ */}
+    {showFailed && (
+      <>
+        <section class="thx-hero">
+          <div class="thx-wrap">
+            <span class="thx-eyebrow thx-eyebrow-fail">Płatność nieudana</span>
+            <h1 class="thx-h1">
+              Płatność <em>nie została zakończona</em>
+            </h1>
+            <p class="thx-lede">
+              Zamówienie <strong class="thx-code">{order.code}</strong> nie zostało opłacone.
+              Wróć do sklepu i złóż zamówienie ponownie.
+            </p>
+          </div>
+        </section>
 
-      {/* TRACKING BAR */}
-      <section class="ty-tracking">
-        <div class="ty-track-step ty-track-active">
-          <div class="ty-track-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-          </div>
-          <span class="ty-track-label">Potwierdzone</span>
-        </div>
-        <div class="ty-track-line"></div>
-        <div class="ty-track-step">
-          <div class="ty-track-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-          </div>
-          <span class="ty-track-label">Pakowanie</span>
-        </div>
-        <div class="ty-track-line"></div>
-        <div class="ty-track-step">
-          <div class="ty-track-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-          </div>
-          <span class="ty-track-label">Wysyłka</span>
-        </div>
-        <div class="ty-track-line"></div>
-        <div class="ty-track-step">
-          <div class="ty-track-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-          </div>
-          <span class="ty-track-label">Dostarczone</span>
-        </div>
-      </section>
+        <section class="thx-section">
+          <div class="thx-wrap">
+            <div class="thx-fail-card">
+              <h2 class="thx-fail-title">Co dalej?</h2>
+              <p class="thx-fail-desc">
+                Najczęstsze powody: anulowana płatność BLIK, błąd banku, brak środków, zamknięte
+                okno PayU. Aby spróbować ponownie, wróć do sklepu i dodaj produkty do koszyka jeszcze raz.
+              </p>
 
-      {/* CO DALEJ — 3 kroki z ikonkami */}
-      <section class="ty-section">
-        <h2 class="ty-h2">Co teraz?</h2>
-        <div class="ty-next">
-          <article class="ty-next-item">
-            <div class="ty-next-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+              <div class="thx-fail-actions">
+                <a href="/sklep" class="thx-cta-btn">
+                  Wróć do sklepu
+                  <span class="thx-arrow">→</span>
+                </a>
+              </div>
+
+              <p class="thx-fail-help">
+                Coś nie działa? Napisz na <a href="mailto:sklep@dbamyopupile.pl">sklep@dbamyopupile.pl</a>
+                lub zadzwoń <a href="tel:+48577723506">577 723 506</a>.
+              </p>
             </div>
-            <h3>Pakujemy Twoje zamówienie</h3>
-            <p>Już dziś przygotowujemy paczkę. Wysyłka tego samego dnia, jeśli zamówiłaś do 14:00.</p>
-          </article>
+          </div>
+        </section>
+      </>
+    )}
 
-          <article class="ty-next-item">
-            <div class="ty-next-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+    {/* ============================================================
+       STATE: PENDING — PayU Authorized/Created (polling do Settled)
+       Lub UNKNOWN — fallback dla edge case'u brak payments[]
+       ============================================================ */}
+    {showPendingOrUnknown && (
+      <>
+        <section class="thx-hero">
+          <div class="thx-wrap">
+            <span class="thx-eyebrow thx-eyebrow-pending">Status płatności</span>
+            <h1 class="thx-h1">
+              Sprawdzamy <em>status płatności…</em>
+            </h1>
+            <p class="thx-lede">
+              Twoje zamówienie <strong class="thx-code">{order.code}</strong> jest
+              weryfikowane przez bank. Nie zamykaj tej strony — automatycznie odświeży się
+              po potwierdzeniu.
+            </p>
+          </div>
+        </section>
+
+        <section class="thx-section">
+          <div class="thx-wrap">
+            <div class="thx-pending-card">
+              <div class="thx-spinner" aria-hidden="true"></div>
+              <p class="thx-pending-status">Czekamy na potwierdzenie z PayU…</p>
+              <p class="thx-pending-help">
+                Zazwyczaj trwa to kilka sekund. Jeśli nic się nie dzieje przez 5 minut,
+                <a href="/kontakt">skontaktuj się z nami</a>.
+              </p>
             </div>
-            <h3>Dostaniesz numer śledzenia</h3>
-            <p>Mailem z linkiem do InPost. Zobaczysz dokładnie gdzie jest paczka.</p>
-          </article>
+          </div>
+        </section>
+      </>
+    )}
 
-          <article class="ty-next-item">
-            <div class="ty-next-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            </div>
-            <h3>Paczka u Ciebie w 24-48h</h3>
-            <p>Paczkomat InPost — zwykle 24h. Kurier — do 48h. Wysyłamy z magazynu w Polsce.</p>
-          </article>
-        </div>
-      </section>
+    {/* ============================================================
+       STATE: THANK YOU — COD lub PayU Settled
+       ============================================================ */}
+    {showThankYou && (
+      <>
+        {/* HERO */}
+        <section class="thx-hero">
+          <div class="thx-wrap">
+            <span class="thx-eyebrow">Płatność potwierdzona</span>
 
-      {/* DETAILS — zawsze otwarte (nie accordion) */}
-      <section class="ty-section">
-        <h2 class="ty-h2">Szczegóły zamówienia</h2>
-        <div class="ty-details">
-          <div class="ty-details-body">
-            <div class="ty-details-grid">
-              {customer && (
-                <div class="ty-details-block">
-                  <h3>Dane klienta</h3>
-                  <p>{customer.firstName} {customer.lastName}</p>
-                  <p>{customer.emailAddress}</p>
-                  {customer.phoneNumber && <p>{customer.phoneNumber}</p>}
-                </div>
+            <h1 class="thx-h1">
+              Dziękujemy. Twoje zamówienie jest <em>w drodze</em>
+            </h1>
+
+            <p class="thx-lede">
+              Numer zamówienia <strong class="thx-code">{order.code}</strong>.
+              {customer?.emailAddress && (
+                <>Potwierdzenie wysłaliśmy na <strong>{customer.emailAddress}</strong>.</>
               )}
+            </p>
+          </div>
+        </section>
 
-              {address && (
-                <div class="ty-details-block">
-                  <h3>Adres dostawy</h3>
-                  {address.fullName && <p>{address.fullName}</p>}
-                  <p>{address.streetLine1}</p>
-                  <p>{address.postalCode} {address.city}</p>
-                  {address.phoneNumber && <p class="ty-details-meta">tel. {address.phoneNumber}</p>}
-                  {shippingMethod && (
-                    <p class="ty-details-shipping">
-                      <span>Dostawa:</span> {shippingMethod}
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
+        {/* DETAILS — promote high so user verifies data before scrolling further */}
+        <section class="thx-section thx-section-soft">
+          <div class="thx-wrap">
+            <span class="thx-eyebrow">Szczegóły zamówienia</span>
+            <h2 class="thx-h2">
+              Sprawdź, czy <em>wszystko się zgadza</em>
+            </h2>
+            <p class="thx-h2-sub">Coś nie tak? Napisz na <a href="mailto:sklep@dbamyopupile.pl">sklep@dbamyopupile.pl</a>, poprawimy zanim spakujemy.</p>
 
-            <div class="ty-details-summary-box">
-              <OrderSummary order={order} />
+            <div class="thx-details-card">
+              <div class="thx-details-grid">
+                {customer && (
+                  <div class="thx-details-block">
+                    <div class="thx-details-label">Dane klienta</div>
+                    <p class="thx-details-name">{customer.firstName} {customer.lastName}</p>
+                    <p>{customer.emailAddress}</p>
+                    {customer.phoneNumber && <p>{customer.phoneNumber}</p>}
+                  </div>
+                )}
+
+                {address && (
+                  <div class="thx-details-block">
+                    <div class="thx-details-label">Adres dostawy</div>
+                    {address.fullName && <p class="thx-details-name">{address.fullName}</p>}
+                    <p>{address.streetLine1}</p>
+                    <p>{address.postalCode} {address.city}</p>
+                    {address.phoneNumber && <p class="thx-details-meta">tel. {address.phoneNumber}</p>}
+                    {shippingMethod && (
+                      <p class="thx-details-shipping">
+                        <span>Dostawa:</span> {shippingMethod}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div class="thx-details-summary">
+                <div class="thx-details-summary-label">Twoje produkty</div>
+                <OrderSummary order={order} readonly />
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* CTA */}
-      <section class="ty-cta">
-        <a href="/" class="ty-cta-btn">
-          Wróć do sklepu
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-        </a>
-        <p class="ty-cta-meta">Masz pytania? Napisz na <a href="mailto:sklep@dbamyopupile.pl">sklep@dbamyopupile.pl</a> lub zadzwoń <a href="tel:+48577723506">577 723 506</a>.</p>
-      </section>
+        {/* TRACKING */}
+        <section class="thx-section">
+          <div class="thx-wrap">
+            <div class="thx-track-card">
+              <div class="thx-track">
+                <div class="thx-track-step thx-track-active">
+                  <div class="thx-track-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                  </div>
+                  <span class="thx-track-label">Potwierdzone</span>
+                </div>
+                <div class="thx-track-line"></div>
+                <div class="thx-track-step">
+                  <div class="thx-track-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                  </div>
+                  <span class="thx-track-label">Pakowanie</span>
+                </div>
+                <div class="thx-track-line"></div>
+                <div class="thx-track-step">
+                  <div class="thx-track-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                  </div>
+                  <span class="thx-track-label">Wysyłka</span>
+                </div>
+                <div class="thx-track-line"></div>
+                <div class="thx-track-step">
+                  <div class="thx-track-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                  </div>
+                  <span class="thx-track-label">Dostarczone</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
 
-    </div>
+        {/* CO TERAZ */}
+        <section class="thx-section thx-section-soft">
+          <div class="thx-wrap">
+            <span class="thx-eyebrow">Co dalej</span>
+            <h2 class="thx-h2">
+              Trzy <em>kroki</em> i paczka będzie u Ciebie
+            </h2>
+
+            <div class="thx-next-grid">
+              <article class="thx-next-card">
+                <div class="thx-next-num">01</div>
+                <h3>Pakujemy zamówienie</h3>
+                <p>Dziś przygotowujemy paczkę. Wysyłka tego samego dnia, jeśli zamówiłaś do 14:00.</p>
+              </article>
+
+              <article class="thx-next-card">
+                <div class="thx-next-num">02</div>
+                <h3>Numer śledzenia mailem</h3>
+                <p>Dostaniesz link InPost, zobaczysz dokładnie, gdzie jest paczka.</p>
+              </article>
+
+              <article class="thx-next-card">
+                <div class="thx-next-num">03</div>
+                <h3>Paczka u Ciebie w 24–48h</h3>
+                <p>Paczkomat InPost, 24h. Kurier, do 48h. Przy zestawie 3 ścierek dostawa za 0 zł.</p>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        {/* CTA */}
+        <section class="thx-final">
+          <div class="thx-wrap">
+            <div class="thx-final-inner">
+              <h2 class="thx-final-title">
+                Do <em>zobaczenia</em> wkrótce
+              </h2>
+              <p class="thx-final-lede">
+                Jeśli masz pytanie do zamówienia, jesteśmy pod ręką.
+              </p>
+
+              <div class="thx-cta-wrap">
+                <a href="/" class="thx-cta-btn">
+                  Wróć do sklepu
+                  <span class="thx-arrow">→</span>
+                </a>
+              </div>
+
+              <p class="thx-cta-meta">
+                Napisz na <a href="mailto:sklep@dbamyopupile.pl">sklep@dbamyopupile.pl</a> lub zadzwoń <a href="tel:+48577723506">577 723 506</a>.
+              </p>
+            </div>
+          </div>
+        </section>
+      </>
+    )}
+
   </div>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com" slot="head" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin slot="head" />
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" slot="head" />
 </BaseLayout>
 
+{/* ============================================================
+   Browser fbq Purchase — TYLKO showThankYou + sessionStorage dedup
+   ============================================================ */}
+{showThankYou && browserPixelData && (
+  <script
+    is:inline
+    define:vars={{
+      orderCode: browserPixelData.orderCode,
+      value: browserPixelData.value,
+      currency: browserPixelData.currency,
+      contentIds: browserPixelData.contentIds,
+      contents: browserPixelData.contents,
+      numItems: browserPixelData.numItems,
+    }}
+  >
+    (function () {
+      if (typeof window.fbq !== 'function') return;
+      // sessionStorage dedup chroni przed double-fire po F5 refresh.
+      // Meta i tak deduplikuje po eventID (purchase-{orderCode}) w 7-dniowym oknie,
+      // ale lokalny check zmniejsza niepotrzebne network calls.
+      var key = 'purchase:fired:' + orderCode;
+      try {
+        if (sessionStorage.getItem(key)) return;
+        sessionStorage.setItem(key, '1');
+      } catch (e) {
+        // sessionStorage może być disabled (private mode, quota) — Meta dedup zadba o resztę
+      }
+      window.fbq(
+        'track',
+        'Purchase',
+        {
+          value: value,
+          currency: currency,
+          content_type: 'product',
+          content_ids: contentIds,
+          contents: contents,
+          num_items: numItems,
+        },
+        { eventID: 'purchase-' + orderCode },
+      );
+    })();
+  </script>
+)}
+
+{/* ============================================================
+   Behawioralny pixel — purchase (Warstwa 1, ZERO Meta).
+   TYLKO showThankYou (COD lub Settled — NIGDY pending/failed).
+   sessionStorage dedup per order.code chroni przed double-fire po F5.
+   ============================================================ */}
+{showThankYou && browserPixelData && (
+  <script
+    is:inline
+    define:vars={{
+      orderCode: browserPixelData.orderCode,
+      value: browserPixelData.spValue,
+      currency: browserPixelData.currency,
+      items: browserPixelData.items,
+    }}
+  >
+    (function () {
+      var key = 'sp:purchase:fired:' + orderCode;
+      try {
+        if (sessionStorage.getItem(key)) return;
+        sessionStorage.setItem(key, '1');
+      } catch {
+        // sessionStorage disabled (private mode/quota) — strzelamy mimo to.
+      }
+      if (window.sp && window.sp.track) {
+        window.sp.track('purchase', {
+          order_id: orderCode,
+          value: value,
+          currency: currency,
+          items: items,
+        });
+      }
+    })();
+  </script>
+)}
+
+{/* ============================================================
+   Polling /api/payment/status co 3s gdy Pending
+   Settled → reload pokaże thank-you; Failed → reload pokaże failed state.
+   Max 5 min, potem reload (user zobaczy aktualny stan, w razie czego refresh ręczny).
+   ============================================================ */}
+{showPendingOrUnknown && (
+  <script is:inline define:vars={{ orderCode: code }}>
+    (function () {
+      var POLL_MS = 3000;
+      var MAX_MS = 5 * 60 * 1000;
+      var url = '/api/payment/status?code=' + encodeURIComponent(orderCode);
+
+      var pollInterval = setInterval(async function () {
+        try {
+          var res = await fetch(url, { credentials: 'include' });
+          if (!res.ok) return; // 404/429 — silent, czekamy na kolejny tick
+          var json = await res.json();
+          if (json.status === 'COMPLETED' || json.status === 'FAILED') {
+            clearInterval(pollInterval);
+            window.location.reload();
+          }
+        } catch (e) {
+          // network glitch — silent, kolejny tick spróbuje
+        }
+      }, POLL_MS);
+
+      setTimeout(function () {
+        clearInterval(pollInterval);
+        window.location.reload();
+      }, MAX_MS);
+    })();
+  </script>
+)}
+
 <style is:global>
-  :root {
-    --ty-powder: #B8D8E8;
-    --ty-navy: #1E3A5F;
-    --ty-ivory: #FAF7F2;
-    --ty-ivory-2: #F2EDE3;
-    --ty-white: #FFFFFF;
-    --ty-ink: #1A1A1A;
-    --ty-ink-2: #5A5A5A;
-    --ty-rule: #E8E3D8;
-    --ty-shadow-soft: 0 2px 12px rgba(30, 58, 95, 0.06);
-    --ty-shadow-lift: 0 6px 24px rgba(30, 58, 95, 0.10);
-    --ty-radius: 16px;
-    --ty-ease: cubic-bezier(0.4, 0, 0.2, 1);
-    --ty-f-display: 'Fraunces', Georgia, serif;
-    --ty-f-body: 'Inter', system-ui, sans-serif;
+  /* ============================================ */
+  /* THANK-YOU PAGE — dbamyopupile.pl                    */
+  /* Brand-aligned z home.css                      */
+  /* ============================================ */
+  .thx {
+    --tx-canvas: #F5F1EA;
+    --tx-ivory-2: #E8F0F6;
+    --tx-navy: #1C2331;
+    --tx-navy-2: #0F1620;
+    --tx-blue: #7497BF;
+    --tx-blue-soft: #A8D2EE;
+    --tx-ink: #1C2331;
+    --tx-ink-2: #4A5568;
+    --tx-ink-3: #6B7280;
+    --tx-rule: #D5E3EE;
+    --tx-rule-soft: #E8F0F6;
+    --tx-white: #ffffff;
+    --tx-warn: #C84A4A;
+    --tx-warn-soft: #FBEAEA;
+    --tx-pending: #B68A3E;
+    --tx-pending-soft: #FBF3E2;
+    --tx-shadow-soft: 0 4px 16px rgba(28, 35, 49, 0.08);
+    --tx-shadow-lift: 0 12px 40px rgba(28, 35, 49, 0.12);
+    --tx-f-display: "Outfit", -apple-system, system-ui, sans-serif;
+    --tx-f-body: "Outfit", -apple-system, system-ui, sans-serif;
+    --tx-wrap: 1100px;
+    --tx-gutter: clamp(20px, 4vw, 56px);
+    --tx-ease: cubic-bezier(0.16, 1, 0.3, 1);
+    font-family: var(--tx-f-body);
+    color: var(--tx-ink);
+    background: var(--tx-canvas);
+    line-height: 1.6;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .thx *, .thx *::before, .thx *::after { box-sizing: border-box; }
+  .thx p { margin: 0; }
+  .thx h1, .thx h2, .thx h3 {
+    margin: 0;
+    font-family: var(--tx-f-display);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+    color: var(--tx-ink);
   }
 
-  .ty-page {
-    background: var(--ty-ivory);
-    min-height: 100vh;
-    font-family: var(--ty-f-body);
-    color: var(--ty-ink);
-    padding: 32px 16px 64px;
-  }
-  @media (min-width: 768px) {
-    .ty-page { padding: 56px 24px 96px; }
+  .thx-wrap {
+    max-width: var(--tx-wrap);
+    margin: 0 auto;
+    padding-left: max(var(--tx-gutter), env(safe-area-inset-left));
+    padding-right: max(var(--tx-gutter), env(safe-area-inset-right));
+    width: 100%;
   }
 
-  .ty-wrap {
+  /* Eyebrow pill — identyczny jak home .eyebrow */
+  .thx-eyebrow {
+    display: inline-block;
+    font-family: var(--tx-f-body);
+    font-weight: 700;
+    font-size: 11.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--tx-navy);
+    background: var(--tx-blue);
+    padding: 6px 14px;
+    border-radius: 999px;
+    margin-bottom: 18px;
+  }
+  .thx-eyebrow-fail {
+    background: var(--tx-warn);
+    color: #fff;
+  }
+  .thx-eyebrow-pending {
+    background: var(--tx-pending);
+    color: #fff;
+  }
+
+  /* ============================================ */
+  /* HERO                                          */
+  /* ============================================ */
+  .thx-hero {
+    position: relative;
+    background: var(--tx-canvas);
+    padding: clamp(48px, 6vw, 88px) 0 clamp(32px, 4vw, 56px);
+    overflow: hidden;
+    text-align: center;
+  }
+  .thx-hero::before {
+    content: "";
+    position: absolute;
+    top: -120px;
+    right: -180px;
+    width: 520px;
+    height: 520px;
+    background: radial-gradient(circle, rgba(116, 151, 191, 0.32) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .thx-hero::after {
+    content: "";
+    position: absolute;
+    bottom: -180px;
+    left: -200px;
+    width: 480px;
+    height: 480px;
+    background: radial-gradient(circle, rgba(116, 151, 191, 0.22) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .thx-hero .thx-wrap {
+    position: relative;
     max-width: 760px;
+  }
+
+  .thx-h1 {
+    font-family: var(--tx-f-display);
+    font-weight: 700;
+    font-size: clamp(34px, 6vw, 60px);
+    line-height: 1.02;
+    letter-spacing: -0.03em;
+    color: var(--tx-ink);
+    margin: 0 0 22px;
+  }
+  .thx-h1 em {
+    font-style: italic;
+    font-weight: 600;
+    color: var(--tx-navy);
+  }
+
+  .thx-lede {
+    font-family: var(--tx-f-body);
+    font-weight: 400;
+    font-size: clamp(15.5px, 1.4vw, 18px);
+    line-height: 1.55;
+    color: var(--tx-ink-2);
+    max-width: 560px;
     margin: 0 auto;
   }
+  .thx-lede strong { color: var(--tx-ink); font-weight: 600; }
+  .thx-code {
+    font-family: var(--tx-f-display);
+    font-weight: 700;
+    color: var(--tx-navy);
+    letter-spacing: 0.03em;
+  }
 
-  /* HERO */
-  .ty-hero {
+  /* ============================================ */
+  /* SECTIONS                                      */
+  /* ============================================ */
+  .thx-section { padding: clamp(40px, 5vw, 72px) 0; }
+  .thx-section-soft {
+    background: var(--tx-ivory-2);
+    border-top: 1px solid var(--tx-rule);
+    border-bottom: 1px solid var(--tx-rule);
+  }
+
+  .thx-h2 {
+    font-family: var(--tx-f-display);
+    font-weight: 700;
+    font-size: clamp(26px, 3.5vw, 42px);
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+    color: var(--tx-ink);
+    max-width: 720px;
+    margin: 0 0 32px;
+  }
+  .thx-h2 em { font-style: italic; font-weight: 600; color: var(--tx-navy); }
+
+  .thx-h2-sub {
+    font-family: var(--tx-f-display);
+    font-size: clamp(15px, 1.4vw, 17px);
+    line-height: 1.55;
+    color: var(--tx-ink-2);
+    max-width: 640px;
+    margin: -16px 0 32px;
+  }
+  .thx-h2-sub a {
+    color: var(--tx-navy);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+  }
+  .thx-h2-sub a:hover { text-decoration-thickness: 2px; }
+
+  /* ============================================ */
+  /* FAILED STATE — payment cancelled/error        */
+  /* ============================================ */
+  .thx-fail-card {
+    background: var(--tx-white);
+    border: 1px solid var(--tx-warn);
+    border-radius: 0;
+    padding: clamp(28px, 4vw, 48px);
+    max-width: 720px;
+    margin: 0 auto;
+    box-shadow: var(--tx-shadow-soft);
     text-align: center;
-    margin-bottom: 48px;
   }
-  @media (min-width: 768px) {
-    .ty-hero { margin-bottom: 64px; }
-  }
-
-  .ty-checkmark-wrap {
-    display: inline-block;
-    margin: 0 auto 24px;
-    animation: tyCheckScale 0.5s var(--ty-ease);
-  }
-  .ty-checkmark-svg {
-    width: 88px;
-    height: 88px;
-    filter: drop-shadow(0 4px 12px rgba(184, 216, 232, 0.4));
-  }
-  .ty-checkmark-bg {
-    transform-origin: center;
-    animation: tyCheckBg 0.4s var(--ty-ease);
-  }
-  .ty-checkmark-path {
-    stroke-dasharray: 60;
-    stroke-dashoffset: 60;
-    animation: tyCheckDraw 0.5s ease-out 0.3s forwards;
-  }
-
-  @keyframes tyCheckScale {
-    0% { transform: scale(0); opacity: 0; }
-    60% { transform: scale(1.1); }
-    100% { transform: scale(1); opacity: 1; }
-  }
-  @keyframes tyCheckBg {
-    0% { transform: scale(0); }
-    100% { transform: scale(1); }
-  }
-  @keyframes tyCheckDraw {
-    to { stroke-dashoffset: 0; }
-  }
-
-  .ty-eyebrow {
-    font-family: var(--ty-f-body);
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--ty-ink-2);
+  .thx-fail-title {
+    font-family: var(--tx-f-display);
+    font-size: clamp(22px, 2.8vw, 30px);
+    color: var(--tx-ink);
     margin: 0 0 12px;
   }
-
-  .ty-title {
-    font-family: var(--ty-f-display);
-    font-style: italic;
-    font-weight: 400;
-    font-size: clamp(32px, 6vw, 48px);
-    line-height: 1.1;
-    letter-spacing: -0.02em;
-    color: var(--ty-navy);
-    margin: 0 0 16px;
-  }
-
-  .ty-subtitle {
+  .thx-fail-desc {
+    font-family: var(--tx-f-body);
     font-size: 15px;
-    color: var(--ty-ink-2);
-    margin: 0 0 8px;
+    line-height: 1.6;
+    color: var(--tx-ink-2);
+    margin: 0 0 28px;
   }
-  .ty-order-code {
-    font-family: var(--ty-f-body);
-    font-weight: 700;
-    color: var(--ty-navy);
-    letter-spacing: 0.04em;
+  .thx-fail-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 28px;
   }
-
-  .ty-email {
-    font-size: 14px;
-    color: var(--ty-ink-2);
-    margin: 8px 0 0;
+  @media (min-width: 540px) {
+    .thx-fail-actions { flex-direction: row; justify-content: center; }
   }
-  .ty-email strong {
-    color: var(--ty-ink);
+  .thx-fail-help {
+    font-family: var(--tx-f-body);
+    font-size: 13.5px;
+    color: var(--tx-ink-3);
+    line-height: 1.7;
+    border-top: 1px solid var(--tx-rule);
+    padding-top: 20px;
+  }
+  .thx-fail-help a {
+    color: var(--tx-navy);
     font-weight: 600;
+    text-decoration: none;
+    border-bottom: 1px solid var(--tx-rule);
+  }
+  .thx-fail-help a:hover { border-color: var(--tx-navy); }
+
+  .thx-cta-btn-ghost {
+    background: transparent !important;
+    color: var(--tx-navy) !important;
+    border: 1.5px solid var(--tx-navy);
+    box-shadow: none !important;
+  }
+  .thx-cta-btn-ghost:hover {
+    background: var(--tx-navy) !important;
+    color: #fff !important;
   }
 
-  /* TRACKING */
-  .ty-tracking {
+  /* ============================================ */
+  /* PENDING STATE — polling do Settled            */
+  /* ============================================ */
+  .thx-pending-card {
+    background: var(--tx-white);
+    border: 1px solid var(--tx-pending);
+    padding: clamp(40px, 5vw, 64px) clamp(28px, 4vw, 48px);
+    max-width: 560px;
+    margin: 0 auto;
+    box-shadow: var(--tx-shadow-soft);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+  .thx-spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid var(--tx-rule);
+    border-top-color: var(--tx-pending);
+    border-radius: 50%;
+    animation: thx-spin 900ms linear infinite;
+  }
+  @keyframes thx-spin {
+    to { transform: rotate(360deg); }
+  }
+  .thx-pending-status {
+    font-family: var(--tx-f-display);
+    font-weight: 600;
+    font-size: 18px;
+    color: var(--tx-ink);
+    margin: 0;
+  }
+  .thx-pending-help {
+    font-family: var(--tx-f-body);
+    font-size: 14px;
+    color: var(--tx-ink-3);
+    line-height: 1.6;
+    margin: 0;
+  }
+  .thx-pending-help a {
+    color: var(--tx-navy);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  /* ============================================ */
+  /* TRACKING                                      */
+  /* ============================================ */
+  .thx-track-card {
+    background: var(--tx-white);
+    border: 1px solid var(--tx-rule);
+    padding: clamp(20px, 3vw, 32px) clamp(16px, 2.5vw, 36px);
+    box-shadow: var(--tx-shadow-soft);
+  }
+
+  .thx-track {
     display: grid;
     grid-template-columns: auto 1fr auto 1fr auto 1fr auto;
-    align-items: center;
+    align-items: flex-start;
     gap: 8px;
-    background: var(--ty-white);
-    border: 1px solid var(--ty-rule);
-    border-radius: var(--ty-radius);
-    padding: 24px 16px;
-    margin-bottom: 56px;
-    box-shadow: var(--ty-shadow-soft);
   }
   @media (min-width: 768px) {
-    .ty-tracking { padding: 28px 32px; gap: 16px; }
+    .thx-track { gap: 16px; }
   }
 
-  .ty-track-step {
+  .thx-track-step {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 10px;
   }
 
-  .ty-track-icon {
+  .thx-track-icon {
     width: 44px;
     height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    background: var(--ty-ivory-2);
-    color: var(--ty-ink-2);
-    border: 2px solid var(--ty-rule);
-    transition: all 300ms var(--ty-ease);
+    background: var(--tx-ivory-2);
+    color: var(--tx-ink-3);
+    border: 2px solid var(--tx-rule);
+    transition: all 300ms var(--tx-ease);
+    flex-shrink: 0;
   }
-  .ty-track-icon svg {
+  @media (min-width: 768px) {
+    .thx-track-icon { width: 52px; height: 52px; }
+  }
+  .thx-track-icon svg {
     width: 20px;
     height: 20px;
   }
-
-  .ty-track-active .ty-track-icon {
-    background: var(--ty-navy);
-    border-color: var(--ty-navy);
-    color: var(--ty-white);
-    box-shadow: 0 4px 12px rgba(30, 58, 95, 0.25);
+  @media (min-width: 768px) {
+    .thx-track-icon svg { width: 22px; height: 22px; }
   }
 
-  .ty-track-label {
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.06em;
+  .thx-track-active .thx-track-icon {
+    background: var(--tx-navy);
+    border-color: var(--tx-navy);
+    color: var(--tx-blue);
+    box-shadow: 0 6px 18px rgba(28, 35, 49, 0.28);
+  }
+
+  .thx-track-label {
+    font-family: var(--tx-f-body);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--ty-ink-2);
+    color: var(--tx-ink-3);
     text-align: center;
     line-height: 1.2;
-  }
-  .ty-track-active .ty-track-label {
-    color: var(--ty-navy);
-  }
-
-  .ty-track-line {
-    height: 2px;
-    background: var(--ty-rule);
-    border-radius: 2px;
-    margin-top: -28px;
-  }
-
-  /* SECTIONS */
-  .ty-section {
-    margin-bottom: 56px;
+    max-width: 88px;
   }
   @media (min-width: 768px) {
-    .ty-section { margin-bottom: 72px; }
+    .thx-track-label { font-size: 11.5px; max-width: none; }
+  }
+  .thx-track-active .thx-track-label {
+    color: var(--tx-navy);
   }
 
-  .ty-h2 {
-    font-family: var(--ty-f-display);
-    font-style: italic;
-    font-weight: 400;
-    font-size: clamp(24px, 3.5vw, 32px);
-    line-height: 1.2;
-    letter-spacing: -0.015em;
-    color: var(--ty-navy);
-    margin: 0 0 8px;
-    text-align: center;
+  .thx-track-line {
+    height: 2px;
+    background: var(--tx-rule);
+    border-radius: 2px;
+    margin-top: 22px;
+  }
+  @media (min-width: 768px) {
+    .thx-track-line { margin-top: 26px; }
   }
 
-  .ty-lede {
-    font-size: 15px;
-    color: var(--ty-ink-2);
-    text-align: center;
-    margin: 0 0 28px;
-  }
-
-  /* CO TERAZ — 3 kroki */
-  .ty-next {
+  /* ============================================ */
+  /* CO TERAZ — 3 cards (wzór home-why-card)       */
+  /* ============================================ */
+  .thx-next-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 16px;
-    margin-top: 28px;
+    gap: 20px;
   }
-  @media (min-width: 768px) {
-    .ty-next { grid-template-columns: repeat(3, 1fr); gap: 20px; }
-  }
-
-  .ty-next-item {
-    background: var(--ty-white);
-    border: 1px solid var(--ty-rule);
-    border-radius: var(--ty-radius);
-    padding: 24px;
-    text-align: left;
-    transition: all 300ms var(--ty-ease);
-  }
-  .ty-next-item:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--ty-shadow-lift);
-    border-color: var(--ty-powder);
+  @media (min-width: 720px) {
+    .thx-next-grid { grid-template-columns: repeat(3, 1fr); gap: 24px; }
   }
 
-  .ty-next-icon {
-    width: 48px;
-    height: 48px;
+  .thx-next-card {
+    background: var(--tx-white);
+    border: 1px solid var(--tx-rule);
     display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 12px;
-    background: var(--ty-powder);
-    color: var(--ty-navy);
-    margin-bottom: 16px;
+    flex-direction: column;
+    transition: transform 400ms var(--tx-ease), box-shadow 400ms var(--tx-ease);
   }
-  .ty-next-icon svg {
-    width: 24px;
-    height: 24px;
+  .thx-next-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--tx-shadow-lift);
   }
 
-  .ty-next-item h3 {
-    font-family: var(--ty-f-body);
-    font-weight: 700;
-    font-size: 16px;
-    letter-spacing: -0.005em;
-    color: var(--ty-ink);
-    margin: 0 0 8px;
-    line-height: 1.3;
+  .thx-next-num {
+    font-family: var(--tx-f-display);
+    font-style: italic;
+    font-weight: 300;
+    font-size: 64px;
+    line-height: 1;
+    color: var(--tx-navy);
+    padding: 24px 26px 0;
   }
-  .ty-next-item p {
-    font-size: 14px;
-    color: var(--ty-ink-2);
+  .thx-next-card h3 {
+    font-family: var(--tx-f-body);
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: -0.005em;
+    line-height: 1.3;
+    color: var(--tx-ink);
+    padding: 8px 26px 0;
+    margin: 0;
+  }
+  .thx-next-card p {
+    font-family: var(--tx-f-body);
+    font-size: 14.5px;
     line-height: 1.55;
+    color: var(--tx-ink-2);
+    padding: 12px 26px 28px;
     margin: 0;
   }
 
-  /* UPSELL */
-  .ty-upsell-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-  }
-  @media (min-width: 768px) {
-    .ty-upsell-grid { grid-template-columns: repeat(4, 1fr); gap: 20px; }
-  }
-
-  /* DETAILS */
-  .ty-details {
-    background: var(--ty-white);
-    border: 1px solid var(--ty-rule);
-    border-radius: var(--ty-radius);
-    overflow: hidden;
-    margin-top: 28px;
+  /* ============================================ */
+  /* DETAILS                                       */
+  /* ============================================ */
+  .thx-details-card {
+    background: var(--tx-white);
+    border: 1px solid var(--tx-rule);
+    padding: clamp(24px, 3.5vw, 44px);
   }
 
-  .ty-details-body {
-    padding: 24px;
-  }
-  @media (min-width: 768px) {
-    .ty-details-body { padding: 32px; }
-  }
-
-  .ty-details-grid {
+  .thx-details-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 24px;
-    margin-bottom: 28px;
+    gap: clamp(24px, 3vw, 40px);
+    padding-bottom: clamp(24px, 3vw, 36px);
+    border-bottom: 1px solid var(--tx-rule);
   }
   @media (min-width: 640px) {
-    .ty-details-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
+    .thx-details-grid { grid-template-columns: 1fr 1fr; }
   }
 
-  .ty-details-block h3 {
-    font-family: var(--ty-f-body);
+  .thx-details-label {
+    font-family: var(--tx-f-body);
     font-weight: 700;
     font-size: 11px;
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: var(--ty-ink-2);
-    margin: 0 0 12px;
+    color: var(--tx-ink-3);
+    margin-bottom: 14px;
   }
-  .ty-details-block p {
-    font-size: 14px;
-    color: var(--ty-ink);
+  .thx-details-block p {
+    font-family: var(--tx-f-body);
+    font-size: 14.5px;
+    color: var(--tx-ink-2);
     margin: 0 0 4px;
     line-height: 1.5;
   }
-  .ty-details-meta {
-    color: var(--ty-ink-2) !important;
-    font-size: 13px !important;
+  .thx-details-name {
+    color: var(--tx-ink) !important;
+    font-weight: 600 !important;
+    font-size: 15px !important;
   }
-  .ty-details-shipping {
-    margin-top: 8px !important;
-    padding-top: 8px;
-    border-top: 1px solid var(--ty-rule);
+  .thx-details-meta {
+    color: var(--tx-ink-3) !important;
     font-size: 13px !important;
-    color: var(--ty-ink-2) !important;
+    margin-top: 2px !important;
   }
-  .ty-details-shipping span {
-    font-weight: 600;
+  .thx-details-shipping {
+    margin-top: 12px !important;
+    padding-top: 12px;
+    border-top: 1px dashed var(--tx-rule);
+    font-size: 13px !important;
+    color: var(--tx-ink-2) !important;
+  }
+  .thx-details-shipping span {
+    font-weight: 700;
+    color: var(--tx-navy);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 11px;
+    margin-right: 6px;
   }
 
-  .ty-details-summary-box {
-    border-top: 1px solid var(--ty-rule);
-    padding-top: 24px;
+  .thx-details-summary {
+    padding-top: clamp(24px, 3vw, 36px);
+  }
+  .thx-details-summary-label {
+    font-family: var(--tx-f-body);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--tx-ink-3);
+    margin-bottom: 18px;
   }
 
-  /* CTA */
-  .ty-cta {
+  /* ============================================ */
+  /* FINAL CTA                                     */
+  /* ============================================ */
+  .thx-final {
+    background: var(--tx-canvas);
+    padding: clamp(72px, 9vw, 120px) 0 clamp(96px, 11vw, 144px);
+  }
+
+  .thx-final-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     text-align: center;
-    padding: 32px 0 0;
+    max-width: 560px;
+    margin: 0 auto;
   }
-  .ty-cta-btn {
+
+  .thx-final-title {
+    font-family: var(--tx-f-display);
+    font-weight: 700;
+    font-size: clamp(28px, 4vw, 48px);
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+    color: var(--tx-ink);
+    margin: 0;
+  }
+  .thx-final-title em { font-style: italic; font-weight: 600; color: var(--tx-navy); }
+
+  .thx-final-lede {
+    font-family: var(--tx-f-body);
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--tx-ink-2);
+    max-width: 480px;
+    margin: 20px 0 0;
+  }
+
+  .thx-cta-wrap {
+    margin-top: 40px;
+  }
+  .thx-cta-btn {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
-    background: var(--ty-navy);
-    color: var(--ty-white);
-    font-family: var(--ty-f-body);
-    font-weight: 600;
+    gap: 12px;
+    padding: 18px 32px;
+    font-family: var(--tx-f-body);
+    font-weight: 700;
     font-size: 15px;
-    padding: 16px 32px;
-    border-radius: 100px;
+    letter-spacing: 0.02em;
+    border-radius: 14px;
+    background: var(--tx-navy);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(28, 35, 49, 0.28), 0 1px 3px rgba(28, 35, 49, 0.18);
+    transition: background 200ms var(--tx-ease), transform 200ms var(--tx-ease), box-shadow 200ms var(--tx-ease);
     text-decoration: none;
-    transition: all 300ms var(--ty-ease);
-    box-shadow: 0 4px 16px rgba(30, 58, 95, 0.2);
   }
-  .ty-cta-btn:hover {
-    background: #15294A;
+  .thx-cta-btn:hover {
+    background: var(--tx-navy-2);
     transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(30, 58, 95, 0.3);
+    box-shadow: 0 8px 24px rgba(28, 35, 49, 0.34);
+    color: #fff;
   }
-  .ty-cta-btn svg {
-    width: 18px;
-    height: 18px;
+  .thx-arrow {
+    font-family: var(--tx-f-display);
+    font-weight: 300;
+    font-size: 22px;
+    transition: transform 280ms var(--tx-ease);
   }
+  .thx-cta-btn:hover .thx-arrow { transform: translateX(6px); }
 
-  .ty-cta-meta {
-    margin: 24px auto 0;
-    font-size: 13px;
-    color: var(--ty-ink-2);
-    max-width: 480px;
-    line-height: 1.6;
+  .thx-cta-meta {
+    margin: 64px 0 0;
+    font-family: var(--tx-f-body);
+    font-size: 13.5px;
+    color: var(--tx-ink-3);
+    line-height: 1.7;
   }
-  .ty-cta-meta a {
-    color: var(--ty-navy);
+  .thx-cta-meta a {
+    color: var(--tx-navy);
     font-weight: 600;
     text-decoration: none;
+    border-bottom: 1px solid var(--tx-rule);
+    transition: border-color 200ms var(--tx-ease);
   }
-  .ty-cta-meta a:hover {
-    text-decoration: underline;
+  .thx-cta-meta a:hover {
+    border-color: var(--tx-navy);
   }
 
-  /* Reduced motion */
+  /* ============================================ */
+  /* OrderSummary override w details-card          */
+  /* ============================================ */
+  .thx-details-summary #order-summary ul {
+    padding-left: 0;
+  }
+
+  /* ============================================ */
+  /* Reduced motion                                */
+  /* ============================================ */
   @media (prefers-reduced-motion: reduce) {
-    .ty-checkmark-wrap,
-    .ty-checkmark-bg,
-    .ty-checkmark-path {
-      animation: none !important;
+    .thx-next-card,
+    .thx-cta-btn,
+    .thx-arrow,
+    .thx-track-icon {
+      transition: none !important;
     }
-    .ty-checkmark-path {
-      stroke-dashoffset: 0 !important;
+    .thx-next-card:hover,
+    .thx-cta-btn:hover {
+      transform: none !important;
+    }
+    .thx-spinner {
+      animation: none !important;
     }
   }
 </style>
+</content>
+</invoke>

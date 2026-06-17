@@ -7,28 +7,47 @@ if (!code) {
 }
 ---
 
-<BaseLayout title="Potwierdzanie platnosci BLIK" noindex={true}>
-  <div class="min-h-[60vh] flex items-center justify-center px-4">
-    <div class="max-w-sm w-full text-center">
+<BaseLayout title="Potwierdzanie płatności BLIK" noindex={true}>
+  <div class="mx-auto max-w-[28rem] px-4 py-16 text-center">
       <!-- Spinner -->
       <div id="blik-spinner" class="mx-auto mb-6 h-16 w-16 animate-spin rounded-full border-4 border-gray-200 border-t-gray-900"></div>
 
       <h1 id="blik-title" class="text-xl font-bold text-gray-900 mb-2">
-        Potwierdz platnosc w aplikacji bankowej
+        Potwierdź płatność w aplikacji bankowej
       </h1>
       <p id="blik-subtitle" class="text-sm text-gray-500 mb-6">
         Otwórz aplikację banku i zatwierdź płatność BLIK. Czekamy na potwierdzenie...
       </p>
 
       <div id="blik-timer" class="text-xs text-gray-400 mb-4">
-        Pozostalo: <span id="blik-countdown">120</span>s
+        Pozostało: <span id="blik-countdown">120</span>s
+      </div>
+
+      <!--
+        Manual cancel — UX dla "user kliknął anuluj w aplikacji bankowej".
+        Klik → POST /api/payment/cancel (ACK marker) → redirect na
+        /potwierdzenie?code=XXX&manualCancel=1 (failed UI bez czekania na IPN).
+        Po IPN PayU Vendure i tak ustawi payment.state=Cancelled — eventual
+        consistency, UI już pokazał failed state.
+      -->
+      <div id="blik-cancel-section" class="mt-10 pt-6 border-t border-gray-100">
+        <p class="text-xs text-gray-400 mb-3">
+          Anulowałeś płatność w aplikacji bankowej?
+        </p>
+        <button
+          id="manual-cancel-btn"
+          type="button"
+          class="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          Tak, anulowałem
+        </button>
       </div>
 
       <!-- Error state (hidden by default) -->
       <div id="blik-error" class="hidden">
-        <p class="text-sm text-red-600 mb-4">Platnosc nie zostala potwierdzona.</p>
+        <p class="text-sm text-red-600 mb-4">Płatność nie została potwierdzona.</p>
         <a href="/checkout" class="inline-flex items-center justify-center rounded-lg bg-gray-900 px-6 py-3 text-sm font-medium text-white hover:bg-gray-800 transition-colors">
-          Sprobuj ponownie
+          Spróbuj ponownie
         </a>
       </div>
 
@@ -39,9 +58,8 @@ if (!code) {
             <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <p class="text-sm text-green-700 font-medium">Platnosc potwierdzona! Przekierowujemy...</p>
+        <p class="text-sm text-green-700 font-medium">Płatność potwierdzona! Przekierowujemy...</p>
       </div>
-    </div>
   </div>
 
   <script is:inline define:vars={{ orderCode: code }}>
@@ -71,7 +89,7 @@ if (!code) {
     function showError() {
       done = true;
       spinnerEl.classList.add('hidden');
-      titleEl.textContent = 'Platnosc nie powiodla sie';
+      titleEl.textContent = 'Płatność nie powiodła się';
       subtitleEl.classList.add('hidden');
       timerEl.classList.add('hidden');
       errorEl.classList.remove('hidden');
@@ -94,11 +112,37 @@ if (!code) {
         });
     }
 
-    // Poll every 2 seconds
+    // Poll every 1s — szybkie wykrycie Cancelled po IPN webhook (PayU IPN
+    // dochodzi 30s-2min po user akcji, więc każda sekunda oczekiwania = UX win).
+    // Rate limit `/api/payment/status` podbity do 120 req/min/IP pod ten use case.
     var pollInterval = setInterval(function() {
       if (done) { clearInterval(pollInterval); return; }
       checkStatus();
-    }, 2000);
+    }, 1000);
+
+    // Manual cancel — user kliknął "Anuluj" w aplikacji bankowej i chce od razu
+    // failed UI bez czekania na IPN webhook od PayU. POST /api/payment/cancel to
+    // tylko ACK (Vendure dalej dostanie Cancelled po IPN, eventual consistency),
+    // klient robi hard redirect na /potwierdzenie?code=XXX&manualCancel=1.
+    var cancelBtn = document.getElementById('manual-cancel-btn');
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', function() {
+        if (done) return;
+        done = true;
+        cancelBtn.setAttribute('disabled', 'true');
+        cancelBtn.textContent = 'Przekierowuję...';
+        clearInterval(pollInterval);
+        clearInterval(timerInterval);
+        fetch('/api/payment/cancel?code=' + encodeURIComponent(orderCode), {
+          method: 'POST',
+          credentials: 'include',
+        })
+          .catch(function() { /* ACK only, ignorujemy błąd */ })
+          .finally(function() {
+            window.location.href = '/potwierdzenie?code=' + orderCode + '&manualCancel=1';
+          });
+      });
+    }
 
     // Countdown timer
     var timerInterval = setInterval(function() {

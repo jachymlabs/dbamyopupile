@@ -1,0 +1,2869 @@
+---
+/**
+ * ClickyDescription — pełny opis produktu Clicky.
+ * Smukły walec z mikro-kolcami i cichym pop-buttonem — aktywność dla rąk bez ekranu.
+ *
+ * Assety w /public/clicky/photos/ (22 webp).
+ * Tone post-humanizer: lowercase, konwersacyjny, screen-free, bez medical claims.
+ */
+import { shopApi } from '@/lib/vendure';
+import { SEARCH_PRODUCTS } from '@/lib/queries';
+import { getProductReviews, formatRating, ratingPercentages, opiniiPlural, starKind } from '@/lib/reviews';
+import { getRegularPrice } from '@/lib/prices';
+
+const ASSET_BASE = '/clicky/photos';
+
+// Reviews — z osobnego JSON per produkt (clicky tutaj)
+const reviews = getProductReviews('clicky');
+const ratingPct = reviews ? ratingPercentages(reviews) : null;
+
+// Fetch related products — exclude clicky, take first 5
+let relatedProducts: any[] = [];
+try {
+  const data = await shopApi<any>(SEARCH_PRODUCTS, {
+    input: { groupByProduct: true, take: 12 },
+  }, Astro.request);
+  relatedProducts = (data.search?.items ?? [])
+    .filter((p: any) => p.slug !== 'clicky')
+    .slice(0, 5);
+} catch (e: any) {
+  if (import.meta.env.DEV) console.error('ClickyDescription related products fetch failed:', e?.message);
+}
+
+function formatPrice(grosze: number): string {
+  return (grosze / 100).toLocaleString('pl-PL', { style: 'currency', currency: 'PLN', minimumFractionDigits: 2 });
+}
+
+function extractPrice(p: any): number {
+  const pw = p?.priceWithTax;
+  if (!pw) return 0;
+  if (typeof pw === 'number') return pw;
+  // SinglePrice { value } | PriceRange { min, max }
+  if (typeof pw.value === 'number') return pw.value;
+  if (typeof pw.min === 'number') return pw.min;
+  return 0;
+}
+---
+
+<div class="md-pdp">
+
+  {/* ========== 01 — HERO 4 ZDJĘCIA (PC: 4-up grid, no arrows; mobile: carousel) ========== */}
+  <section class="md-hero-gifs">
+    <div class="md-gif-carousel" id="md-gif-carousel">
+      <div class="md-gif-item"><img src={`${ASSET_BASE}/clicky-01-makro-pawprint-button.webp`} alt="" loading="eager" /></div>
+      <div class="md-gif-item"><img src={`${ASSET_BASE}/clicky-16-hero-studio-okno-promien.webp`} alt="" loading="lazy" /></div>
+      <div class="md-gif-item"><img src={`${ASSET_BASE}/clicky-17-hero-lifestyle-salon.webp`} alt="" loading="lazy" /></div>
+      <div class="md-gif-item"><img src={`${ASSET_BASE}/clicky-02-makro-spikes-tekstura.webp`} alt="" loading="lazy" /></div>
+    </div>
+    <div class="md-mobile-arrows">
+      <button type="button" class="md-arrow" data-md-carousel-prev="md-gif-carousel" aria-label="Poprzedni">
+        <span class="material-symbols-outlined">chevron_left</span>
+      </button>
+      <button type="button" class="md-arrow" data-md-carousel-next="md-gif-carousel" aria-label="Następny">
+        <span class="material-symbols-outlined">chevron_right</span>
+      </button>
+    </div>
+  </section>
+
+  {/* ========== 02 — PROBLEM → SOLUTION (refined split) ========== */}
+  <section class="md-section md-section--surface md-section--compact">
+    <div class="md-container">
+      <div class="md-center" style="margin-bottom: 36px;">
+        <span class="md-eyebrow md-eyebrow--sage">Od telefonu do kieszeni</span>
+        <h2>Twoje ręce i tak będą szukać czegoś do roboty. Niech to nie będzie długopis albo <span class="md-em">paznokieć</span></h2>
+      </div>
+      <div class="md-problem-solve">
+        <div class="md-ps-side md-ps-side--problem">
+          <div class="md-ps-head">
+            <span class="md-ps-emoji" aria-hidden="true">⨯</span>
+            <span class="md-ps-tag md-ps-tag--problem">Co teraz</span>
+          </div>
+          <ul class="md-ps-list">
+            <li><span class="material-symbols-outlined">close</span>klikasz długopis — i wszyscy w sali to słyszą</li>
+            <li><span class="material-symbols-outlined">close</span>obgryzasz paznokcie zanim zdążysz zauważyć, że zacząłeś</li>
+            <li><span class="material-symbols-outlined">close</span>sięgasz po telefon nie dlatego, że chcesz, ale żeby ręce miały co robić</li>
+            <li><span class="material-symbols-outlined">close</span>napięcie zostaje w ciele, a głowa kręci się w kółko</li>
+          </ul>
+          <p class="md-ps-foot">to nie jest kwestia silnej woli. ręce po prostu potrzebują zadania. i zazwyczaj biorą pierwsze, co jest pod ręką.</p>
+        </div>
+        <div class="md-ps-bridge" aria-hidden="true">
+          <div class="md-ps-bridge-circle">
+            <span class="md-ps-bridge-arrow">→</span>
+          </div>
+          <span class="md-ps-bridge-label">Clicky</span>
+        </div>
+        <div class="md-ps-side md-ps-side--solution">
+          <div class="md-ps-head">
+            <span class="md-ps-emoji" aria-hidden="true">✓</span>
+            <span class="md-ps-tag md-ps-tag--solution">Co dostajesz</span>
+          </div>
+          <ul class="md-ps-list md-ps-list--ok">
+            <li><span class="material-symbols-outlined md-icon-fill">check_circle</span>cichy klik, którego słyszysz tylko ty</li>
+            <li><span class="material-symbols-outlined md-icon-fill">check_circle</span>kolce do przesuwania palcami — rytmicznie, bez myślenia</li>
+            <li><span class="material-symbols-outlined md-icon-fill">check_circle</span>napięcie odpuszcza w kilkadziesiąt sekund</li>
+            <li><span class="material-symbols-outlined md-icon-fill">check_circle</span>mieści się w kieszeni, wychodzi tylko kiedy chcesz</li>
+          </ul>
+          <p class="md-ps-foot">jeden ruch kciukiem — cichy, miękki klik. tyle wystarczy, żeby głowa wzięła oddech.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {/* ========== 03 — PROBLEM (text + image LEWO) ========== */}
+  <section class="md-section">
+    <div class="md-split">
+      <div class="md-img-square">
+        <img src={`${ASSET_BASE}/clicky-15-bez-z-clicky-kanapa.webp`} alt="" loading="lazy" />
+      </div>
+      <div>
+        <h2>Telefon zawsze jest pod ręką. To nie pomaga</h2>
+        <p class="md-body">Sięgasz po niego nie dlatego, że masz co sprawdzić. Sięgasz, bo ręce potrzebują czegoś. I znowu jesteś w środku scrollowania, które nie daje nic poza kolejnym bodźcem. Clicky nie walczy z telefonem i nie udaje, że cię od niego odciągnie. Po prostu daje rękom inne zadanie, spokojne, ciche, w pełni pod kontrolą. Bez ekranu i bez angażowania głowy.</p>
+      </div>
+    </div>
+  </section>
+
+  {/* ========== 04 — PRODUKT W AKCJI (text LEWO, image PRAWO) ========== */}
+  <section class="md-section md-section--surface">
+    <div class="md-split md-split--mirror">
+      <div class="md-img-square">
+        <img src={`${ASSET_BASE}/clicky-04-side-profile-15cm.webp`} alt="" loading="lazy" />
+      </div>
+      <div>
+        <span class="md-eyebrow md-eyebrow--sage">Co dostajesz w dłoni</span>
+        <h2>Walec, który mieści się w kieszeni. Z kolcami po bokach i cichym klikiem na górze</h2>
+        <p class="md-body">clicky to smukły walec — około piętnastu centymetrów wysokości, cztery centymetry średnicy. boki pokryte są równymi rzędami mikro-kolców: ostrosłupowe wierzchołki, miękko zaokrąglone, rozstawione tak, żeby palec trafiał na nie naturalnie przy przesuwaniu w górę i w dół. na górnej pokrywie biały silikonowy odcisk łapki — pod nim pop-button, który przy naciśnięciu kciukiem wydaje cichy, wyraźny klik. dolna pokrywa ma dwa małe otwory — po użyciu spłukujesz clicky pod bieżącą wodą i zostawiasz do wyschnięcia. materiał to premium PLA z druku 3D: widoczne subtelne linie warstw, które przypominają słoje drewna. nie wygląda jak gadżet z marketu.</p>
+      </div>
+    </div>
+  </section>
+
+  {/* ========== POLECANE PRODUKTY — przeniesione: pozycja 5 ========== */}
+  {relatedProducts.length > 0 && (
+    <section class="md-section md-section--sage-soft">
+      <div class="md-container">
+        <div class="md-related-head">
+          <div>
+            <span class="md-eyebrow md-eyebrow--sage">Jeszcze coś z naszego sklepu</span>
+            <h2>Polecane produkty</h2>
+          </div>
+          <a href="/sklep" class="md-related-all">
+            zobacz wszystko
+            <span class="material-symbols-outlined">arrow_forward</span>
+          </a>
+        </div>
+        <div class="md-related-grid">
+          {relatedProducts.map((p: any) => {
+            const currentPrice = extractPrice(p);
+            const regularPrice = getRegularPrice(p.slug);
+            const hasSale = regularPrice && regularPrice > currentPrice;
+            const salePct = hasSale ? Math.round(((regularPrice - currentPrice) / regularPrice) * 100) : 0;
+            const isRange = p.priceWithTax?.__typename === 'PriceRange' && p.priceWithTax.min !== p.priceWithTax.max;
+            return (
+              <a href={`/produkty/${p.slug}`} class="md-related-card">
+                <div class="md-related-img">
+                  {hasSale && <span class="md-related-sale-badge">−{salePct}%</span>}
+                  {p.productAsset?.preview ? (
+                    <img src={p.productAsset.preview} alt={p.productName} loading="lazy" />
+                  ) : (
+                    <div class="md-related-img-empty"><span class="material-symbols-outlined">image</span></div>
+                  )}
+                </div>
+                <div class="md-related-body">
+                  <h3>{p.productName}</h3>
+                  <p class="md-related-price-row">
+                    {hasSale && <span class="md-related-price-regular">{formatPrice(regularPrice)}</span>}
+                    <span class={`md-related-price${hasSale ? ' md-related-price--sale' : ''}`}>
+                      {isRange ? `od ${formatPrice(p.priceWithTax.min)}` : formatPrice(currentPrice)}
+                    </span>
+                  </p>
+                </div>
+              </a>
+            );
+          })}
+        </div>
+        <div class="md-related-mobile-hint">
+          <span class="material-symbols-outlined">swipe</span>
+          przesuń, żeby zobaczyć więcej
+        </div>
+      </div>
+    </section>
+  )}
+
+  {/* ========== 06 — STICKY SCROLL DETAILS (refined) ========== */}
+  <section class="md-section">
+    <div class="md-container">
+      <div class="md-center" style="margin-bottom: 36px;">
+        <span class="md-eyebrow md-eyebrow--sage">Dlaczego to działa</span>
+        <h2>Trzy powody, dla których Clicky leży na biurku, a nie w szufladzie</h2>
+      </div>
+      <div class="md-sticky-text">
+        <div class="md-sticky-block">
+          <div class="md-sticky-block-head">
+            <span class="md-sticky-num">01</span>
+            <span class="md-sticky-meta">Cisza</span>
+          </div>
+          <h3>Klikasz bez irytowania kogokolwiek w zasięgu głosu</h3>
+          <p class="md-body">Długopis stuka głośno. Klik Clicky'ego jest cichy i miękki, słyszysz go tylko ty. Możesz go nacisnąć podczas spotkania, przy nauce w kawiarni, w poczekalni. Nikt się nie obejrzy.</p>
+        </div>
+        <div class="md-sticky-block">
+          <div class="md-sticky-block-head">
+            <span class="md-sticky-num">02</span>
+            <span class="md-sticky-meta">Tekstura</span>
+          </div>
+          <h3>Kolce robią robotę, zanim zdążysz pomyśleć, że jej potrzebujesz</h3>
+          <p class="md-body">równe rzędy mikro-kolców wzdłuż całego walca. przesuwasz palcem w górę i w dół — rytmicznie, bez wysiłku, bez skupienia. to działa na poziomie ciała, nie decyzji. ręce mają zadanie, głowa przestaje się kręcić.</p>
+        </div>
+        <div class="md-sticky-block">
+          <div class="md-sticky-block-head">
+            <span class="md-sticky-num">03</span>
+            <span class="md-sticky-meta">Format</span>
+          </div>
+          <h3>Mieści się w kieszeni. Wychodzi kiedy trzeba. Chowa się kiedy nie</h3>
+          <p class="md-body">nie potrzebuje miejsca na biurku, nie wymaga specjalnego etui. smukły walec wchodzi do kieszeni spodni, torebki, plecaka. wyciągasz w windzie, przy telefonie, przed snem. chowasz bez ceremonii.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {/* ========== VARIANT SHOWCASE — 2 kolory (mobile: scroll-snap carousel) ========== */}
+  <section class="md-section md-section--surface">
+    <div class="md-container">
+      <div class="md-center" style="margin-bottom: 32px;">
+        <span class="md-eyebrow md-eyebrow--sage">Wybór koloru</span>
+        <h2>Dwa kolory. Ten sam Clicky</h2>
+        <p class="md-variants-swipe-hint">
+          <span class="material-symbols-outlined">swipe</span>
+          przesuń, żeby zobaczyć kolory
+        </p>
+      </div>
+      <div class="md-variants-grid md-variants-grid--two">
+        <div class="md-variant-card md-variant-card--lavender">
+          <div class="md-variant-img"><img src={`${ASSET_BASE}/clicky-22-fomo-promocja-38.webp`} alt="" loading="lazy" /></div>
+          <div class="md-variant-body">
+            <span class="md-variant-dot" style="background: #8B3FD4;"></span>
+            <h3>Fioletowy</h3>
+            <p>bardziej wyrazisty. gradient od fioletu przez magentę do niebieskiego. dla tych, którzy lubią, gdy rzecz w dłoni ma trochę charakteru.</p>
+          </div>
+        </div>
+        <div class="md-variant-card md-variant-card--forest">
+          <div class="md-variant-img"><img src={`${ASSET_BASE}/clicky-21-opinia-mariola-przed-snem.webp`} alt="" loading="lazy" /></div>
+          <div class="md-variant-body">
+            <span class="md-variant-dot" style="background: #2BA88A;"></span>
+            <h3>Zielony</h3>
+            <p>spokojniejszy. teal, limonka i morski przechodzą jeden w drugi. dla tych, którzy wolą stonowane, chłodne barwy.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {/* ========== DLA KOGO — 3 karty (mobile: scroll-snap carousel) ========== */}
+  <section class="md-section md-section--surface">
+    <div class="md-container">
+      <div class="md-center" style="margin-bottom: 32px;">
+        <span class="md-eyebrow md-eyebrow--sage">Dla kogo to jest</span>
+        <h2>Trzy osoby. Jeden walec</h2>
+        <p class="md-variants-swipe-hint">
+          <span class="material-symbols-outlined">swipe</span>
+          przesuń, żeby zobaczyć więcej
+        </p>
+      </div>
+      <div class="md-variants-grid">
+        <div class="md-variant-card md-variant-card--forest">
+          <div class="md-variant-img"><img src={`${ASSET_BASE}/clicky-05-kobieta-biurko-praca.webp`} alt="" loading="lazy" /></div>
+          <div class="md-variant-body">
+            <span class="md-variant-meta">Praca i napięcie</span>
+            <h3>Coś dla rąk, kiedy głowa jest zajęta czymś innym</h3>
+            <p>Spotkanie na słuchawkach, długi raport, rozmowa, która idzie nie tak, Clicky siedzi w dłoni i robi swoje. Kolce, cichy klik, rytm. Nie przeszkadza w myśleniu, ale pozwala nie uciekać do telefonu.</p>
+          </div>
+        </div>
+        <div class="md-variant-card md-variant-card--lavender">
+          <div class="md-variant-img"><img src={`${ASSET_BASE}/clicky-08-studentka-kawiarnia.webp`} alt="" loading="lazy" /></div>
+          <div class="md-variant-body">
+            <span class="md-variant-meta">Nauka i skupienie</span>
+            <h3>Anchor dla rąk, żeby głowa mogła zostać przy zadaniu</h3>
+            <p>Kawiarnia, biblioteka, wieczór przed egzaminem, Clicky jest na tyle dyskretny, żeby nie przeszkadzać innym i na tyle konkretny, żeby ręce nie szukały czegoś innego. Po prostu leży obok i czeka, aż go potrzebujesz.</p>
+          </div>
+        </div>
+        <div class="md-variant-card md-variant-card--strawberry">
+          <div class="md-variant-img"><img src={`${ASSET_BASE}/clicky-11-emocja-spokoj-przed-snem.webp`} alt="" loading="lazy" /></div>
+          <div class="md-variant-body">
+            <span class="md-variant-meta">Wieczór i wyciszenie</span>
+            <h3>Zamiast kolejnego odcinka albo scrollowania bez celu</h3>
+            <p>Kanapa, herbata, Clicky w dłoni, ręce mają co robić, głowa zwalnia. Przesuwasz palcem po kolcach, naciskasz klik co jakiś czas. Żadnych powiadomień, żadnego następnego odcinka, który sam się włącza. Cisza.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {/* ========== TRUST STRIP — przeniesione spod hero do opisu ========== */}
+  <section class="md-trust-strip">
+    <div class="md-trust-grid">
+      <div class="md-trust-cell">
+        <span class="material-symbols-outlined">sentiment_satisfied</span>
+        <span>10k+ zadowolonych</span>
+      </div>
+      <div class="md-trust-cell">
+        <span class="material-symbols-outlined">shield</span>
+        <span>bezpieczne płatności</span>
+      </div>
+      <div class="md-trust-cell">
+        <span class="material-symbols-outlined">award_star</span>
+        <span>polska marka</span>
+      </div>
+      <div class="md-trust-cell">
+        <span class="material-symbols-outlined">support_agent</span>
+        <span>wsparcie 24/7</span>
+      </div>
+    </div>
+  </section>
+
+  {/* ========== TABBED USE CASES — przeniesione wyżej ========== */}
+  <section class="md-section md-section--surface">
+    <div class="md-tabs-wrap">
+      <div class="md-center" style="margin-bottom: 32px;">
+        <h2>Kiedy Clicky robi robotę</h2>
+      </div>
+      <div class="md-tabs-nav" role="tablist">
+        <button class="md-tab-btn md-tab-btn--active" data-md-tab="0">przy biurku</button>
+        <button class="md-tab-btn" data-md-tab="1">w kawiarni</button>
+        <button class="md-tab-btn" data-md-tab="2">przed snem</button>
+        <button class="md-tab-btn" data-md-tab="3">w ruchu</button>
+      </div>
+      <div class="md-tab-content md-tab-content--active">
+        <div class="md-tab-grid">
+          <div class="md-img-square">
+            <img src={`${ASSET_BASE}/clicky-08-studentka-kawiarnia.webp`} alt="" loading="lazy" />
+          </div>
+          <div>
+            <h3 style="font-size: 22px;">Ręce w ruchu, głowa przy tym co ważne</h3>
+            <p class="md-body">Praca zdalna, open space, spotkania na słuchawkach, Clicky leży obok klawiatury. Sięgasz po niego kiedy czekasz, myślisz, słuchasz. Cichy klik nie przeszkadza nikomu. Kolce pod palcami dają rękom zajęcie bez angażowania wzroku ani uwagi.</p>
+          </div>
+        </div>
+      </div>
+      <div class="md-tab-content">
+        <div class="md-tab-grid">
+          <div class="md-img-square">
+            <img src={`${ASSET_BASE}/clicky-18-flat-lay-zestaw.webp`} alt="" loading="lazy" />
+          </div>
+          <div>
+            <h3 style="font-size: 22px;">Nauka bez klikania długopisem co pięć minut</h3>
+            <p class="md-body">Siedzisz z laptopem, starasz się skupić i wiesz, że ręce zaraz zaczną szukać czegoś. Clicky jest na tyle dyskretny, że możesz go trzymać w dłoni bez zwracania na siebie uwagi. Cichy, lekki, bez żadnych efektów dźwiękowych dla otoczenia.</p>
+          </div>
+        </div>
+      </div>
+      <div class="md-tab-content">
+        <div class="md-tab-grid">
+          <div class="md-img-square">
+            <img src={`${ASSET_BASE}/clicky-11-emocja-spokoj-przed-snem.webp`} alt="" loading="lazy" />
+          </div>
+          <div>
+            <h3 style="font-size: 22px;">Wyciszenie, które nie wymaga ekranu</h3>
+            <p class="md-body">Telefon odłożony, ale głowa nie chce wyhamować. Clicky w dłoni, rytmiczne przesuwanie po kolcach, od czasu do czasu klik. Nie stymuluje, wycisza. Ręce mają co robić, a ty nie wpatrujesz się w żaden wyświetlacz.</p>
+          </div>
+        </div>
+      </div>
+      <div class="md-tab-content">
+        <div class="md-tab-grid">
+          <div class="md-img-square">
+            <img src={`${ASSET_BASE}/clicky-13-problem-bezsenne-scrollowanie.webp`} alt="" loading="lazy" />
+          </div>
+          <div>
+            <h3 style="font-size: 22px;">Kieszeń, metro, poczekalnia, zawsze gotowy</h3>
+            <p class="md-body">Clicky nie potrzebuje ładowania, sieci ani miejsca w plecaku. Leży w kieszeni i nie waży. Wyciągasz w poczekalni u lekarza, w metrze, stojąc w kolejce. Chowasz bez szukania etui. Zero przygotowania.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {/* ========== 10 — CUSTOMER STORY (featured = pierwsza opinia 5-star z items) ========== */}
+  {reviews && reviews.items[0] && (
+  <section class="md-section md-section--sage-soft">
+    <div class="md-split md-split--mirror">
+      <div class="md-img-square">
+        <img src={`${ASSET_BASE}/clicky-10-emocja-skupienie-flow.webp`} alt="" loading="lazy" />
+      </div>
+      <div>
+        <span class="md-eyebrow md-eyebrow--sage">Prawdziwa historia</span>
+        <blockquote class="md-customer-quote">{reviews.items[0].body}</blockquote>
+        <div class="md-customer-author">
+          <div class="md-stars">
+            {Array.from({ length: reviews.items[0].stars }).map(() => (
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="#F5B544" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z"/></svg>
+            ))}
+          </div>
+          <div>
+            <strong>{reviews.items[0].name}</strong>
+            <span>
+              {reviews.items[0].age ? ` · ${reviews.items[0].age} lat` : ''}
+              {reviews.items[0].tag ? ` · ${reviews.items[0].tag}` : ''}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  )}
+
+  {/* ========== 11 — REVIEWS (dynamiczne z reviews.json) ========== */}
+  {reviews && ratingPct && (
+  <section id="reviews-section" class="md-section">
+    <div class="md-reviews">
+      <div class="md-center" style="margin-bottom: 32px;">
+        <h2>Setki osób już klika. To co mówią, zostawiamy bez retuszu</h2>
+      </div>
+      <div class="md-reviews-header">
+        <div class="md-reviews-big-rating">
+          <div class="md-reviews-big-num">{formatRating(reviews.averageRating)}</div>
+          <div class="md-reviews-big-stars">
+            {[1, 2, 3, 4, 5].map((i) => {
+              const k = starKind(i, reviews.averageRating);
+              return k === 'full'
+                ? <svg viewBox="0 0 24 24" width="24" height="24" fill="#F5B544" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z"/></svg>
+                : k === 'half'
+                ? <svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><linearGradient id={`md-big-half-${i}`}><stop offset="50%" stop-color="#F5B544"/><stop offset="50%" stop-color="#D6CEBE"/></linearGradient></defs><path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z" fill={`url(#md-big-half-${i})`}/></svg>
+                : <svg viewBox="0 0 24 24" width="24" height="24" fill="#D6CEBE" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z"/></svg>;
+            })}
+          </div>
+          <div class="md-reviews-big-meta">z {reviews.totalCount} {opiniiPlural(reviews.totalCount)} · zakup zweryfikowany</div>
+        </div>
+        <div class="md-reviews-bars">
+          {([5, 4, 3, 2, 1] as const).map((star) => (
+            <div class="md-reviews-bar">
+              <div class="md-stars-mini">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  i <= star
+                    ? <svg viewBox="0 0 24 24" width="14" height="14" fill="#F5B544" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z"/></svg>
+                    : <svg viewBox="0 0 24 24" width="14" height="14" fill="#D6CEBE" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z"/></svg>
+                ))}
+              </div>
+              <div class="md-track"><div class="md-fill" style={`width: ${ratingPct[star]}%;`}></div></div>
+              <span class="md-count">{reviews.distribution[star]}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div class="md-reviews-grid">
+        {reviews.items.slice(0, 3).map((rev) => (
+          <div class="md-review-card">
+            <div class="md-stars-row">
+              {[1, 2, 3, 4, 5].map((i) => (
+                i <= rev.stars
+                  ? <svg viewBox="0 0 24 24" width="18" height="18" fill="#F5B544" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z"/></svg>
+                  : <svg viewBox="0 0 24 24" width="18" height="18" fill="#D6CEBE" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z"/></svg>
+              ))}
+            </div>
+            {rev.verified && (
+              <span class="md-verified"><span class="material-symbols-outlined md-icon-fill">verified</span> zakup zweryfikowany</span>
+            )}
+            <p class="md-quote">„{rev.body}"</p>
+            <div class="md-review-footer">
+              <strong>{rev.name}</strong>
+              <span>{rev.date}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+  )}
+
+  {/* ========== BENEFIT 1 — klik (md-split copy — image LEWO) ========== */}
+  <section class="md-section">
+    <div class="md-split">
+      <div class="md-img-square">
+        <img src={`${ASSET_BASE}/clicky-01-makro-pawprint-button.webp`} alt="" loading="lazy" />
+      </div>
+      <div>
+        <h2>Cichy klik, który słyszysz tylko ty</h2>
+        <p class="md-body">pop-button pod silikonową łapką wydaje jeden konkretny dźwięk: miękki, wyraźny, zamknięty. nie stuka jak długopis, nie trzaska jak bubble wrap. to coś pomiędzy — głębszy, bardziej zduszony. naciskasz kciukiem i czujesz to w całej dłoni. można go nacisnąć raz. można kilkanaście razy z rzędu. żadna z tych opcji nie przeszkadza nikomu w promieniu trzech metrów.</p>
+      </div>
+    </div>
+  </section>
+
+  {/* ========== BENEFIT 2 — infografika „bez ekranu" ========== */}
+  <section class="md-section md-section--surface">
+    <div class="md-container">
+      <div class="md-center" style="margin-bottom: 36px;">
+        <span class="md-eyebrow md-eyebrow--sage">Prosto z założenia</span>
+        <h2>Zero ekranu. Pełne skupienie</h2>
+      </div>
+      <div class="md-notech">
+        <div class="md-notech-item">
+          <div class="md-notech-icon"><span class="material-symbols-outlined">bolt</span></div>
+          <h3>Bez ładowania</h3>
+          <p>nie ma czego ładować. nie ma czego włączać. wyjmujesz z kieszeni i już — tej samej sekundy.</p>
+        </div>
+        <div class="md-notech-item">
+          <div class="md-notech-icon"><span class="material-symbols-outlined">app_blocking</span></div>
+          <h3>Bez aplikacji</h3>
+          <p>żadnego konta, parowania ani powiadomień. kupujesz raz, masz na lata. działa tak samo w dzień premiery co pięć lat później.</p>
+        </div>
+        <div class="md-notech-item">
+          <div class="md-notech-icon"><span class="material-symbols-outlined">tv_off</span></div>
+          <h3>Bez ekranu</h3>
+          <p>jedyna rzecz dla rąk, która nie dokłada kolejnego wyświetlacza do twojego dnia. kolce, klik, walec w dłoni. i tyle.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {/* ========== EXTRA 02 — FOUNDER STORY (mirror split + image rounded) ========== */}
+  <section class="md-section md-section--surface">
+    <div class="md-founder">
+      <div class="md-founder-img">
+        <img src={`${ASSET_BASE}/clicky-12-problem-stres-piesc.webp`} alt="" loading="lazy" />
+        <div class="md-founder-stamp">
+          <span>est.</span>
+          <strong>2024</strong>
+        </div>
+      </div>
+      <div class="md-founder-body">
+        <span class="md-eyebrow md-eyebrow--sage">Od założycieli</span>
+        <h2>Szukaliśmy czegoś, co nie hałasuje i nie świeci</h2>
+        <p class="md-body">klikający długopis denerwuje połowę sali. spinner brzęczy. gniotek nudzi po tygodniu. a telefon — wiadomo. mieliśmy dość wybierania między „robię komuś hałas" a „sięgam po ekran". szukaliśmy trzeciej drogi — cichej, dyskretnej, takiej, która daje rękom coś konkretnego bez angażowania całej reszty.</p>
+        <p class="md-body">Clicky to nasz pomysł na tę trzecią opcję. Walec z mikro-kolcami i cichym klikiem, prosty mechanizm, który działa na poziomie ciała. Nie trzeba go rozgryźć, nie trzeba tłumaczyć. Wyciągasz, przesuwasz palcem, naciskasz. I robi swoje. Nasze, z Tarnowa.</p>
+        <div class="md-founder-sign">
+          <div class="md-founder-sign-line"></div>
+          <span>— marta, kasia &amp; mikołaj</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {/* ========== SPECYFIKACJA — przeniesione na koniec, przed FAQ ========== */}
+  <section class="md-section md-section--surface">
+    <div class="md-spec-card md-spec-card--mirror">
+      <div class="md-img-square">
+        <img src={`${ASSET_BASE}/clicky-03-drainage-holes-myjny.webp`} alt="" loading="lazy" />
+      </div>
+      <div>
+        <h2>Co jest w środku, dokładnie</h2>
+        <ul class="md-spec-list">
+          <li><span class="material-symbols-outlined">straighten</span> <span><strong>wymiary</strong> ok. 15 cm wysokości × 4 cm średnicy</span></li>
+          <li><span class="material-symbols-outlined">science</span> <span><strong>materiał</strong> premium PLA, druk 3D z widocznymi liniami warstw</span></li>
+          <li><span class="material-symbols-outlined">grid_on</span> <span><strong>tekstura boczna</strong> ~100 mikro-kolców ostrosłupowych z zaokrąglonymi wierzchołkami, ułożonych w pionowe rzędy</span></li>
+          <li><span class="material-symbols-outlined">touch_app</span> <span><strong>mechanizm</strong> cichy pop-button pod silikonową łapką na górnej pokrywie</span></li>
+          <li><span class="material-symbols-outlined">water_drop</span> <span><strong>mycie</strong> 2 otwory drenażowe w dolnej pokrywie, możliwość mycia pod bieżącą wodą</span></li>
+          <li><span class="material-symbols-outlined">verified</span> <span><strong>dla kogo</strong> młodzież i dorośli bez górnego limitu wieku</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  {/* ========== EXTRA 03 — COMPARISON TABLE (clicky vs alternatives) ========== */}
+  <section class="md-section">
+    <div class="md-container">
+      <div class="md-center" style="margin-bottom: 36px;">
+        <span class="md-eyebrow md-eyebrow--sage">Porównanie</span>
+        <h2>Długopis stuka. Paznokcie bolą. Clicky nie</h2>
+      </div>
+      <div class="md-compare-wrap">
+        <table class="md-compare-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th class="md-compare-col-us"><span>Clicky</span></th>
+              <th>długopis</th>
+              <th>paznokcie</th>
+              <th>telefon</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>cichy dla otoczenia</td>
+              <td class="md-compare-cell-us"><span class="material-symbols-outlined md-yes">check_circle</span></td>
+              <td><span class="material-symbols-outlined md-no">cancel</span></td>
+              <td><span class="material-symbols-outlined md-yes">check_circle</span></td>
+              <td><span class="material-symbols-outlined md-yes">check_circle</span></td>
+            </tr>
+            <tr>
+              <td>nie szkodzi twoim rękom</td>
+              <td class="md-compare-cell-us"><span class="material-symbols-outlined md-yes">check_circle</span></td>
+              <td><span class="material-symbols-outlined md-yes">check_circle</span></td>
+              <td><span class="material-symbols-outlined md-no">cancel</span></td>
+              <td><span class="material-symbols-outlined md-yes">check_circle</span></td>
+            </tr>
+            <tr>
+              <td>bez ekranu</td>
+              <td class="md-compare-cell-us"><span class="material-symbols-outlined md-yes">check_circle</span></td>
+              <td><span class="material-symbols-outlined md-yes">check_circle</span></td>
+              <td><span class="material-symbols-outlined md-yes">check_circle</span></td>
+              <td><span class="material-symbols-outlined md-no">cancel</span></td>
+            </tr>
+            <tr>
+              <td>tekstura i klik w jednym</td>
+              <td class="md-compare-cell-us"><span class="material-symbols-outlined md-yes">check_circle</span></td>
+              <td><span class="material-symbols-outlined md-no">cancel</span></td>
+              <td><span class="material-symbols-outlined md-no">cancel</span></td>
+              <td><span class="material-symbols-outlined md-no">cancel</span></td>
+            </tr>
+            <tr>
+              <td>mieści się w kieszeni</td>
+              <td class="md-compare-cell-us"><span class="material-symbols-outlined md-yes">check_circle</span></td>
+              <td><span class="material-symbols-outlined md-yes">check_circle</span></td>
+              <td><span class="material-symbols-outlined md-yes">check_circle</span></td>
+              <td><span class="material-symbols-outlined md-yes">check_circle</span></td>
+            </tr>
+            <tr>
+              <td>nie wciąga w scrollowanie</td>
+              <td class="md-compare-cell-us"><span class="material-symbols-outlined md-yes">check_circle</span></td>
+              <td><span class="material-symbols-outlined md-yes">check_circle</span></td>
+              <td><span class="material-symbols-outlined md-yes">check_circle</span></td>
+              <td><span class="material-symbols-outlined md-no">cancel</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  {/* ========== EXTRA 04 — STATS BENTO (asymetryczne kafelki light) ========== */}
+  <section class="md-section">
+    <div class="md-container">
+      <div class="md-center" style="margin-bottom: 36px;">
+        <span class="md-eyebrow md-eyebrow--sage">Bez ściemy</span>
+        <h2>Clicky w liczbach. Bez upiększania</h2>
+      </div>
+      <div class="md-bento">
+        <div class="md-bento-cell md-bento-cell--xl">
+          <div class="md-bento-icon"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">favorite</span></div>
+          <div class="md-bento-num">{reviews ? (reviews.totalCount * 35).toLocaleString('pl-PL') : '10 847'}</div>
+          <div class="md-bento-label">zestawów wysłanych od premiery</div>
+          <p class="md-bento-sub">wszystkie zamówienia z Polski. drukowane i pakowane w Tarnowie.</p>
+        </div>
+        <div class="md-bento-cell">
+          <div class="md-bento-num">{reviews ? formatRating(reviews.averageRating) : '4,72'}<small>/5</small></div>
+          <div class="md-bento-label">średnia ocen</div>
+          <div class="md-bento-foot">
+            <svg class="md-bento-star" viewBox="0 0 24 24" width="15" height="15" fill="#E8A317" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z"/></svg>
+            z {reviews ? reviews.totalCount : 310} zweryfikowanych {reviews ? opiniiPlural(reviews.totalCount) : 'opinii'}
+          </div>
+        </div>
+        <div class="md-bento-cell md-bento-cell--sage">
+          <div class="md-bento-num">81<small>%</small></div>
+          <div class="md-bento-label">osób mówi, że przestało sięgać po telefon podczas pracy</div>
+          <div class="md-bento-foot">badanie własne · n=210</div>
+        </div>
+        <div class="md-bento-cell md-bento-cell--strawberry">
+          <div class="md-bento-num">14<small> dni</small></div>
+          <div class="md-bento-label">zwrot w 14 dni, bez pytań i bez tłumaczenia się</div>
+          <div class="md-bento-foot">etykieta zwrotna gratis</div>
+        </div>
+        <div class="md-bento-cell">
+          <div class="md-bento-num">24<small>h</small></div>
+          <div class="md-bento-label">wysyłka zanim zdążysz zapomnieć, że zamawiałeś</div>
+          <div class="md-bento-foot">InPost i kurier · cała Polska</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {/* ========== FAQ ========== */}
+  <section class="md-section md-section--surface">
+    <div class="md-narrow">
+      <div class="md-center" style="margin-bottom: 40px;">
+        <h2>A teraz pytania, które wszyscy mają</h2>
+      </div>
+      <div class="md-faq-list">
+        <details class="md-faq-item" open>
+          <summary>Czy klik jest naprawdę cichy? <span class="material-symbols-outlined">expand_more</span></summary>
+          <p>Tak, miękki, zduszony dźwięk słyszalny przede wszystkim dla osoby trzymającej Clicky. Spokojnie używasz go podczas spotkania, przy nauce w kawiarni albo gdy ktoś śpi obok. Nie stuka jak długopis, nie trzaska jak bąbelki w folii.</p>
+        </details>
+        <details class="md-faq-item">
+          <summary>Czy mikro-kolce nie bolą w palce? <span class="material-symbols-outlined">expand_more</span></summary>
+          <p>wierzchołki są zaokrąglone — nie ostre. przy normalnym używaniu (przesuwanie palcem, trzymanie) czujesz wyraźną, przyjemną fakturę. nie kaleczą, nie zostawiają śladów.</p>
+        </details>
+        <details class="md-faq-item">
+          <summary>Jak myć Clicky? <span class="material-symbols-outlined">expand_more</span></summary>
+          <p>spłukujesz pod bieżącą wodą przez dwa otwory w dolnej pokrywie. nie potrzebujesz mydła ani szczoteczki przy normalnym użytkowaniu. po umyciu zostawiasz do wyschnięcia — schnie szybko, otwory zapewniają cyrkulację powietrza.</p>
+        </details>
+        <details class="md-faq-item">
+          <summary>Czy Clicky jest dla dzieci? <span class="material-symbols-outlined">expand_more</span></summary>
+          <p>projektowaliśmy go dla nastolatków i dorosłych — bez górnego limitu wieku. dla małych dzieci nie jest. jeśli kupujesz dla starszego dziecka, oceń sam — biorąc pod uwagę wiek i dojrzałość.</p>
+        </details>
+        <details class="md-faq-item">
+          <summary>Który kolor wybrać? <span class="material-symbols-outlined">expand_more</span></summary>
+          <p>oba są tym samym produktem — różni je tylko gradient. fioletowy (fiolet→magenta→niebieski) jest bardziej wyrazisty. zielony (teal→limonka→morski) spokojniejszy. jeśli nie możesz się zdecydować — to zazwyczaj znaczy, że pasują oba.</p>
+        </details>
+        <details class="md-faq-item">
+          <summary>Kiedy dostanę? <span class="material-symbols-outlined">expand_more</span></summary>
+          <p>wysyłka 24h od zamówienia. paczkomat InPost 1-2 dni robocze, kurier 1-3 dni.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  {/* ========== FINAL CTA — contained card na cream bg (nie full-bg, kontrast z footerem) ========== */}
+  <section class="md-section md-section--last">
+    <div class="md-cta-card">
+      <div class="md-cta-card-img">
+        <img src={`${ASSET_BASE}/clicky-05-kobieta-biurko-praca.webp`} alt="" loading="lazy" />
+      </div>
+      <div class="md-cta-card-body">
+        <span class="md-cta-card-eyebrow">Jeśli doczytałeś do tutaj</span>
+        <h2>Daj rękom coś cichego. Na siebie i dla siebie</h2>
+        <p>smukły walec z mikro-kolcami i cichym klikiem. wysyłka 24h, zwrot do 14 dni bez pytań.</p>
+        <div class="md-cta-card-actions">
+          <a href="#primary-atc-btn" class="md-cta-card-btn">
+            dodaj do koszyka
+            <span class="material-symbols-outlined">arrow_forward</span>
+          </a>
+          {reviews && (
+            <a href="#reviews-section" class="md-cta-card-link">
+              albo przeczytaj {reviews.totalCount} {opiniiPlural(reviews.totalCount)} →
+            </a>
+          )}
+        </div>
+        <div class="md-cta-card-trust">
+          <span><span class="material-symbols-outlined md-icon-fill">local_shipping</span>wysyłka 24h</span>
+          <span><span class="material-symbols-outlined md-icon-fill">published_with_changes</span>14 dni zwrot</span>
+          <span><span class="material-symbols-outlined md-icon-fill">verified_user</span>SSL PayU</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<style is:global>
+  /* =====================================================
+     CLICKY DESCRIPTION — 14 sekcji
+     Brand voice doodie (sage + strawberry + Outfit)
+     ===================================================== */
+
+  .md-pdp {
+    font-family: 'Outfit', system-ui, sans-serif;
+    color: var(--brand-heading);
+    line-height: 1.6;
+  }
+
+  .md-pdp h2 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+    color: var(--brand-heading);
+    margin: 0 0 16px;
+  }
+  @media (min-width: 768px) { .md-pdp h2 { font-size: 42px; } }
+
+  .md-pdp h3 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0 0 6px;
+    color: var(--brand-heading);
+  }
+
+  .md-eyebrow {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    color: var(--brand-muted);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .md-eyebrow--sage { color: var(--brand-primary); }
+
+  .md-pdp p.md-body {
+    color: var(--brand-text);
+    font-size: 16px;
+    margin: 0;
+  }
+  @media (min-width: 768px) { .md-pdp p.md-body { font-size: 17px; } }
+
+  .md-center { text-align: center; }
+
+  .md-icon-fill { font-variation-settings: 'FILL' 1; }
+
+  .md-img-square {
+    aspect-ratio: 1 / 1;
+    border-radius: 24px;
+    overflow: hidden;
+    border: 1px solid var(--brand-border);
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+  .md-img-square img {
+    width: 100%; height: 100%;
+    object-fit: cover; display: block;
+  }
+
+  /* ---------- Containers ---------- */
+  .md-container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+  @media (min-width: 768px) { .md-container { padding: 0 24px; } }
+  .md-narrow { max-width: 760px; margin: 0 auto; padding: 0 20px; }
+
+  /* ---------- Section base ---------- */
+  .md-section {
+    padding: 56px 20px;
+  }
+  @media (min-width: 768px) { .md-section { padding: 80px 32px; } }
+  .md-section--surface {
+    background: var(--brand-surface);
+    border-top: 1px solid var(--brand-border);
+    border-bottom: 1px solid var(--brand-border);
+  }
+  .md-section--sage-soft {
+    background: var(--brand-primary-soft);
+    border-top: 1px solid var(--brand-border);
+    border-bottom: 1px solid var(--brand-border);
+  }
+  .md-section--cta { padding: 96px 20px; }
+  .md-section--last { border-bottom: none; }
+  /* Kompaktowa wersja — np. dla manifestu, mniejszy vertical breathing room */
+  .md-section--compact { padding: 40px 20px; }
+  @media (min-width: 768px) { .md-section--compact { padding: 56px 32px; } }
+
+  .md-split {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 32px;
+    align-items: center;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  @media (min-width: 768px) { .md-split { grid-template-columns: 1fr 1fr; gap: 56px; } }
+  .md-split--mirror > div:first-child { order: 0; }
+  @media (min-width: 768px) { .md-split--mirror > div:first-child { order: 1; } }
+
+  /* ---------- 01 HERO GIFY ---------- */
+  .md-hero-gifs {
+    background: var(--brand-surface);
+    border-top: 1px solid var(--brand-border);
+    border-bottom: 1px solid var(--brand-border);
+    padding: 56px 20px;
+  }
+  .md-gif-carousel {
+    display: flex; gap: 16px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding: 20px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    max-width: 1200px; margin: 0 auto;
+  }
+  .md-gif-carousel::-webkit-scrollbar { display: none; }
+  .md-gif-item {
+    flex: 0 0 calc(85% - 40px);
+    scroll-snap-align: center;
+    aspect-ratio: 4 / 5;
+    border-radius: 20px;
+    overflow: hidden;
+    background: var(--brand-surface-2);
+    border: 1px solid var(--brand-border);
+  }
+  @media (min-width: 768px) {
+    .md-gif-carousel { gap: 12px; overflow-x: visible; }
+    .md-gif-item { flex: 1 1 0; }
+  }
+  .md-gif-item video { width: 100%; height: 100%; object-fit: cover; }
+  .md-mobile-arrows { display: flex; justify-content: center; gap: 12px; margin-top: 24px; }
+  @media (min-width: 768px) { .md-mobile-arrows { display: none; } }
+  .md-arrow {
+    width: 44px; height: 44px; border-radius: 9999px;
+    background: var(--brand-surface); border: 1px solid var(--brand-border);
+    color: var(--brand-primary); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 200ms, color 200ms;
+  }
+  .md-arrow:hover { background: var(--brand-primary); color: white; }
+  .md-arrow .material-symbols-outlined { color: inherit; font-size: 22px; }
+
+  /* ---------- 02 MANIFESTO ---------- */
+  .md-manifesto { text-align: center; max-width: 720px; margin: 0 auto; }
+  .md-manifesto-eyebrow {
+    display: block;
+    font-size: 12px; font-weight: 700; letter-spacing: 0.22em;
+    color: var(--brand-primary); text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .md-manifesto h2 { font-size: 32px; line-height: 1.12; font-weight: 800; letter-spacing: -0.025em; }
+  @media (min-width: 768px) { .md-manifesto h2 { font-size: 48px; } }
+  .md-em { color: var(--brand-primary); }
+  .md-manifesto-divider {
+    width: 32px; height: 2px; background: var(--brand-primary);
+    margin: 24px auto; border-radius: 2px;
+  }
+  .md-manifesto p.md-body { font-size: 15px; max-width: 540px; margin: 0 auto; line-height: 1.6; }
+  @media (min-width: 768px) { .md-manifesto p.md-body { font-size: 16px; } }
+
+  /* ---------- 05 TIMELINE ---------- */
+  .md-timeline {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 32px;
+    max-width: 1100px; margin: 0 auto;
+    position: relative;
+  }
+  @media (min-width: 768px) {
+    .md-timeline { grid-template-columns: repeat(4, 1fr); gap: 16px; align-items: start; }
+    .md-timeline::before {
+      content: ''; position: absolute; top: 36px; left: 12.5%; right: 12.5%;
+      height: 2px;
+      background: repeating-linear-gradient(to right, var(--brand-primary) 0 8px, transparent 8px 14px);
+      z-index: 0;
+    }
+  }
+  .md-timeline-step { text-align: center; position: relative; z-index: 1; }
+  .md-timeline-circle {
+    width: 72px; height: 72px;
+    background: var(--brand-surface);
+    border: 2px solid var(--brand-primary);
+    border-radius: 9999px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px;
+    position: relative; z-index: 1;
+  }
+  .md-timeline-circle .material-symbols-outlined {
+    font-size: 32px !important;
+    color: var(--brand-primary);
+  }
+  .md-timeline-num {
+    display: inline-block;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.18em;
+    color: var(--brand-primary); text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .md-timeline-step h3 { font-size: 16px; margin-bottom: 4px; }
+  .md-timeline-step p { font-size: 13px; }
+
+  /* ---------- 06 STICKY SCROLL — polished ---------- */
+  .md-sticky-min {
+    display: grid; grid-template-columns: 1fr; gap: 40px;
+    max-width: 1100px; margin: 0 auto;
+    align-items: start;
+  }
+  @media (min-width: 1024px) { .md-sticky-min { grid-template-columns: 1fr 1.05fr; gap: 72px; } }
+  @media (min-width: 1024px) {
+    .md-sticky-img { position: sticky; top: 100px; align-self: start; }
+  }
+  .md-sticky-img .md-img-square {
+    border-radius: 20px;
+    box-shadow: 0 18px 48px rgba(42, 45, 39, 0.10);
+  }
+  .md-sticky-text {
+    display: grid; grid-template-columns: 1fr; gap: 18px;
+    max-width: 1100px; margin: 0 auto;
+  }
+  @media (min-width: 768px) { .md-sticky-text { grid-template-columns: repeat(3, 1fr); gap: 20px; } }
+
+  /* ---------- BENEFIT 2 — infografika no-tech ---------- */
+  .md-notech {
+    display: grid; grid-template-columns: 1fr; gap: 18px;
+    max-width: 1000px; margin: 0 auto;
+  }
+  @media (min-width: 768px) { .md-notech { grid-template-columns: repeat(3, 1fr); gap: 24px; } }
+  .md-notech-item {
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-radius: 20px;
+    padding: 32px 28px;
+    text-align: center;
+  }
+  .md-notech-icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 56px; height: 56px; border-radius: 16px;
+    background: var(--brand-primary-soft);
+    margin-bottom: 16px;
+  }
+  .md-notech-icon .material-symbols-outlined { font-size: 30px; color: var(--brand-primary-hover); }
+  .md-notech-item h3 {
+    font-size: 19px; font-weight: 700; margin: 0 0 8px; color: var(--brand-heading);
+  }
+  .md-notech-item p {
+    font-size: 14.5px; line-height: 1.6; color: var(--brand-text); margin: 0;
+  }
+  .md-sticky-block {
+    position: relative;
+    padding: 28px 28px 28px 88px;
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-radius: 18px;
+    transition: border-color 240ms ease, box-shadow 240ms ease, transform 240ms ease;
+  }
+  .md-sticky-block:hover {
+    border-color: var(--brand-primary);
+    box-shadow: 0 10px 28px rgba(116, 151, 191, 0.14);
+    transform: translateY(-2px);
+  }
+  .md-sticky-num {
+    position: absolute;
+    top: 26px;
+    left: 26px;
+    width: 42px;
+    height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Outfit', sans-serif;
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    color: var(--brand-primary-hover);
+    background: var(--brand-primary-soft);
+    border: 1.5px solid var(--brand-primary);
+    border-radius: 50%;
+  }
+  .md-sticky-block h3 {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    margin: 0 0 8px;
+    color: var(--brand-heading);
+    line-height: 1.25;
+  }
+  .md-sticky-block .md-body {
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--brand-text);
+    margin: 0;
+  }
+  @media (max-width: 640px) {
+    .md-sticky-block {
+      padding: 22px 22px 22px 74px;
+      border-radius: 16px;
+    }
+    .md-sticky-num {
+      top: 22px;
+      left: 22px;
+      width: 38px;
+      height: 38px;
+      font-size: 14px;
+    }
+    .md-sticky-block h3 { font-size: 18px; }
+  }
+
+  /* ---------- TRUST STRIP (between sticky scroll and stats) ---------- */
+  .md-trust-strip {
+    background: var(--brand-bg);
+    border-top: 1px solid var(--brand-border);
+    border-bottom: 1px solid var(--brand-border);
+    padding: 28px 20px;
+  }
+  @media (min-width: 768px) { .md-trust-strip { padding: 32px 32px; } }
+  .md-trust-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  @media (min-width: 768px) {
+    .md-trust-grid { grid-template-columns: repeat(4, 1fr); gap: 24px; }
+  }
+  .md-trust-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .md-trust-cell .material-symbols-outlined {
+    color: var(--brand-primary);
+    font-size: 26px !important;
+  }
+  .md-trust-cell span:last-child {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--brand-heading);
+  }
+  @media (min-width: 768px) {
+    .md-trust-cell span:last-child { font-size: 14px; }
+  }
+
+  /* ---------- 07 STATS image + numbers vertical ---------- */
+  .md-stats-img-num {
+    display: grid; grid-template-columns: 1fr; gap: 32px; align-items: center;
+    max-width: 1100px; margin: 0 auto;
+  }
+  @media (min-width: 768px) { .md-stats-img-num { grid-template-columns: 1fr 1fr; gap: 64px; } }
+  .md-stats-vlist {
+    display: flex; flex-direction: column; gap: 24px;
+  }
+  .md-stat-vrow {
+    display: flex; align-items: baseline; gap: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--brand-border);
+  }
+  .md-stat-vrow:last-child { border-bottom: none; padding-bottom: 0; }
+  .md-stat-vrow-num {
+    font-family: 'Outfit', sans-serif; font-weight: 800;
+    font-size: 44px; line-height: 1; color: var(--brand-primary);
+    letter-spacing: -0.025em;
+    min-width: 110px; flex-shrink: 0;
+  }
+  @media (min-width: 768px) { .md-stat-vrow-num { font-size: 56px; min-width: 140px; } }
+  .md-stat-vrow-num small {
+    font-size: 0.45em; color: var(--brand-muted);
+    font-weight: 600; margin-left: 3px;
+  }
+  .md-stat-vrow-text { flex: 1; }
+  .md-stat-vrow-text h3 { font-size: 15px; margin-bottom: 4px; }
+  .md-stat-vrow-text p { font-size: 13px; }
+
+  /* ---------- 08 SPECS ---------- */
+  .md-spec-card {
+    display: grid; grid-template-columns: 1fr; gap: 32px; align-items: center;
+    max-width: 1100px; margin: 0 auto;
+  }
+  @media (min-width: 768px) { .md-spec-card { grid-template-columns: 1fr 1fr; gap: 64px; } }
+  .md-spec-card--mirror > div:first-child { order: 0; }
+  @media (min-width: 768px) { .md-spec-card--mirror > div:first-child { order: 1; } }
+  .md-spec-list { list-style: none; padding: 0; margin: 16px 0 0; }
+  .md-spec-list li {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--brand-border);
+    font-size: 15px; color: var(--brand-text);
+  }
+  .md-spec-list li:last-child { border-bottom: none; }
+  .md-spec-list li strong {
+    color: var(--brand-heading);
+    font-weight: 700; font-size: 13px;
+    display: inline-block; min-width: 100px;
+  }
+  .md-spec-list li .material-symbols-outlined {
+    font-size: 18px !important;
+    flex-shrink: 0; margin-top: 2px;
+  }
+
+  /* ---------- 09 TABS ---------- */
+  .md-tabs-wrap { max-width: 1000px; margin: 0 auto; }
+  .md-tabs-nav {
+    display: flex; gap: 6px; flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 32px;
+  }
+  .md-tab-btn {
+    padding: 12px 22px;
+    border: none; background: transparent; cursor: pointer;
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px; font-weight: 700;
+    letter-spacing: 0.02em; color: var(--brand-muted);
+    transition: color 200ms, background 200ms;
+    border-radius: 9999px;
+  }
+  .md-tab-btn.md-tab-btn--active {
+    background: var(--brand-primary);
+    color: white;
+  }
+  .md-tab-btn:hover:not(.md-tab-btn--active) {
+    color: var(--brand-heading);
+    background: var(--brand-surface-2);
+  }
+  .md-tab-content { display: none; }
+  .md-tab-content.md-tab-content--active {
+    display: block;
+    animation: md-tab-fade 280ms ease;
+  }
+  @keyframes md-tab-fade {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .md-tab-grid {
+    display: grid; grid-template-columns: 1fr; gap: 32px; align-items: center;
+    max-width: 1000px; margin: 0 auto;
+  }
+  @media (min-width: 768px) { .md-tab-grid { grid-template-columns: 1fr 1fr; gap: 56px; } }
+
+  /* ---------- 10 CUSTOMER STORY ---------- */
+  .md-customer-quote {
+    font-family: 'Outfit', sans-serif;
+    font-style: italic;
+    font-size: 24px; line-height: 1.35;
+    color: var(--brand-heading);
+    margin: 0 0 24px;
+    padding-left: 24px;
+    border-left: 3px solid var(--brand-primary);
+  }
+  @media (min-width: 768px) { .md-customer-quote { font-size: 30px; } }
+  .md-customer-author {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 14px;
+  }
+  .md-stars { color: var(--brand-primary); display: inline-flex; gap: 1px; }
+  .md-stars .material-symbols-outlined { font-size: 16px !important; }
+  .md-customer-author strong { font-weight: 700; color: var(--brand-heading); }
+  .md-customer-author span { color: var(--brand-muted); }
+
+  /* ---------- 11 REVIEWS ---------- */
+  .md-reviews { max-width: 1100px; margin: 0 auto; }
+  .md-reviews-header {
+    display: grid; grid-template-columns: 1fr; gap: 24px; align-items: center;
+    margin-bottom: 40px; padding-bottom: 32px;
+    border-bottom: 1px solid var(--brand-border);
+  }
+  @media (min-width: 768px) { .md-reviews-header { grid-template-columns: 1fr 1fr; gap: 48px; } }
+  .md-reviews-big-rating { text-align: center; }
+  .md-reviews-big-num {
+    font-family: 'Outfit', sans-serif; font-weight: 800;
+    font-size: 72px; line-height: 1;
+    color: var(--brand-heading);
+    letter-spacing: -0.03em;
+  }
+  @media (min-width: 768px) { .md-reviews-big-num { font-size: 96px; } }
+  .md-reviews-big-stars { color: var(--brand-primary); margin: 12px 0 8px; }
+  .md-reviews-big-stars .material-symbols-outlined { font-size: 24px !important; }
+  .md-reviews-big-meta { font-size: 14px; color: var(--brand-muted); }
+  .md-reviews-bars { display: flex; flex-direction: column; gap: 10px; }
+  .md-reviews-bar {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 13px; color: var(--brand-text);
+  }
+  .md-stars-mini { color: var(--brand-primary); display: inline-flex; gap: 1px; }
+  .md-stars-mini .material-symbols-outlined { font-size: 14px !important; }
+  .md-track {
+    flex: 1; height: 8px;
+    background: var(--brand-surface-2);
+    border-radius: 9999px; overflow: hidden;
+  }
+  .md-fill {
+    height: 100%; background: var(--brand-primary);
+    border-radius: 9999px;
+  }
+  .md-count {
+    color: var(--brand-muted); font-size: 12px;
+    min-width: 32px; text-align: right;
+  }
+  .md-reviews-grid {
+    display: grid; grid-template-columns: 1fr; gap: 16px;
+  }
+  @media (min-width: 768px) { .md-reviews-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; } }
+  .md-review-card {
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-radius: 20px;
+    padding: 22px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .md-stars-row { color: var(--brand-primary); display: inline-flex; gap: 1px; }
+  .md-stars-row .material-symbols-outlined { font-size: 18px !important; }
+  .md-verified {
+    font-size: 11px; font-weight: 700;
+    color: var(--brand-primary);
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .md-verified .material-symbols-outlined { font-size: 14px !important; }
+  .md-quote {
+    font-size: 14px; color: var(--brand-text);
+    line-height: 1.55; margin: 0;
+  }
+  .md-review-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-top: 12px;
+    border-top: 1px solid var(--brand-border);
+    font-size: 13px;
+  }
+  .md-review-footer strong { color: var(--brand-heading); font-weight: 700; }
+  .md-review-footer span { color: var(--brand-muted); font-size: 12px; }
+
+  /* ---------- 12 GUARANTEE ---------- */
+  .md-guarantee {
+    display: grid; grid-template-columns: 1fr; gap: 32px; align-items: center;
+    max-width: 1100px; margin: 0 auto;
+  }
+  @media (min-width: 768px) { .md-guarantee { grid-template-columns: 1fr 1.4fr; gap: 64px; } }
+  .md-guarantee-badge {
+    width: 200px; height: 200px;
+    border-radius: 9999px;
+    background: var(--brand-primary-soft);
+    border: 4px solid var(--brand-primary);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center;
+    margin: 0 auto;
+    position: relative;
+  }
+  .md-guarantee-badge::before {
+    content: ''; position: absolute; inset: -16px;
+    border: 1px dashed var(--brand-primary);
+    border-radius: 9999px;
+  }
+  .md-guarantee-num {
+    font-family: 'Outfit', sans-serif;
+    font-size: 56px; font-weight: 800;
+    color: var(--brand-primary);
+    line-height: 1; letter-spacing: -0.03em;
+  }
+  .md-guarantee-label {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.18em;
+    color: var(--brand-primary); text-transform: uppercase;
+    margin-top: 4px;
+  }
+  .md-trust-row {
+    display: flex; flex-wrap: wrap; gap: 16px;
+    margin-top: 24px;
+  }
+  .md-trust-item {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 13px; color: var(--brand-text);
+  }
+  .md-trust-item .material-symbols-outlined {
+    font-size: 18px !important;
+    color: var(--brand-primary);
+  }
+
+  /* ---------- 13 FINAL CTA ---------- */
+  .md-cta {
+    text-align: center;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  .md-cta-eyebrow {
+    display: block;
+    font-size: 13px; font-weight: 700; letter-spacing: 0.24em;
+    color: var(--brand-accent); text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  .md-cta h2 { font-size: 40px; line-height: 1.1; margin: 0 0 16px; }
+  @media (min-width: 768px) { .md-cta h2 { font-size: 64px; } }
+  .md-cta p.md-body {
+    font-size: 17px;
+    margin: 0 0 40px;
+  }
+  .md-btn-strawberry {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: var(--brand-accent); color: white;
+    padding: 22px 48px; border-radius: 9999px;
+    font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
+    font-size: 16px; text-decoration: none;
+    box-shadow: 0 12px 32px rgba(230, 57, 70, 0.4);
+    transition: transform 150ms, box-shadow 200ms;
+  }
+  .md-btn-strawberry:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 40px rgba(230, 57, 70, 0.5);
+  }
+  .md-btn-strawberry .material-symbols-outlined {
+    color: white;
+    font-size: 20px !important;
+  }
+  .md-cta-trust {
+    display: inline-flex; gap: 20px;
+    margin-top: 28px;
+    font-size: 13px; color: var(--brand-muted);
+    flex-wrap: wrap; justify-content: center;
+  }
+  .md-cta-trust span {
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .md-cta-trust .material-symbols-outlined {
+    font-size: 16px !important;
+    color: var(--brand-primary);
+  }
+
+  /* ---------- 14 FAQ ---------- */
+  .md-faq-list { max-width: 760px; margin: 0 auto; }
+  .md-faq-item {
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-radius: 16px;
+    margin-bottom: 8px;
+    overflow: hidden;
+    transition: border-color 200ms;
+  }
+  .md-faq-item[open] { border-color: var(--brand-primary); }
+  .md-faq-item summary {
+    padding: 18px 22px;
+    font-weight: 700; font-size: 15px;
+    cursor: pointer; list-style: none;
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 12px;
+  }
+  .md-faq-item summary::-webkit-details-marker { display: none; }
+  .md-faq-item summary .material-symbols-outlined {
+    color: var(--brand-primary);
+    transition: transform 200ms;
+  }
+  .md-faq-item[open] summary .material-symbols-outlined {
+    transform: rotate(180deg);
+  }
+  .md-faq-item p {
+    padding: 0 22px 18px;
+    margin: 0;
+    font-size: 14px; color: var(--brand-text);
+    line-height: 1.6;
+  }
+
+  /* =====================================================
+     NEW VARIETY SECTIONS — add visual rhythm
+     ===================================================== */
+
+  /* ---------- UNBOXING — quad grid ---------- */
+  .md-unbox-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  @media (min-width: 768px) {
+    .md-unbox-grid { grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  }
+  .md-unbox-cell {
+    position: relative;
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-radius: 18px;
+    overflow: hidden;
+    transition: border-color 220ms ease, box-shadow 220ms ease, transform 220ms ease;
+  }
+  .md-unbox-cell:hover {
+    border-color: var(--brand-primary);
+    box-shadow: 0 14px 32px rgba(116, 151, 191, 0.12);
+    transform: translateY(-2px);
+  }
+  .md-unbox-img { aspect-ratio: 1; overflow: hidden; }
+  .md-unbox-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .md-unbox-tag {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    width: 30px;
+    height: 30px;
+    background: var(--brand-heading);
+    color: #FFFCF7;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Outfit', sans-serif;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+  }
+  .md-unbox-cell h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--brand-heading);
+    margin: 14px 16px 4px;
+    line-height: 1.25;
+  }
+  .md-unbox-cell p {
+    margin: 0 16px 16px;
+    font-size: 13px;
+    color: var(--brand-text);
+    line-height: 1.5;
+  }
+  @media (min-width: 768px) {
+    .md-unbox-cell h3 { font-size: 16px; margin: 16px 20px 6px; }
+    .md-unbox-cell p { font-size: 13.5px; margin: 0 20px 20px; }
+  }
+
+  /* Swipe hint — widoczny tylko na mobile */
+  .md-variants-swipe-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 14px 0 0;
+    font-size: 12.5px;
+    color: var(--brand-muted);
+    font-weight: 600;
+  }
+  .md-variants-swipe-hint .material-symbols-outlined {
+    font-size: 16px;
+    color: var(--brand-primary);
+  }
+  @media (min-width: 768px) { .md-variants-swipe-hint { display: none; } }
+
+  /* ---------- VARIANT SHOWCASE — 3 cards (mobile: scroll-snap carousel) ---------- */
+  .md-variants-grid {
+    display: flex;
+    gap: 14px;
+    max-width: 1100px;
+    margin: 0 auto;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding: 4px 9% 16px;
+    scrollbar-width: none;
+  }
+  .md-variants-grid::-webkit-scrollbar { display: none; }
+  .md-variants-grid > .md-variant-card {
+    scroll-snap-align: center;
+    flex: 0 0 82%;
+    min-width: 0;
+  }
+  @media (min-width: 768px) {
+    .md-variants-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      overflow: visible;
+      padding: 0;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .md-variants-grid > .md-variant-card { flex: initial; min-width: 0; }
+    /* Wariant z 2 kartami — wyśrodkowane, węższy grid */
+    .md-variants-grid--two {
+      grid-template-columns: repeat(2, 1fr);
+      max-width: 720px;
+    }
+  }
+  .md-variant-card {
+    background: var(--brand-bg);
+    border-radius: 24px;
+    overflow: hidden;
+    transition: transform 280ms ease, box-shadow 280ms ease;
+    position: relative;
+    isolation: isolate;
+  }
+  .md-variant-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 50%, rgba(42, 45, 39, 0.04) 100%);
+    pointer-events: none;
+    z-index: 1;
+  }
+  .md-variant-card:hover {
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: 0 20px 48px rgba(42, 45, 39, 0.12);
+  }
+  .md-variant-img {
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
+  }
+  .md-variant-img img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: transform 600ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .md-variant-card:hover .md-variant-img img { transform: scale(1.04); }
+  .md-variant-body {
+    padding: 22px 24px 26px;
+    position: relative;
+    z-index: 2;
+  }
+  .md-variant-dot {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 6px rgba(42, 45, 39, 0.15);
+  }
+  .md-variant-meta {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--brand-primary);
+    margin-bottom: 10px;
+  }
+  .md-variant-card h3 {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--brand-heading);
+    margin: 0 0 6px;
+    letter-spacing: -0.02em;
+  }
+  .md-variant-card p {
+    margin: 0;
+    font-size: 14.5px;
+    color: var(--brand-text);
+    line-height: 1.55;
+  }
+
+  /* ---------- PULL QUOTE — typographic breather ---------- */
+  .md-section--pullquote {
+    background:
+      radial-gradient(50% 70% at 20% 20%, rgba(116, 151, 191, 0.08) 0%, transparent 60%),
+      radial-gradient(45% 60% at 85% 80%, rgba(230, 57, 70, 0.05) 0%, transparent 60%),
+      var(--brand-bg);
+    padding: 96px 20px;
+  }
+  @media (min-width: 768px) { .md-section--pullquote { padding: 128px 32px; } }
+  .md-pullquote {
+    max-width: 900px;
+    margin: 0 auto;
+    text-align: center;
+    position: relative;
+  }
+  .md-pullquote-mark {
+    display: block;
+    font-family: 'Outfit', sans-serif;
+    font-size: 120px;
+    font-weight: 900;
+    color: var(--brand-primary);
+    line-height: 0.7;
+    margin-bottom: 24px;
+    opacity: 0.7;
+  }
+  @media (min-width: 768px) { .md-pullquote-mark { font-size: 180px; } }
+  .md-pullquote-text {
+    font-family: 'Outfit', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--brand-heading);
+    letter-spacing: -0.02em;
+    line-height: 1.3;
+    margin: 0 0 28px;
+  }
+  @media (min-width: 768px) { .md-pullquote-text { font-size: 42px; } }
+  .md-pullquote-sign {
+    display: inline-block;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--brand-primary);
+  }
+
+  /* ---------- ANTI-CLAIMS — czym NIE są ---------- */
+  .md-eyebrow--strawberry { color: var(--brand-accent); }
+  .md-em-strawberry { color: var(--brand-accent); }
+  .md-anti-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  @media (min-width: 768px) { .md-anti-grid { grid-template-columns: repeat(3, 1fr); gap: 24px; } }
+  .md-anti-card {
+    background: var(--brand-surface);
+    border: 1.5px solid var(--brand-border);
+    border-radius: 18px;
+    padding: 28px 26px;
+    position: relative;
+    transition: border-color 240ms ease, transform 240ms ease;
+  }
+  .md-anti-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 22px;
+    bottom: 22px;
+    width: 4px;
+    background: var(--brand-accent);
+    border-radius: 0 4px 4px 0;
+  }
+  .md-anti-card:hover {
+    border-color: var(--brand-accent);
+    transform: translateY(-2px);
+  }
+  .md-anti-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: var(--brand-accent-soft);
+    color: var(--brand-accent);
+    border-radius: 50%;
+    margin-bottom: 14px;
+  }
+  .md-anti-icon .material-symbols-outlined { font-size: 22px; }
+  .md-anti-card h3 {
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--brand-heading);
+    margin: 0 0 10px;
+    letter-spacing: -0.015em;
+  }
+  .md-anti-card h3 s {
+    color: var(--brand-accent);
+    text-decoration-thickness: 2px;
+    text-decoration-color: var(--brand-accent);
+  }
+  .md-anti-card p {
+    margin: 0;
+    font-size: 14.5px;
+    line-height: 1.55;
+    color: var(--brand-text);
+  }
+
+  /* ---------- USE CASE SCENARIOS — 6 cards ---------- */
+  .md-uses-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  @media (min-width: 640px) {
+    .md-uses-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  }
+  @media (min-width: 1024px) {
+    .md-uses-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  }
+  .md-use-card {
+    background: var(--brand-bg);
+    border: 1px solid var(--brand-border);
+    border-radius: 16px;
+    padding: 22px 22px 24px;
+    transition: border-color 220ms ease, transform 220ms ease, box-shadow 220ms ease;
+  }
+  .md-use-card:hover {
+    border-color: var(--brand-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 26px rgba(116, 151, 191, 0.12);
+  }
+  .md-use-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    background: var(--brand-primary-soft);
+    color: var(--brand-primary-hover);
+    border-radius: 12px;
+    margin-bottom: 14px;
+  }
+  .md-use-icon .material-symbols-outlined { font-size: 22px; }
+  .md-use-card h3 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--brand-heading);
+    margin: 0 0 6px;
+    letter-spacing: -0.015em;
+  }
+  .md-use-card p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--brand-text);
+  }
+
+  /* =====================================================
+     EXTRA 8 SECTIONS — final closing rhythm
+     ===================================================== */
+
+  /* ---------- EXTRA 01 — MAGAZINE SPREAD ---------- */
+  .md-mag-spread {
+    position: relative;
+    width: 100%;
+    min-height: 380px;
+    overflow: hidden;
+  }
+  @media (min-width: 768px) { .md-mag-spread { min-height: 520px; } }
+  .md-mag-img {
+    position: absolute;
+    inset: 0;
+  }
+  .md-mag-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .md-mag-img::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(42,45,39,0.78) 0%, rgba(42,45,39,0.55) 40%, rgba(42,45,39,0.20) 100%);
+  }
+  .md-mag-overlay {
+    position: relative;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 64px 24px;
+    color: #FFFCF7;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 380px;
+    max-width: 720px;
+  }
+  @media (min-width: 768px) {
+    .md-mag-overlay { padding: 96px 64px; min-height: 520px; }
+  }
+  .md-mag-eyebrow {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--brand-primary-soft);
+    margin-bottom: 18px;
+  }
+  .md-mag-overlay h2 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    line-height: 1.05;
+    margin: 0 0 18px;
+    color: #FFFCF7;
+  }
+  @media (min-width: 768px) { .md-mag-overlay h2 { font-size: 56px; } }
+  .md-mag-overlay p {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.6;
+    color: rgba(255,252,247,0.85);
+    max-width: 540px;
+  }
+  @media (min-width: 768px) { .md-mag-overlay p { font-size: 17px; } }
+
+  /* ---------- EXTRA 02 — FOUNDER STORY ---------- */
+  .md-founder {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 32px;
+    max-width: 1100px;
+    margin: 0 auto;
+    align-items: center;
+  }
+  @media (min-width: 768px) { .md-founder { grid-template-columns: 1.05fr 1fr; gap: 64px; } }
+  .md-founder-img {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 24px 56px rgba(42,45,39,0.14);
+  }
+  .md-founder-img img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .md-founder-stamp {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: 80px;
+    height: 80px;
+    background: var(--brand-primary);
+    color: #FFFCF7;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Outfit', sans-serif;
+    letter-spacing: 0.02em;
+    transform: rotate(-8deg);
+    box-shadow: 0 8px 20px rgba(116,151,191,0.40);
+  }
+  .md-founder-stamp span { font-size: 9px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.8; }
+  .md-founder-stamp strong { font-size: 22px; font-weight: 800; }
+  .md-founder-body h2 {
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    color: var(--brand-heading);
+    margin: 14px 0 18px;
+    line-height: 1.1;
+  }
+  @media (min-width: 768px) { .md-founder-body h2 { font-size: 40px; } }
+  .md-founder-body .md-body { font-size: 15px; line-height: 1.65; margin: 0 0 14px; }
+  @media (min-width: 768px) { .md-founder-body .md-body { font-size: 16px; } }
+  .md-founder-sign {
+    margin-top: 22px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    color: var(--brand-muted);
+    font-size: 13.5px;
+    font-style: italic;
+  }
+  .md-founder-sign-line {
+    width: 32px; height: 2px;
+    background: var(--brand-primary);
+    border-radius: 2px;
+  }
+
+  /* ---------- EXTRA 03 — COMPARISON TABLE ---------- */
+  .md-compare-wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .md-compare-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    min-width: 580px;
+  }
+  .md-compare-table th,
+  .md-compare-table td {
+    padding: 14px 16px;
+    text-align: center;
+    font-size: 14px;
+    color: var(--brand-text);
+    border-bottom: 1px solid var(--brand-border);
+  }
+  .md-compare-table thead th {
+    font-weight: 600;
+    color: var(--brand-muted);
+    font-size: 13px;
+    border-bottom: 2px solid var(--brand-border);
+    padding-bottom: 18px;
+  }
+  .md-compare-table tbody td:first-child {
+    text-align: left;
+    font-weight: 600;
+    color: var(--brand-heading);
+    background: var(--brand-bg);
+    border-radius: 10px 0 0 10px;
+  }
+  .md-compare-col-us {
+    background: var(--brand-primary-soft);
+    border-radius: 10px 10px 0 0;
+    color: var(--brand-primary-hover) !important;
+    font-weight: 800 !important;
+    font-size: 15px !important;
+  }
+  .md-compare-col-us span {
+    display: inline-block;
+    padding: 4px 14px;
+    background: var(--brand-primary);
+    color: #FFFCF7;
+    border-radius: 999px;
+    font-size: 14px;
+  }
+  .md-compare-cell-us {
+    background: var(--brand-primary-soft);
+  }
+  .md-compare-table tbody tr:last-child .md-compare-cell-us {
+    border-radius: 0 0 10px 10px;
+  }
+  .md-yes { color: var(--brand-primary); font-size: 24px !important; }
+  .md-no { color: rgba(42,45,39,0.20); font-size: 24px !important; }
+
+  /* ---------- STATS — BENTO GRID (asymetryczny, light bg) ---------- */
+  .md-bento {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  @media (min-width: 768px) {
+    .md-bento {
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: auto auto;
+      gap: 18px;
+    }
+  }
+  .md-bento-cell {
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-radius: 22px;
+    padding: 26px 24px 28px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease;
+  }
+  .md-bento-cell:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 18px 36px rgba(42,45,39,0.10);
+  }
+  /* Featured XL cell — zajmuje 2 wiersze i 1 kolumnę na desktop */
+  .md-bento-cell--xl {
+    background: linear-gradient(160deg, var(--brand-primary) 0%, var(--brand-primary-hover) 100%);
+    color: #FFFCF7;
+    border: none;
+    padding: 32px 30px 36px;
+  }
+  @media (min-width: 768px) {
+    .md-bento-cell--xl { grid-column: 1; grid-row: 1 / span 2; padding: 40px 36px; }
+  }
+  .md-bento-cell--xl .md-bento-num { color: #FFFCF7; font-size: 56px; }
+  @media (min-width: 768px) { .md-bento-cell--xl .md-bento-num { font-size: 72px; } }
+  .md-bento-cell--xl .md-bento-label { color: rgba(255,252,247,0.92); font-size: 15px; font-weight: 700; }
+  .md-bento-cell--xl .md-bento-sub { color: rgba(255,252,247,0.72); font-size: 13.5px; margin: 12px 0 0; line-height: 1.55; }
+  .md-bento-cell--sage {
+    background: var(--brand-primary-soft);
+    border-color: var(--brand-primary);
+  }
+  .md-bento-cell--strawberry {
+    background: var(--brand-accent-soft);
+    border-color: var(--brand-accent);
+  }
+  .md-bento-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background: rgba(255,252,247,0.18);
+    color: #FFFCF7;
+    border-radius: 12px;
+    margin-bottom: 4px;
+  }
+  .md-bento-icon .material-symbols-outlined { font-size: 24px; }
+  .md-bento-num {
+    font-family: 'Outfit', sans-serif;
+    font-size: 40px;
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    color: var(--brand-heading);
+    line-height: 1;
+  }
+  @media (min-width: 768px) { .md-bento-num { font-size: 46px; } }
+  .md-bento-num small {
+    font-size: 0.45em;
+    font-weight: 600;
+    color: var(--brand-muted);
+    margin-left: 2px;
+    letter-spacing: -0.02em;
+  }
+  .md-bento-cell--xl .md-bento-num small { color: rgba(255,252,247,0.55); }
+  .md-bento-label {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--brand-heading);
+    line-height: 1.3;
+  }
+  .md-bento-cell--sage .md-bento-label,
+  .md-bento-cell--sage .md-bento-num { color: var(--brand-primary-hover); }
+  .md-bento-cell--strawberry .md-bento-label,
+  .md-bento-cell--strawberry .md-bento-num { color: var(--brand-accent-hover); }
+  .md-bento-foot {
+    font-size: 12.5px;
+    color: var(--brand-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+  }
+  .md-bento-cell--sage .md-bento-foot { color: var(--brand-primary-hover); opacity: 0.85; }
+  .md-bento-cell--strawberry .md-bento-foot { color: var(--brand-accent-hover); opacity: 0.85; }
+  .md-bento-star {
+    color: #E8A317;
+    font-size: 15px !important;
+  }
+
+  /* ---------- SECTION 2 — PROBLEM → SOLUTION SPLIT ---------- */
+  .md-problem-solve {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    align-items: stretch;
+  }
+  @media (min-width: 768px) {
+    .md-problem-solve {
+      grid-template-columns: 1fr auto 1fr;
+      gap: 24px;
+      align-items: center;
+    }
+  }
+  .md-ps-side {
+    background: var(--brand-bg);
+    border: 1px solid var(--brand-border);
+    border-radius: 22px;
+    padding: 26px 24px;
+  }
+  .md-ps-side--solution {
+    background: var(--brand-primary-soft);
+    border-color: var(--brand-primary);
+  }
+  .md-ps-tag {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+  .md-ps-tag--problem {
+    background: var(--brand-accent-soft);
+    color: var(--brand-accent);
+  }
+  .md-ps-tag--solution {
+    background: var(--brand-primary);
+    color: #FFFCF7;
+  }
+  .md-ps-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .md-ps-list li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 15.5px;
+    font-weight: 500;
+    color: var(--brand-text);
+    line-height: 1.35;
+  }
+  .md-ps-list li .material-symbols-outlined {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    background: var(--brand-accent-soft);
+    color: var(--brand-accent);
+    border-radius: 50%;
+  }
+  .md-ps-list--ok li {
+    color: var(--brand-heading);
+    font-weight: 600;
+  }
+  .md-ps-list--ok li .material-symbols-outlined {
+    background: transparent;
+    color: var(--brand-primary);
+    font-size: 22px;
+    width: auto;
+    height: auto;
+  }
+  .md-ps-bridge {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: var(--brand-primary);
+  }
+  @media (min-width: 768px) {
+    .md-ps-bridge { flex-direction: column; gap: 6px; }
+  }
+  .md-ps-bridge-arrow {
+    font-size: 32px;
+    line-height: 1;
+    color: var(--brand-primary);
+    font-weight: 300;
+    transform: rotate(0);
+  }
+  @media (min-width: 768px) {
+    .md-ps-bridge-arrow { transform: rotate(0); font-size: 40px; }
+  }
+  .md-ps-bridge-label {
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--brand-primary-hover);
+  }
+
+  /* ---------- EXTRA 05 — CARE FLOW (4 steps with arrows) ---------- */
+  .md-care-flow {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    align-items: stretch;
+  }
+  @media (min-width: 768px) {
+    .md-care-flow {
+      grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr;
+      gap: 14px;
+      align-items: center;
+    }
+  }
+  .md-care-step {
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-radius: 18px;
+    padding: 24px 22px 26px;
+    text-align: left;
+    position: relative;
+    transition: border-color 240ms ease, transform 240ms ease, box-shadow 240ms ease;
+  }
+  .md-care-step:hover {
+    border-color: var(--brand-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(116,151,191,0.12);
+  }
+  .md-care-icon {
+    width: 44px;
+    height: 44px;
+    background: var(--brand-primary-soft);
+    color: var(--brand-primary-hover);
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 14px;
+  }
+  .md-care-icon .material-symbols-outlined { font-size: 24px; }
+  .md-care-num {
+    position: absolute;
+    top: 22px;
+    right: 22px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--brand-primary);
+    letter-spacing: -0.02em;
+    opacity: 0.45;
+  }
+  .md-care-step h3 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--brand-heading);
+    margin: 0 0 6px;
+    letter-spacing: -0.015em;
+  }
+  .md-care-step p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--brand-text);
+  }
+  .md-care-arrow {
+    display: none;
+    font-size: 28px;
+    color: var(--brand-primary);
+    font-weight: 300;
+  }
+  @media (min-width: 768px) { .md-care-arrow { display: inline-flex; align-items: center; justify-content: center; } }
+
+  /* ---------- EXTRA 06 — QUOTE WALL ---------- */
+  .md-quotes-wall {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  @media (min-width: 640px) { .md-quotes-wall { grid-template-columns: repeat(2, 1fr); gap: 20px; } }
+  @media (min-width: 1024px) { .md-quotes-wall { grid-template-columns: repeat(4, 1fr); gap: 18px; } }
+  .md-quote-card {
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-radius: 18px;
+    padding: 22px 22px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    transition: transform 240ms ease, box-shadow 240ms ease;
+  }
+  .md-quote-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 32px rgba(42,45,39,0.10);
+  }
+  .md-quote-stars {
+    display: inline-flex;
+    gap: 2px;
+    color: #E8A317;
+  }
+  .md-quote-stars .material-symbols-outlined { font-size: 16px; }
+  .md-quote-card p {
+    margin: 0;
+    flex: 1;
+    font-size: 14.5px;
+    line-height: 1.5;
+    color: var(--brand-heading);
+    font-style: italic;
+  }
+  .md-quote-author {
+    font-size: 13px;
+    color: var(--brand-muted);
+  }
+  .md-quote-author strong {
+    color: var(--brand-heading);
+    font-weight: 700;
+    font-style: normal;
+  }
+
+  /* ---------- EXTRA 07 — MATERIALS / SUSTAINABILITY ---------- */
+  .md-materials-grid {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  @media (min-width: 768px) { .md-materials-grid { grid-template-columns: repeat(3, 1fr); gap: 24px; } }
+  .md-material-card {
+    position: relative;
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-top: 4px solid var(--mat-color);
+    border-radius: 18px;
+    padding: 28px 26px 26px;
+    transition: transform 240ms ease, box-shadow 240ms ease;
+  }
+  .md-material-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 16px 32px rgba(42,45,39,0.10);
+  }
+  .md-material-tag {
+    display: inline-block;
+    padding: 5px 12px;
+    background: var(--mat-soft);
+    color: var(--mat-color);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    border-radius: 999px;
+    margin-bottom: 16px;
+  }
+  .md-material-card h3 {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--brand-heading);
+    letter-spacing: -0.02em;
+    margin: 0 0 10px;
+  }
+  .md-material-card p {
+    margin: 0 0 18px;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--brand-text);
+  }
+  .md-material-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-top: 16px;
+    border-top: 1px solid var(--brand-border);
+    font-size: 12.5px;
+    color: var(--brand-muted);
+  }
+  .md-material-meta strong {
+    color: var(--brand-heading);
+    font-weight: 700;
+    margin-right: 4px;
+  }
+
+  /* ---------- FINAL CTA — contained card (nie full-bg, daje breathing room z dark footerem) ---------- */
+  .md-cta-card {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-radius: 24px;
+    box-shadow: 0 24px 56px rgba(42,45,39,0.10);
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 900px) {
+    .md-cta-card { grid-template-columns: 5fr 7fr; }
+  }
+  .md-cta-card-img {
+    background: var(--brand-primary-soft);
+    aspect-ratio: 16 / 11;
+    overflow: hidden;
+  }
+  @media (min-width: 900px) {
+    .md-cta-card-img { aspect-ratio: auto; min-height: 100%; }
+  }
+  .md-cta-card-img img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .md-cta-card-body {
+    padding: 28px 26px 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  @media (min-width: 768px) { .md-cta-card-body { padding: 44px 44px; } }
+  .md-cta-card-eyebrow {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--brand-primary);
+    margin-bottom: 14px;
+  }
+  .md-cta-card-body h2 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+    color: var(--brand-heading);
+    margin: 0 0 14px;
+  }
+  @media (min-width: 768px) { .md-cta-card-body h2 { font-size: 34px; } }
+  .md-cta-card-body p {
+    margin: 0 0 26px;
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--brand-text);
+  }
+  .md-cta-card-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+    margin-bottom: 22px;
+  }
+  @media (min-width: 640px) {
+    .md-cta-card-actions { flex-direction: row; align-items: center; gap: 16px; }
+  }
+  .md-cta-card-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 15px 28px;
+    background: var(--brand-primary);
+    color: #FFFCF7;
+    font-weight: 800;
+    font-size: 14px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border-radius: 999px;
+    text-decoration: none;
+    transition: background 200ms ease, transform 200ms ease, box-shadow 200ms ease;
+    box-shadow: 0 10px 24px rgba(116,151,191,0.30);
+  }
+  .md-cta-card-btn:hover {
+    background: var(--brand-primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 14px 32px rgba(116,151,191,0.40);
+  }
+  .md-cta-card-btn .material-symbols-outlined { font-size: 18px; }
+  .md-cta-card-link {
+    color: var(--brand-text);
+    font-weight: 600;
+    font-size: 14px;
+    text-decoration: none;
+    transition: color 200ms ease;
+  }
+  .md-cta-card-link:hover { color: var(--brand-primary-hover); }
+  .md-cta-card-trust {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding-top: 22px;
+    border-top: 1px solid var(--brand-border);
+    color: var(--brand-muted);
+    font-size: 12.5px;
+  }
+  .md-cta-card-trust span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .md-cta-card-trust .material-symbols-outlined {
+    font-size: 16px;
+    color: var(--brand-primary);
+  }
+
+  /* ---------- PROBLEM → SOLUTION — refined polish ---------- */
+  .md-ps-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .md-ps-emoji {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    font-family: 'Outfit', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .md-ps-side--problem .md-ps-emoji {
+    background: var(--brand-accent-soft);
+    color: var(--brand-accent);
+  }
+  .md-ps-side--solution .md-ps-emoji {
+    background: var(--brand-primary);
+    color: #FFFCF7;
+  }
+  .md-ps-side {
+    padding: 28px 26px;
+    border-radius: 22px;
+    box-shadow: 0 4px 16px rgba(42,45,39,0.04);
+    transition: transform 240ms ease, box-shadow 240ms ease;
+  }
+  .md-ps-side:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 32px rgba(42,45,39,0.08);
+  }
+  .md-ps-foot {
+    margin: 20px 0 0;
+    padding-top: 16px;
+    border-top: 1px solid var(--brand-border);
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--brand-muted);
+    font-style: italic;
+  }
+  .md-ps-side--solution .md-ps-foot { border-top-color: var(--brand-primary); opacity: 0.85; }
+  .md-ps-bridge-circle {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--brand-surface);
+    border: 2px solid var(--brand-primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 18px rgba(116,151,191,0.25);
+  }
+  .md-ps-bridge-circle .md-ps-bridge-arrow {
+    color: var(--brand-primary);
+    font-size: 28px;
+    font-weight: 600;
+    line-height: 1;
+  }
+  @media (max-width: 768px) {
+    .md-ps-bridge-circle .md-ps-bridge-arrow { transform: rotate(90deg); display: inline-block; }
+  }
+
+  /* ---------- STICKY MIN — refined polish ---------- */
+  .md-sticky-img .md-img-square {
+    position: relative;
+  }
+  .md-sticky-img-tag {
+    position: absolute;
+    bottom: 16px;
+    left: 16px;
+    background: rgba(42,45,39,0.85);
+    color: #FFFCF7;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    backdrop-filter: blur(8px);
+  }
+  .md-sticky-img-tag .material-symbols-outlined {
+    font-size: 14px;
+    color: var(--brand-primary-soft);
+  }
+  .md-sticky-block-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .md-sticky-meta {
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--brand-muted);
+  }
+  .md-sticky-tags {
+    list-style: none;
+    margin: 14px 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .md-sticky-tags li {
+    padding: 4px 10px;
+    background: var(--brand-primary-soft);
+    color: var(--brand-primary-hover);
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  /* ---------- POLECANE PRODUKTY — related products ---------- */
+  .md-related-head {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 28px;
+    align-items: flex-start;
+  }
+  @media (min-width: 768px) {
+    .md-related-head {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 24px;
+    }
+  }
+  .md-related-head h2 {
+    margin: 6px 0 0;
+  }
+  .md-related-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 18px;
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    color: var(--brand-heading);
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 200ms ease;
+  }
+  .md-related-all:hover {
+    background: var(--brand-primary);
+    color: #FFFCF7;
+    border-color: var(--brand-primary);
+    transform: translateY(-1px);
+  }
+  .md-related-all .material-symbols-outlined { font-size: 16px; }
+  .md-related-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  @media (max-width: 900px) {
+    .md-related-grid {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      padding: 4px 16px 16px;
+      margin-left: -16px;
+      margin-right: -16px;
+      scrollbar-width: none;
+    }
+    .md-related-grid::-webkit-scrollbar { display: none; }
+    .md-related-card {
+      flex: 0 0 65%;
+      scroll-snap-align: start;
+    }
+  }
+  @media (max-width: 640px) {
+    .md-related-card { flex-basis: 72%; }
+  }
+  .md-related-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-radius: 16px;
+    overflow: hidden;
+    text-decoration: none;
+    transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+  }
+  .md-related-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--brand-primary);
+    box-shadow: 0 14px 28px rgba(42,45,39,0.10);
+  }
+  .md-related-img {
+    aspect-ratio: 1;
+    background: var(--brand-primary-soft);
+    overflow: hidden;
+  }
+  .md-related-img img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: transform 480ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .md-related-card:hover .md-related-img img { transform: scale(1.05); }
+  .md-related-img-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--brand-muted);
+  }
+  .md-related-img-empty .material-symbols-outlined { font-size: 40px; }
+  .md-related-body {
+    padding: 14px 16px 16px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .md-related-body h3 {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--brand-heading);
+    margin: 0;
+    line-height: 1.3;
+    letter-spacing: -0.005em;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .md-related-price {
+    margin: auto 0 0;
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--brand-primary-hover);
+    letter-spacing: -0.01em;
+  }
+  .md-related-price-row {
+    margin: auto 0 0;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .md-related-price-regular {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--brand-muted);
+    text-decoration: line-through;
+    text-decoration-color: currentColor;
+    text-decoration-thickness: 1.5px;
+  }
+  .md-related-price--sale {
+    color: var(--brand-accent);
+  }
+  .md-related-sale-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 2;
+    padding: 4px 10px;
+    background: var(--brand-accent);
+    color: #FFFFFF;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    border-radius: 9999px;
+    box-shadow: 0 3px 10px rgba(230, 57, 70, 0.35);
+  }
+  .md-related-mobile-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 16px;
+    font-size: 12.5px;
+    color: var(--brand-muted);
+    font-weight: 600;
+  }
+  .md-related-mobile-hint .material-symbols-outlined {
+    font-size: 16px;
+    color: var(--brand-primary);
+  }
+  @media (min-width: 901px) { .md-related-mobile-hint { display: none; } }
+
+  /* =====================================================
+     MOBILE TUNING — wszystkie sekcje
+     ===================================================== */
+  @media (max-width: 640px) {
+    /* Section padding mniejszy na mobile */
+    .md-section { padding: 40px 16px; }
+    .md-section--compact { padding: 28px 16px; }
+    .md-section--last { padding-bottom: 40px; }
+
+    /* H2 mniejsze */
+    .md-center h2, .md-split h2, .md-section h2 {
+      font-size: 26px !important;
+      letter-spacing: -0.02em;
+    }
+    .md-body, .md-section p { font-size: 14.5px; line-height: 1.55; }
+
+    /* Problem/solve split — w pionie, bridge horyzontalny */
+    .md-problem-solve { gap: 12px; }
+    .md-ps-side { padding: 20px 18px; }
+    .md-ps-list li { font-size: 14.5px; }
+    .md-ps-bridge { padding: 6px 0; }
+    .md-ps-bridge-arrow { transform: rotate(90deg); font-size: 28px; }
+    .md-ps-bridge-label { font-size: 11px; }
+
+    /* Split sections — image first, then text */
+    .md-split, .md-split--mirror { gap: 22px; }
+    .md-split .md-img-square, .md-split--mirror .md-img-square { border-radius: 16px; }
+
+    /* Sticky scroll cards — mniejsze paddingi już są w base */
+
+    /* Variant showcase — pojedyncza kolumna na mobile */
+    .md-variants-grid { gap: 14px; }
+    .md-variant-card { border-radius: 18px; }
+    .md-variant-body { padding: 18px 20px 22px; }
+    .md-variant-card h3 { font-size: 19px; }
+
+    /* Trust strip — 2x2 grid */
+    .md-trust-strip { padding: 20px 16px; }
+
+    /* Tabs */
+    .md-tabs-nav { gap: 6px; flex-wrap: wrap; justify-content: center; }
+    .md-tab-btn { font-size: 12.5px; padding: 8px 14px; }
+
+    /* Customer story (sage-soft) */
+    .md-customer-quote { font-size: 18px; line-height: 1.4; }
+
+    /* Reviews — keep responsive */
+    .md-reviews-big-num { font-size: 56px; }
+
+    /* Specyfikacja */
+    .md-spec-card { gap: 22px; }
+    .md-spec-list li { font-size: 13.5px; }
+
+    /* Founder */
+    .md-founder { gap: 28px; }
+    .md-founder-img { border-radius: 18px; }
+    .md-founder-stamp {
+      width: 64px; height: 64px; bottom: 14px; right: 14px;
+    }
+    .md-founder-stamp strong { font-size: 18px; }
+    .md-founder-body h2 { font-size: 26px !important; }
+    .md-founder-body .md-body { font-size: 14.5px; }
+
+    /* Comparison table — scrollowalna */
+    .md-compare-table { font-size: 12.5px; min-width: 460px; }
+    .md-compare-table th, .md-compare-table td { padding: 10px 8px; }
+
+    /* Bento stats — 1 col, większe paddings */
+    .md-bento { gap: 12px; }
+    .md-bento-cell { padding: 22px 22px 24px; border-radius: 18px; }
+    .md-bento-cell--xl { padding: 28px 26px 30px; }
+    .md-bento-cell--xl .md-bento-num { font-size: 48px; }
+    .md-bento-num { font-size: 36px; }
+
+    /* FAQ — szczelniej */
+    .md-faq-item summary { padding: 14px 18px; font-size: 14.5px; }
+
+    /* Final CTA card */
+    .md-cta-card { border-radius: 20px; }
+    .md-cta-card-img { aspect-ratio: 16 / 10; }
+    .md-cta-card-body { padding: 24px 22px 28px; }
+    .md-cta-card-body h2 { font-size: 22px !important; line-height: 1.2; }
+    .md-cta-card-body p { font-size: 14.5px; margin-bottom: 22px; }
+    .md-cta-card-btn { width: 100%; min-width: 0; padding: 14px 22px; }
+    .md-cta-card-trust { gap: 12px; font-size: 12px; }
+  }
+</style>
+
+<script is:inline>
+  // Carousel arrows (mobile)
+  document.querySelectorAll('[data-md-carousel-prev], [data-md-carousel-next]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-md-carousel-prev') || btn.getAttribute('data-md-carousel-next');
+      const dir = btn.getAttribute('data-md-carousel-prev') ? -1 : 1;
+      const el = document.getElementById(id);
+      if (!el) return;
+      const item = el.firstElementChild;
+      if (!item) return;
+      const gap = parseFloat(getComputedStyle(el).gap) || 16;
+      el.scrollBy({ left: (item.offsetWidth + gap) * dir, behavior: 'smooth' });
+    });
+  });
+
+  // Tabs
+  document.querySelectorAll('.md-tab-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const idx = Number(btn.getAttribute('data-md-tab'));
+      document.querySelectorAll('.md-tab-btn').forEach((b) => b.classList.remove('md-tab-btn--active'));
+      document.querySelectorAll('.md-tab-content').forEach((c) => c.classList.remove('md-tab-content--active'));
+      btn.classList.add('md-tab-btn--active');
+      const all = document.querySelectorAll('.md-tab-content');
+      if (all[idx]) all[idx].classList.add('md-tab-content--active');
+    });
+  });
+</script>
