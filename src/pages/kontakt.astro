@@ -86,11 +86,6 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
           </label>
 
           <label class="kp-form-field">
-            <span>Adres (opcjonalny)</span>
-            <input type="text" name="address" maxlength="200" placeholder="Ulica, kod pocztowy, miasto — jeśli sprawa dotyczy zamówienia" />
-          </label>
-
-          <label class="kp-form-field">
             <span>Wiadomość *</span>
             <textarea name="message" required maxlength="2000" rows="6" placeholder="Napisz w czym możemy pomóc…"></textarea>
           </label>
@@ -960,7 +955,6 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
         const name = String(fd.get('name') || '').trim();
         const email = String(fd.get('email') || '').trim();
         const topic = String(fd.get('topic') || '').trim();
-        const address = String(fd.get('address') || '').trim();
         const message = String(fd.get('message') || '').trim();
         const honey = String(fd.get('_honey') || '').trim();
 
@@ -1000,7 +994,6 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
               name,
               email,
               topic: topic || '(brak tematu)',
-              address: address || '(nie podano)',
               message,
             }),
           });
