@@ -655,6 +655,64 @@ const isOptionOos = (id: string): boolean => optionHasStock[id] !== true;
                 <span data-hint-msg>Wybierz wariant aby dodać do koszyka</span>
               </p>
 
+              {/* Bundle selector — tylko Bryza. Ustawia ilość w #quantity; cenę pakietu
+                  w koszyku domyka promocja w Vendure (front pokazuje ofertę). */}
+              {slug === 'bryza' && (
+                <Fragment>
+                <div class="pdp-bundle" role="radiogroup" aria-label="Wybierz zestaw">
+                  <span class="pdp-bundle-title">Wybierz zestaw</span>
+                  <button type="button" class="pdp-bundle-tile" data-bundle-qty="1" aria-pressed="true">
+                    <span class="pdp-bundle-radio" aria-hidden="true"></span>
+                    <span class="pdp-bundle-info">
+                      <span class="pdp-bundle-name">1 sztuka</span>
+                      <span class="pdp-bundle-sub">Na start</span>
+                    </span>
+                    <span class="pdp-bundle-price">59,99 zł</span>
+                  </button>
+                  <button type="button" class="pdp-bundle-tile pdp-bundle-tile--popular" data-bundle-qty="3" aria-pressed="false">
+                    <span class="pdp-bundle-flag">Najpopularniejszy</span>
+                    <span class="pdp-bundle-radio" aria-hidden="true"></span>
+                    <span class="pdp-bundle-info">
+                      <span class="pdp-bundle-name">2 + 1 gratis <em>(3 szt.)</em></span>
+                      <span class="pdp-bundle-sub">Darmowa dostawa · taniej o 79,98 zł</span>
+                    </span>
+                    <span class="pdp-bundle-price">99,99 zł</span>
+                  </button>
+                  <button type="button" class="pdp-bundle-tile" data-bundle-qty="5" aria-pressed="false">
+                    <span class="pdp-bundle-radio" aria-hidden="true"></span>
+                    <span class="pdp-bundle-info">
+                      <span class="pdp-bundle-name">3 + 2 gratis <em>(5 szt.)</em></span>
+                      <span class="pdp-bundle-sub">Darmowa dostawa · taniej o 149,96 zł</span>
+                    </span>
+                    <span class="pdp-bundle-price">149,99 zł</span>
+                  </button>
+                </div>
+                <script is:inline>
+                  (function () {
+                    const bundle = document.querySelector('.pdp-bundle');
+                    if (!bundle) return;
+                    const qtyInput = document.getElementById('quantity');
+                    const qtyControl = document.querySelector('.pdp-qty-control');
+                    if (qtyControl) qtyControl.style.display = 'none';
+                    const tiles = bundle.querySelectorAll('.pdp-bundle-tile');
+                    function select(t) {
+                      tiles.forEach((x) => x.setAttribute('aria-pressed', x === t ? 'true' : 'false'));
+                      const q = parseInt(t.getAttribute('data-bundle-qty'), 10) || 1;
+                      if (qtyInput) {
+                        qtyInput.value = String(q);
+                        qtyInput.dispatchEvent(new Event('input', { bubbles: true }));
+                        qtyInput.dispatchEvent(new Event('change', { bubbles: true }));
+                      }
+                      window.dispatchEvent(new CustomEvent('wm-bundle-change', { detail: { qty: q } }));
+                    }
+                    tiles.forEach((t) => t.addEventListener('click', () => select(t)));
+                    const init = bundle.querySelector('.pdp-bundle-tile[aria-pressed="true"]') || tiles[0];
+                    if (init) select(init);
+                  })();
+                </script>
+                </Fragment>
+              )}
+
               {/* Quantity + ATC row */}
               <div class="pdp-qty-row">
                 <div class="pdp-qty-control">
@@ -2334,6 +2392,92 @@ const isOptionOos = (id: string): boolean => optionHasStock[id] !== true;
       color: var(--brand-text);
       font-weight: 500;
       letter-spacing: 0.02em;
+    }
+
+    /* --- Bundle selector (Bryza) --- */
+    .pdp-bundle {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin: 4px 0 20px;
+    }
+    .pdp-bundle-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--brand-heading);
+    }
+    .pdp-bundle-tile {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      width: 100%;
+      text-align: left;
+      padding: 16px 18px;
+      background: var(--brand-surface);
+      border: 1.5px solid var(--brand-border);
+      border-radius: 16px;
+      cursor: pointer;
+      transition: border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
+    }
+    .pdp-bundle-tile:hover { border-color: var(--brand-primary); }
+    .pdp-bundle-tile[aria-pressed="true"] {
+      border-color: var(--brand-primary);
+      background: var(--brand-primary-soft);
+      box-shadow: 0 0 0 3px rgba(116, 151, 191, 0.18);
+    }
+    .pdp-bundle-radio {
+      flex-shrink: 0;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid var(--brand-border-strong);
+      position: relative;
+      transition: border-color 180ms ease;
+    }
+    .pdp-bundle-tile[aria-pressed="true"] .pdp-bundle-radio { border-color: var(--brand-primary); }
+    .pdp-bundle-tile[aria-pressed="true"] .pdp-bundle-radio::after {
+      content: '';
+      position: absolute;
+      inset: 4px;
+      border-radius: 50%;
+      background: var(--brand-primary);
+    }
+    .pdp-bundle-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+    .pdp-bundle-name {
+      font-family: 'Outfit', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--brand-heading);
+      line-height: 1.25;
+    }
+    .pdp-bundle-name em { font-style: normal; font-weight: 500; color: var(--brand-muted); font-size: 14px; }
+    .pdp-bundle-sub { font-size: 12.5px; font-weight: 600; color: var(--brand-primary-hover); }
+    .pdp-bundle-price {
+      flex-shrink: 0;
+      font-family: 'Outfit', sans-serif;
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--brand-heading);
+      letter-spacing: -0.01em;
+    }
+    .pdp-bundle-tile--popular { border-color: var(--brand-primary); }
+    .pdp-bundle-flag {
+      position: absolute;
+      top: -10px;
+      right: 14px;
+      background: var(--brand-primary);
+      color: #fff;
+      font-family: 'Outfit', sans-serif;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 999px;
     }
 
     /* --- Stitch SWATCHES (color circles + label) --- */
