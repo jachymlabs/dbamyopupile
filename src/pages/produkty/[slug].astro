@@ -905,6 +905,45 @@ const isOptionOos = (id: string): boolean => optionHasStock[id] !== true;
 
             </form>
 
+            {/* Bryza: 3 najczęstsze pytania pod ATC (bezpieczeństwo / rasa / użycie) */}
+            {slug === 'bryza' && (
+              <div class="pdp-bryza-faq">
+                <h3 class="pdp-bryza-faq-title">Najczęstsze pytania</h3>
+                <div class="pdp-mini-faq">
+                  <details class="pdp-mini-faq-item" open>
+                    <summary>
+                      <span class="pdp-mini-faq-q">
+                        <span class="material-symbols-outlined">health_and_safety</span>
+                        Czy szal jest bezpieczny dla psa?
+                      </span>
+                      <span class="material-symbols-outlined pdp-mini-faq-chev">expand_more</span>
+                    </summary>
+                    <p>Tak. Bryza chłodzi łagodnie, przez parowanie wody, więc nie ma zimnego szoku jak przy kostkach lodu. Tkanina jest miękka i przewiewna, zawiązujesz ją luźno na szyi, tak jak chustę, bez uciskania. Przy pierwszym założeniu popatrz na psa przez chwilę i nie zostawiaj go z szalem bez nadzoru na cały dzień.</p>
+                  </details>
+                  <details class="pdp-mini-faq-item">
+                    <summary>
+                      <span class="pdp-mini-faq-q">
+                        <span class="material-symbols-outlined">pets</span>
+                        Czy pasuje na każdą rasę psa?
+                      </span>
+                      <span class="material-symbols-outlined pdp-mini-faq-chev">expand_more</span>
+                    </summary>
+                    <p>Bryza jest w rozmiarach S, M i L, od małego psa po dużego. Zawiązujesz ją na szyi, więc masz zapas regulacji. Zmierz obwód szyi w miejscu, gdzie pies nosi obrożę, i porównaj z tabelą przy wariancie. Jeśli pies wypada między rozmiarami, wybierz większy.</p>
+                  </details>
+                  <details class="pdp-mini-faq-item">
+                    <summary>
+                      <span class="pdp-mini-faq-q">
+                        <span class="material-symbols-outlined">water_drop</span>
+                        Jak używać szala?
+                      </span>
+                      <span class="material-symbols-outlined pdp-mini-faq-chev">expand_more</span>
+                    </summary>
+                    <p>Namocz szal w zimnej wodzie przez chwilę, lekko wykręć nadmiar, żeby był wilgotny, a nie ociekający, i zawiąż na szyi psa. Chłodzi przez kilka godzin. Gdy wyschnie, po prostu namocz go znowu, tyle razy ile trzeba, także w trakcie spaceru.</p>
+                  </details>
+                </div>
+              </div>
+            )}
+
             {/* Post-ATC block: mini FAQ (+ bonus ebook tylko dla Moodles) */}
             <PostATCBlock showEbookBonus={slug === 'moodles'} />
 
@@ -2661,6 +2700,14 @@ const isOptionOos = (id: string): boolean => optionHasStock[id] !== true;
       margin: 0 0 2px;
     }
     .pdp-bundle-color-chosen { font-weight: 700; color: var(--brand-heading); }
+    .pdp-bryza-faq { margin-top: 18px; }
+    .pdp-bryza-faq-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--brand-heading);
+      margin: 0 0 10px;
+    }
     .pdp-bundle-tile--popular { border-color: var(--brand-primary); }
     .pdp-bundle-flag {
       position: absolute;
