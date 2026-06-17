@@ -125,22 +125,37 @@ function inMemoryCheck(
  *
  * @returns true if the request should be BLOCKED.
  */
+// Circuit breaker (per-process): gdy Upstash raz zawiśnie/timeout'uje, przestajemy
+// go wołać do końca życia tego procesu i lecimy in-memory. Bez tego KAŻDY request
+// płacił ~5s timeout na nieosiągalnym/źle skonfigurowanym Redisie (Vercel prod).
+let upstashUnavailable = false;
+const UPSTASH_TIMEOUT_MS = 600;
+
 export async function isRateLimitedAsync(
     ip: string,
     route: string,
     maxRequests = 30,
     windowMs = 60_000,
 ): Promise<boolean> {
-    const limiter = getLimiter(route, maxRequests, windowMs);
+    const limiter = upstashUnavailable ? null : getLimiter(route, maxRequests, windowMs);
     if (limiter) {
+        let timer: ReturnType<typeof setTimeout> | undefined;
         try {
-            const { success } = await limiter.limit(ip);
-            return !success;
+            const res = await Promise.race([
+                limiter.limit(ip),
+                new Promise<never>((_, reject) => {
+                    timer = setTimeout(() => reject(new Error('upstash-timeout')), UPSTASH_TIMEOUT_MS);
+                }),
+            ]);
+            if (timer) clearTimeout(timer);
+            return !(res as { success: boolean }).success;
         } catch (e: any) {
-            // Network blip / Upstash unreachable — degrade gracefully to in-memory check
-            // rather than failing open or blocking everyone.
+            if (timer) clearTimeout(timer);
+            // Upstash wolny/nieosiągalny — odcinamy go na resztę procesu (żeby nie płacić
+            // timeoutu na każdym requeście) i degradujemy do in-memory.
+            upstashUnavailable = true;
             if (import.meta.env.DEV) {
-                console.warn('[rate-limit] Upstash check failed, falling back to in-memory:', e?.message);
+                console.warn('[rate-limit] Upstash slow/unreachable, switching to in-memory:', e?.message);
             }
             return inMemoryCheck(ip, route, maxRequests, windowMs);
         }
