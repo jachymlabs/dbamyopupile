@@ -138,8 +138,8 @@ function extractPrice(p: any): number {
           <div>
             <strong>{reviews.items[0].name}</strong>
             <span>
-              {reviews.items[0].age ? ` · ${reviews.items[0].age} lat` : ''}
-              {reviews.items[0].tag ? ` · ${reviews.items[0].tag}` : ''}
+              {reviews.items[0].age ? `, ${reviews.items[0].age} lat` : ''}
+              {reviews.items[0].tag ? `, ${reviews.items[0].tag}` : ''}
             </span>
           </div>
         </div>
@@ -383,7 +383,7 @@ function extractPrice(p: any): number {
                 : <svg viewBox="0 0 24 24" width="24" height="24" fill="#D6CEBE" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z"/></svg>;
             })}
           </div>
-          <div class="md-reviews-big-meta">z {reviews.totalCount} {opiniiPlural(reviews.totalCount)} · zakup zweryfikowany</div>
+          <div class="md-reviews-big-meta">z {reviews.totalCount} {opiniiPlural(reviews.totalCount)}, zakup zweryfikowany</div>
         </div>
         <div class="md-reviews-bars">
           {([5, 4, 3, 2, 1] as const).map((star) => (
