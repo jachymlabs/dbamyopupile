@@ -1,5 +1,16 @@
 import { useState, useEffect } from 'react';
 
+export type CartLineOption = {
+  id?: string;
+  code: string;
+  name: string;
+  group: {
+    id?: string;
+    code: string;
+    name: string;
+  };
+};
+
 export type CartLine = {
   id: string;
   quantity: number;
@@ -8,6 +19,8 @@ export type CartLine = {
   productVariant: {
     id: string;
     name: string;
+    featuredAsset?: { id: string; preview: string };
+    options?: CartLineOption[];
     product: {
       id: string;
       name: string;

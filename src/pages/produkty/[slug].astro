@@ -2,9 +2,21 @@
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import Breadcrumbs from '@/components/Breadcrumbs.astro';
 import Price from '@/components/Price.astro';
-import Button from '@/components/Button.astro';
-import TrustBadges from '@/components/TrustBadges.astro';
 import StickyATCBar from '@/components/StickyATCBar';
+import FormiDescription from '@/components/pdp/FormiDescription.astro';
+import NeuroCubeDescription from '@/components/pdp/NeuroCubeDescription.astro';
+import SnapStonesDescription from '@/components/pdp/SnapStonesDescription.astro';
+import ClickyDescription from '@/components/pdp/ClickyDescription.astro';
+import LoomoDescription from '@/components/pdp/LoomoDescription.astro';
+import FlickoDescription from '@/components/pdp/FlickoDescription.astro';
+import FasolkaDescription from '@/components/pdp/FasolkaDescription.astro';
+import PingwinDescription from '@/components/pdp/PingwinDescription.astro';
+import WibbloDescription from '@/components/pdp/WibbloDescription.astro';
+import GorlyDescription from '@/components/pdp/GorlyDescription.astro';
+import CrockyDescription from '@/components/pdp/CrockyDescription.astro';
+import MoodlesKidsDescription from '@/components/pdp/MoodlesKidsDescription.astro';
+import PostATCBlock from '@/components/pdp/PostATCBlock.astro';
+import AllReviewsSection from '@/components/pdp/AllReviewsSection.astro';
 import { shopApi, shopApiRaw, redirectWithToken } from '@/lib/vendure';
 import { GET_PRODUCT_DETAIL } from '@/lib/queries';
 import { ADD_TO_CART } from '@/lib/mutations';
@@ -13,6 +25,9 @@ import { buildAssetUrl } from '@/lib/utils';
 import type { VendureProduct, VendureVariant, VendureAsset, VendureCollection } from '@/types/vendure';
 import { sendCAPIEvent, buildUserData, generateEventId } from '@/lib/meta-capi';
 import { getStoreConfig } from '@/lib/store-config';
+import { assertSameOrigin } from '@/lib/security';
+import { getProductReviews, formatRating, ratingPercentages, opiniiPlural, starKind } from '@/lib/reviews';
+import { computeSale, getVariantRegularPrice } from '@/lib/prices';
 
 const storeConfig = await getStoreConfig(Astro.request);
 const { slug } = Astro.params;
@@ -23,6 +38,8 @@ if (!slug) {
 
 // Handle POST — add to cart
 if (Astro.request.method === 'POST') {
+  const blocked = assertSameOrigin(Astro.request);
+  if (blocked) return blocked;
   try {
     const formData = await Astro.request.formData();
     const variantId = formData.get('variantId') as string;
@@ -32,25 +49,21 @@ if (Astro.request.method === 'POST') {
     if (variantId) {
       const result = await shopApiRaw<any>(ADD_TO_CART, { variantId, quantity }, Astro.request);
 
-      // CAPI: AddToCart event — only send if user consented to tracking (RODO)
-      const cookies = Astro.request.headers.get('cookie') || '';
-      const hasConsent = cookies.includes('cookie_consent=accepted');
-      if (hasConsent) {
-        const userData = await buildUserData(Astro.request);
-        sendCAPIEvent({
-          event_name: 'AddToCart',
-          event_time: Math.floor(Date.now() / 1000),
-          event_id: generateEventId(),
-          event_source_url: Astro.url.href,
-          action_source: 'website',
-          user_data: userData,
-          custom_data: {
-            content_ids: [variantId],
-            content_type: 'product',
-            currency: 'PLN',
-          },
-        }, storeConfig.metaDatasetId);
-      }
+      // CAPI: AddToCart event
+      const userData = await buildUserData(Astro.request);
+      await sendCAPIEvent({
+        event_name: 'AddToCart',
+        event_time: Math.floor(Date.now() / 1000),
+        event_id: generateEventId(),
+        event_source_url: Astro.url.href,
+        action_source: 'website',
+        user_data: userData,
+        custom_data: {
+          content_ids: [variantId],
+          content_type: 'product',
+          currency: 'PLN',
+        },
+      }, storeConfig.metaDatasetId);
 
       return redirectWithToken('/koszyk', result.authToken);
     }
@@ -74,35 +87,35 @@ if (!product && !error) {
   return Astro.rewrite('/404');
 }
 
-// CAPI: ViewContent (server-side) — consent-gated
+// CAPI: ViewContent (server-side)
 // viewContentEventId is shared with browser pixel for deduplication (defined below, used in both)
 const viewContentEventId = generateEventId();
 if (product) {
-  const vcCookies = Astro.request.headers.get('cookie') || '';
-  const vcHasConsent = vcCookies.includes('cookie_consent=accepted');
-  if (vcHasConsent) {
-    const vcUserData = await buildUserData(Astro.request);
-    const vcFirstVariant = product.variants?.[0];
-    sendCAPIEvent({
-      event_name: 'ViewContent',
-      event_time: Math.floor(Date.now() / 1000),
-      event_id: viewContentEventId,
-      event_source_url: Astro.url.href,
-      action_source: 'website',
-      user_data: vcUserData,
-      custom_data: {
-        content_ids: [vcFirstVariant?.sku || product.id],
-        content_name: product.name,
-        content_type: 'product',
-        value: vcFirstVariant ? vcFirstVariant.priceWithTax / 100 : 0,
-        currency: 'PLN',
-      },
-    }, storeConfig.metaDatasetId);
-  }
+  const vcUserData = await buildUserData(Astro.request);
+  const vcFirstVariant = product.variants?.[0];
+  sendCAPIEvent({
+    event_name: 'ViewContent',
+    event_time: Math.floor(Date.now() / 1000),
+    event_id: viewContentEventId,
+    event_source_url: Astro.url.href,
+    action_source: 'website',
+    user_data: vcUserData,
+    custom_data: {
+      content_ids: [vcFirstVariant?.sku || product.id],
+      content_name: product.name,
+      content_type: 'product',
+      value: vcFirstVariant ? vcFirstVariant.priceWithTax / 100 : 0,
+      currency: 'PLN',
+    },
+  }, storeConfig.metaDatasetId);
 }
 
 // Find parent collection for breadcrumbs
 const parentCollection = product?.collections?.find((c: VendureCollection) => c.parent?.id === '1');
+
+// Per-product reviews — z src/data/reviews.json. Null jeśli brak danych dla tego sluga.
+const productReviews = slug ? getProductReviews(slug) : null;
+const ratingPct = productReviews ? ratingPercentages(productReviews) : null;
 
 // Main image — featuredAsset or first asset
 const mainImage = product?.featuredAsset || product?.assets?.[0];
@@ -114,12 +127,6 @@ function stripHtml(html: string): string {
 
 const rawDescription = product?.customFields?.shortDescription || product?.description || '';
 const metaDescription = stripHtml(rawDescription).slice(0, 160);
-
-// Tytuł oferty (SEO/social/zakładka): nazwa + emocjonalny podtytuł, nie samo "Bryza"
-const subtitleRaw = stripHtml(product?.customFields?.shortDescription || '');
-const pageTitle = product
-  ? (subtitleRaw ? `${product.name} — ${subtitleRaw}` : product.name)
-  : 'Produkt';
 const ogImageUrl = mainImage?.preview ? buildAssetUrl(mainImage.preview, 'large') : undefined;
 
 // Stock status
@@ -154,247 +161,880 @@ const jsonLd = product ? {
 
 // Stock count logic
 const firstVariantStock = product?.variants?.[0]?.stockLevel;
-const stockNum = parseInt(firstVariantStock, 10);
-const showStockCritical = !isNaN(stockNum) && stockNum <= 2;
+const stockNum = parseInt(firstVariantStock || '', 10);
+// Stock guards: wymagaj stockNum > 0 żeby nie pokazywać "ostatnie 0 szt"
+// gdy Vendure zwraca stockLevel='0' jako string (kasuje legacy bug).
+const showStockCritical = !isNaN(stockNum) && stockNum > 0 && stockNum <= 2;
 const showStockLow = !isNaN(stockNum) && stockNum > 2 && stockNum <= 5;
 
 // Omnibus: najnizsza cena z 30 dni
-const lowestPrice30d = product?.variants?.[0]?.customFields?.lowestPrice30d;
-const firstVariantPrice = product?.variants?.[0]?.priceWithTax;
-const showOmnibus = lowestPrice30d && lowestPrice30d > 0 && firstVariantPrice < lowestPrice30d;
+// Coerce do liczb żeby uniknąć "0" gdy customField wraca jako string albo null
+const lowestPrice30dNum = Number(product?.variants?.[0]?.customFields?.lowestPrice30d ?? 0);
+const firstVariantPriceNum = Number(product?.variants?.[0]?.priceWithTax ?? 0);
+
+// JSX gotcha: `{0 && ...}` renderuje literalnie "0". Wrap'ujemy w Boolean() żeby zwracać czysty true/false.
+const showOmnibus: boolean = lowestPrice30dNum > 0 && firstVariantPriceNum > 0 && firstVariantPriceNum < lowestPrice30dNum;
 const omnibusFormatted = showOmnibus
-  ? new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(lowestPrice30d / 100)
+  ? new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(lowestPrice30dNum / 100)
+  : '';
+
+// Sale info — z src/data/prices.json (per slug). Frontend-only, brak ruszania Vendure.
+// Używamy MIN ceny ze wszystkich wariantów (variants[0] może być droższym maxi/zestawem).
+const variantPrices = product?.variants?.map((v: VendureVariant) => Number(v.priceWithTax)) ?? [];
+const minVariantPrice = variantPrices.length ? Math.min(...variantPrices) : firstVariantPriceNum;
+const maxVariantPrice = variantPrices.length ? Math.max(...variantPrices) : firstVariantPriceNum;
+const hasVariantRange = minVariantPrice !== maxVariantPrice;
+const saleInfo = slug && minVariantPrice > 0 ? computeSale(slug, minVariantPrice) : null;
+const showSale = !!saleInfo;
+const regularPriceFormatted = saleInfo?.regularFormatted ?? '';
+const salePercent = saleInfo?.discountPercent ?? 0;
+const saleSavingsFormatted = saleInfo?.savingsFormatted ?? '';
+
+// Per-variant regular prices map (variantId → regularPrice grosze).
+// Używana przez client-side JS przy zmianie wariantu — jeśli wariant ma
+// override w prices.json, używamy go zamiast skalowania przez data-sale-ratio.
+const variantRegulars: Record<string, number> = {};
+if (slug && product?.variants) {
+  for (const v of product.variants as any[]) {
+    const reg = getVariantRegularPrice(slug, v.name);
+    if (reg) variantRegulars[v.id] = reg;
+  }
+}
+
+// "Najniższa cena z 30 dni" (dyrektywa Omnibus) — zawsze pokazywana pod ceną.
+// Fallback do current min variant price (stabilne ceny = current price IS lowest 30d).
+const lowest30dInitial = minVariantPrice > 0
+  ? new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(minVariantPrice / 100)
   : '';
 
 // ViewContent event data for browser pixel (viewContentEventId generated above for dedup)
 const firstVariant = product?.variants?.[0];
+
+// Savings calculation — relative do lowestPrice30d (Omnibus, dla compliance)
+const savings = showOmnibus ? lowestPrice30dNum - firstVariantPriceNum : 0;
+const savingsFormatted = savings > 0
+  ? new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(savings / 100)
+  : '';
+const discountPercent = showOmnibus
+  ? Math.round(((lowestPrice30dNum - firstVariantPriceNum) / lowestPrice30dNum) * 100)
+  : 0;
+const oldPriceFormatted = showOmnibus
+  ? new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(lowestPrice30dNum / 100)
+  : '';
+
+// Backward-compat aliases (używane w innych miejscach komponentu — JSON-LD, omnibusFormatted reference)
+const lowestPrice30d = lowestPrice30dNum > 0 ? lowestPrice30dNum : undefined;
+const firstVariantPrice = firstVariantPriceNum > 0 ? firstVariantPriceNum : undefined;
+
+// ============================================================
+// Stitch variant selector — option groups → swatches/pills.
+// Vendure variant = combination of options across optionGroups.
+// We render each optionGroup as its own row (color swatches OR
+// size pills), then JS finds matching variant on selection change.
+// ============================================================
+const optionGroups: any[] = (product as any)?.optionGroups ?? [];
+const hasMultipleVariants = (product?.variants?.length ?? 0) > 1;
+const useOptionGroups = hasMultipleVariants && optionGroups.length > 0;
+
+// Map option NAME / CODE → hex color for color swatches (heuristic).
+function nameToColor(name: string): string | null {
+  const n = (name || '').toLowerCase();
+  if (n.includes('truskaw') || n.includes('strawberry') || n.includes('różow') || n.includes('pink')) return '#E63946';
+  if (n.includes('leśn') || n.includes('forest') || n.includes('zielon') || n.includes('green')) return '#4A7A52';
+  if (n.includes('lawend') || n.includes('lavender') || n.includes('fiolet') || n.includes('purple')) return '#A78BCC';
+  if (n.includes('sage') || n.includes('szałwi')) return '#7B9075';
+  if (n.includes('niebies') || n.includes('blue')) return '#5BA4DD';
+  if (n.includes('żółt') || n.includes('yellow')) return '#F4C95D';
+  if (n.includes('pomarań') || n.includes('orange')) return '#F08A45';
+  if (n.includes('czarn') || n.includes('black')) return '#2A2D27';
+  if (n.includes('biał') || n.includes('white')) return '#FFFCF7';
+  if (n.includes('szary') || n.includes('gray') || n.includes('grey')) return '#8A8E84';
+  if (n.includes('brąz') || n.includes('brown')) return '#7C5B3A';
+  if (n.includes('miętow') || n.includes('mint')) return '#A7D7C5';
+  return null;
+}
+
+// Heuristic — czy to grupa kolorów? (po nazwie albo po wartościach options)
+function isColorGroup(group: any): boolean {
+  const groupName = (group.name || group.code || '').toLowerCase();
+  if (/(kolor|color|colour|wariant kolor)/i.test(groupName)) return true;
+  // Jeśli wszystkie nazwy opcji da się zmapować na kolor → traktuj jak kolor.
+  if (group.options?.length && group.options.every((o: any) => nameToColor(o.name) !== null)) return true;
+  return false;
+}
+
+// Default selected options — per-group heuristic.
+//  * Color group → NO default (user wybiera). Bez tego nie da się ATC.
+//  * Size group → preferuj opcję zawierającą "mini" (case-insensitive).
+//  * Set/zestaw group → preferuj opcję zawierającą "4" (4 sztuki).
+//  * Inne grupy → pierwsza opcja.
+// Jeśli żadna heurystyka nie pasuje i grupa NIE jest color → fallback pierwsza opcja.
+function findDefaultOption(group: any): any | null {
+  if (isColorGroup(group)) return null;
+  const groupName = (group.name || group.code || '').toLowerCase();
+  const opts = group.options ?? [];
+  if (!opts.length) return null;
+
+  if (/rozm|size/.test(groupName)) {
+    return opts.find((o: any) => /\bmini\b/i.test(o.name || '')) || opts[0];
+  }
+  if (/zestaw|set|opakowanie|pakiet/.test(groupName)) {
+    return opts.find((o: any) => /\b4\b/.test(o.name || '')) || opts[0];
+  }
+  return opts[0];
+}
+
+const defaultSelectedOptionIds: string[] = optionGroups
+  .map((g: any) => findDefaultOption(g)?.id)
+  .filter(Boolean) as string[];
+
+const firstAvailableVariant =
+  product?.variants?.find((v: any) => v.stockLevel !== 'OUT_OF_STOCK') ||
+  product?.variants?.[0];
+
+// Lookup table: stringify sorted optionIds → variant info (id, price, stock, image URL).
+// Used by client JS to swap main image, ATC color, label, and price on option change.
+const variantLookup: Record<string, { id: string; price: number; stock: string; image: string | null; lowestPrice30d: number }> = {};
+(product?.variants ?? []).forEach((v: any) => {
+  const key = (v.options || []).map((o: any) => o.id).sort().join('|');
+  const previewSrc = v.featuredAsset?.preview;
+  variantLookup[key] = {
+    id: v.id,
+    price: v.priceWithTax,
+    stock: v.stockLevel,
+    image: previewSrc ? buildAssetUrl(previewSrc, 'large') : null,
+    lowestPrice30d: Number(v.customFields?.lowestPrice30d ?? 0),
+  };
+});
+
+// Per-option stock: optionId -> czy ISTNIEJE choc jeden in-stock wariant z ta opcja.
+// Opcja bez zadnego in-stock wariantu = wyprzedana (SSR baseline; JS dopina cross-group).
+const optionHasStock: Record<string, boolean> = {};
+(product?.variants ?? []).forEach((v: any) => {
+  const inStock = v.stockLevel !== 'OUT_OF_STOCK';
+  (v.options || []).forEach((o: any) => {
+    if (inStock) optionHasStock[o.id] = true;
+    else if (!(o.id in optionHasStock)) optionHasStock[o.id] = false;
+  });
+});
+const isOptionOos = (id: string): boolean => optionHasStock[id] !== true;
 ---
 
 <BaseLayout
-  title={pageTitle}
+  title={product?.name || 'Produkt'}
   description={metaDescription}
   ogImage={ogImageUrl}
   ogType="product"
 >
-  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
+  <div class="pdp-page">
     {product ? (
       <>
-        <Breadcrumbs items={[
-          { label: 'Strona główna', href: '/' },
-          ...(parentCollection ? [{ label: parentCollection.name, href: `/kolekcje/${parentCollection.slug}` }] : []),
-          { label: product.name },
-        ]} />
+        {/* Breadcrumbs — Sklep / [short name]. Krótka nazwa = przed pierwszym " - "
+            albo " – " (np. "Moodles" z "Moodles - wyciszające kulki..."). */}
+        <div class="pdp-breadcrumbs-wrap">
+          <Breadcrumbs items={[
+            { label: 'Sklep', href: '/sklep' },
+            { label: product.name.split(/\s+[-–]\s+/)[0].trim() },
+          ]} />
+        </div>
 
-        <div class="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-          <!-- Image -->
-          <div class="aspect-square overflow-hidden rounded-lg bg-gray-100">
-            {mainImage ? (
-              <img
-                src={buildAssetUrl(mainImage.preview, 'large')}
-                alt={product.name}
-                width="800"
-                height="800"
-                class="h-full w-full object-cover"
-                fetchpriority="high"
-                loading="eager"
-              />
-            ) : (
-              <div class="flex h-full w-full items-center justify-center text-gray-400">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
+        {/* ==================================================
+           1. HERO — gallery + info (sticky desktop)
+           ================================================== */}
+        <section class="pdp-hero">
+          {/* LEFT: Gallery */}
+          <div class="pdp-gallery">
+            <div class="pdp-main-image">
+              {mainImage ? (
+                <img
+                  id="pdp-main-img"
+                  src={buildAssetUrl(mainImage.preview, 'large')}
+                  alt={product.name}
+                  width="800"
+                  height="800"
+                  fetchpriority="high"
+                  loading="eager"
+                />
+              ) : (
+                <div class="pdp-image-placeholder">
+                  <span class="material-symbols-outlined">image</span>
+                </div>
+              )}
+
+              {/* Gallery arrows — prev/next, widoczne tylko gdy >1 zdjęcie */}
+              {(product.assets?.length ?? 0) > 1 && (
+                <>
+                  <button
+                    type="button"
+                    id="pdp-gallery-prev"
+                    class="pdp-gallery-arrow pdp-gallery-arrow--prev"
+                    aria-label="Poprzednie zdjęcie"
+                  >
+                    <svg class="pdp-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+                  </button>
+                  <button
+                    type="button"
+                    id="pdp-gallery-next"
+                    class="pdp-gallery-arrow pdp-gallery-arrow--next"
+                    aria-label="Następne zdjęcie"
+                  >
+                    <svg class="pdp-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* Thumbnails — horizontalna lista z arrows do scrollowania */}
+            {(product.assets?.length ?? 0) > 1 && (
+              <div class="pdp-thumb-strip">
+                <button
+                  type="button"
+                  id="pdp-thumbs-prev"
+                  class="pdp-thumb-arrow pdp-thumb-arrow--prev"
+                  aria-label="Przewiń galerię w lewo"
+                >
+                  <svg class="pdp-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+                </button>
+                <div class="pdp-thumbnails" id="pdp-thumbnails">
+                  {product.assets.slice(0, 20).map((asset: VendureAsset, i: number) => (
+                    <button
+                      type="button"
+                      class:list={['pdp-thumb', i === 0 && 'pdp-thumb--active']}
+                      data-thumb-index={i}
+                      data-full-src={buildAssetUrl(asset.preview, 'large')}
+                    >
+                      <img
+                        src={buildAssetUrl(asset.preview, 'small')}
+                        alt={`${product.name} ${i + 1}`}
+                        width="150"
+                        height="150"
+                        loading="lazy"
+                      />
+                    </button>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  id="pdp-thumbs-next"
+                  class="pdp-thumb-arrow pdp-thumb-arrow--next"
+                  aria-label="Przewiń galerię w prawo"
+                >
+                  <svg class="pdp-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+                </button>
               </div>
             )}
           </div>
 
-          <!-- Product info + add to cart form -->
-          <div>
-            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">{product.name}</h1>
+          {/* RIGHT: Product info */}
+          <div class="pdp-info">
 
-            {/* Podtytuł — emocjonalny opis produktu z custom field Vendure (shortDescription).
-                Renderowany jako lżejszy subtitle bezpośrednio pod H1.
-                set:html: treść sanityzowana (sanitizeHtml) — admin-only input. */}
+            {/* FOMO bar PRZED nazwą — pulsujący dot + scarcity */}
+            <div class="pdp-fomo-strip">
+              <span class="pdp-fomo-dot"></span>
+              <span class="pdp-fomo-strip-text">
+                {showStockCritical
+                  ? <>Ostatnie <strong>{stockNum} szt</strong> w tym wariancie</>
+                  : showStockLow
+                    ? <>Zostało <strong>{stockNum} szt</strong> · ostatnia dostawa za 7 dni</>
+                    : <>Ostatnie sztuki <strong>na magazynie</strong></>
+                }
+              </span>
+            </div>
+
+            {/* Top chips row — bestseller usunięty */}
+            {((showOmnibus && discountPercent > 0) || allOutOfStock) && (
+              <div class="pdp-chips">
+                {showOmnibus && discountPercent > 0 && (
+                  <span class="pdp-chip pdp-chip--sale">-{discountPercent}%</span>
+                )}
+                {allOutOfStock && (
+                  <span class="pdp-chip pdp-chip--oos">Niedostępny</span>
+                )}
+              </div>
+            )}
+
+            {/* Product name */}
+            <h1 class="pdp-h1">{product.name}</h1>
+
+            {/* Rating — clickable, scroll do reviews. Pokazuje się tylko gdy produkt ma opinie. */}
+            {productReviews && (
+              <a href="#reviews-section" class="pdp-rating-row">
+                <div class="pdp-stars">
+                  {[1, 2, 3, 4, 5].map((i) => {
+                    const k = starKind(i, productReviews.averageRating);
+                    if (k === 'full') return (
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="#F5B544" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z"/>
+                      </svg>
+                    );
+                    if (k === 'half') return (
+                      <svg viewBox="0 0 24 24" width="18" height="18" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <defs>
+                          <linearGradient id={`half-${i}`}>
+                            <stop offset="50%" stop-color="#F5B544"/>
+                            <stop offset="50%" stop-color="#D6CEBE"/>
+                          </linearGradient>
+                        </defs>
+                        <path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z" fill={`url(#half-${i})`}/>
+                      </svg>
+                    );
+                    return (
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="#D6CEBE" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z"/>
+                      </svg>
+                    );
+                  })}
+                </div>
+                <span class="pdp-rating-num">{formatRating(productReviews.averageRating)}</span>
+                <span class="pdp-rating-count">Z {productReviews.totalCount} {opiniiPlural(productReviews.totalCount)}</span>
+                <span class="material-symbols-outlined pdp-rating-arrow">arrow_forward</span>
+              </a>
+            )}
+
+            {/* Price block — flat, bez kafelka. Strikethrough = regularPrice (z prices.json).
+                Wariantowe produkty (hasVariantRange) → prefix "od" przy obu cenach.
+                data-sale-ratio = regularPrice / currentPrice — używane przez JS do dynamicznego
+                przeliczania ceny regularnej po zmianie wariantu (zachowuje % zniżki).
+                Dla Moodles ukryte — bundle pokazuje ceny per tier i per zestaw. */}
+            <div
+              class="pdp-price-block"
+              data-sale-ratio={saleInfo ? (saleInfo.regularPrice / saleInfo.currentPrice).toFixed(4) : ''}
+              data-variant-regulars={JSON.stringify(variantRegulars)}
+              data-has-variant-range={hasVariantRange ? '1' : '0'}
+            >
+              <div class="pdp-price-row">
+                {showSale && regularPriceFormatted && (
+                  <span class="pdp-price-regular">
+                    {regularPriceFormatted}
+                  </span>
+                )}
+                {product.variants.length === 1 ? (
+                  <Price price={product.variants[0].priceWithTax} class={`pdp-price${showSale ? ' pdp-price--sale' : ''}${allOutOfStock ? ' pdp-price--oos' : ''}`} />
+                ) : (
+                  <Price
+                    priceRange={{
+                      __typename: 'PriceRange',
+                      min: minVariantPrice,
+                      max: maxVariantPrice,
+                    }}
+                    class={`pdp-price${showSale ? ' pdp-price--sale' : ''}${allOutOfStock ? ' pdp-price--oos' : ''}`}
+                  />
+                )}
+                {showSale && saleSavingsFormatted && (
+                  <span class="pdp-sale-badge">oszczędzasz {saleSavingsFormatted}</span>
+                )}
+                {showOmnibus && !showSale && oldPriceFormatted && (
+                  <span class="pdp-price-old">{oldPriceFormatted}</span>
+                )}
+              </div>
+              {minVariantPrice > 0 && (
+                <p class="pdp-lowest-30d">Najniższa cena z 30 dni: <span data-lowest-30d>{lowest30dInitial}</span></p>
+              )}
+            </div>
+
+            {/* Short description */}
             {product.customFields?.shortDescription && (
-              <p
-                class="mt-1.5 text-base sm:text-lg text-gray-500 leading-snug rich-text"
+              <div
+                class="pdp-short-desc rich-text"
                 set:html={sanitizeHtml(product.customFields.shortDescription)}
               />
             )}
 
-            {allOutOfStock && (
-              <span class="mt-2 inline-block rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700">
-                Niedostepny
-              </span>
-            )}
-
-            {product.variants.length === 1 ? (
-              <!-- Single variant — show price directly -->
-              <Price price={product.variants[0].priceWithTax} class="mt-3 text-xl" />
-            ) : (
-              <!-- Multiple variants — show range -->
-              <div class="mt-3">
-                <Price
-                  priceRange={{
-                    __typename: 'PriceRange',
-                    min: Math.min(...product.variants.map((v: VendureVariant) => v.priceWithTax)),
-                    max: Math.max(...product.variants.map((v: VendureVariant) => v.priceWithTax)),
-                  }}
-                  class="text-xl"
-                />
-              </div>
-            )}
-
-            {/* Omnibus: najnizsza cena z 30 dni */}
-            {showOmnibus && (
-              <p class="mt-1 text-xs text-gray-500">
-                Najnizsza cena z 30 dni: {omnibusFormatted}
-              </p>
-            )}
-
-            {/* Stock count */}
-            {showStockCritical && (
-              <p class="mt-2 text-sm font-semibold text-red-600">
-                Ostatnie {stockNum} {stockNum === 1 ? 'sztuka' : 'sztuki'}!
-              </p>
-            )}
-            {showStockLow && (
-              <p class="mt-2 text-sm font-medium text-amber-600">
-                Zostalo {stockNum} sztuk
-              </p>
-            )}
-
-            <form method="POST" class="mt-6 space-y-4">
-              {/* Variant selector */}
-              {product.variants.length > 1 ? (
-                <div>
-                  <label for="variantId" class="block text-sm font-medium text-gray-700 mb-1.5">
-                    Wariant
-                  </label>
-                  <select
+            {/* ATC form */}
+            <form
+              method="POST"
+              class="pdp-form"
+              data-variant-lookup={JSON.stringify(variantLookup)}
+            >
+              {/* Variant selector — Stitch swatches + pills, grouped by optionGroup. */}
+              {useOptionGroups ? (
+                <>
+                  {/* variantId puste gdy nie wszystkie grupy mają default (np. brak default koloru).
+                      JS wypełnia po pełnym wyborze; ATC dotąd disabled z hint. */}
+                  <input
+                    type="hidden"
                     name="variantId"
                     id="variantId"
-                    required
-                    class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-gray-900 focus:ring-1 focus:ring-gray-900 focus:outline-none"
-                  >
-                    {product.variants.map((v: VendureVariant) => (
-                      <option value={v.id} disabled={v.stockLevel === 'OUT_OF_STOCK'}>
-                        {v.name} — {new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(v.priceWithTax / 100)}
-                        {v.stockLevel === 'OUT_OF_STOCK' ? ' (brak)' : ''}
-                      </option>
+                    value={defaultSelectedOptionIds.length === optionGroups.length
+                      ? (firstAvailableVariant?.id || product.variants[0]?.id || '')
+                      : ''}
+                  />
+                  {optionGroups.map((group: any) => {
+                    const colorGroup = isColorGroup(group);
+                    const groupLabel = group.name || group.code || 'Wariant';
+                    return (
+                      <div class="pdp-variant-block" data-option-group={group.id}>
+                        <span class="pdp-variant-label">{groupLabel}:</span>
+                        {colorGroup ? (
+                          <div class="pdp-swatches" role="radiogroup" aria-label={groupLabel}>
+                            {group.options.map((opt: any) => {
+                              const color = nameToColor(opt.name) || '#E5DFD2';
+                              const selected = defaultSelectedOptionIds.includes(opt.id);
+                              const isLight = color === '#FFFCF7';
+                              const oos = isOptionOos(opt.id);
+                              return (
+                                <button
+                                  type="button"
+                                  class:list={['pdp-swatch-wrap', selected && 'pdp-swatch-wrap--active', oos && 'pdp-swatch-wrap--oos']}
+                                  data-option-id={opt.id}
+                                  data-option-group-id={group.id}
+                                  data-option-name={opt.name.toLowerCase()}
+                                  data-option-color={color}
+                                  data-option-oos={oos ? '1' : '0'}
+                                  aria-label={oos ? `${opt.name} (wyprzedane)` : opt.name}
+                                  aria-pressed={selected ? 'true' : 'false'}
+                                  title={oos ? `${opt.name}: chwilowo niedostepny` : undefined}
+                                >
+                                  <span
+                                    class:list={['pdp-swatch', isLight && 'pdp-swatch--light']}
+                                    style={`background:${color};`}
+                                  ></span>
+                                  <span class="pdp-swatch-label">{opt.name}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <div class="pdp-pills" role="radiogroup" aria-label={groupLabel}>
+                            {group.options.map((opt: any) => {
+                              const selected = defaultSelectedOptionIds.includes(opt.id);
+                              const oos = isOptionOos(opt.id);
+                              return (
+                                <button
+                                  type="button"
+                                  class:list={['pdp-pill', selected && 'pdp-pill--active', oos && 'pdp-pill--oos']}
+                                  data-option-id={opt.id}
+                                  data-option-group-id={group.id}
+                                  data-option-name={opt.name.toLowerCase()}
+                                  data-option-oos={oos ? '1' : '0'}
+                                  aria-pressed={selected ? 'true' : 'false'}
+                                  title={oos ? `${opt.name}: chwilowo niedostepny` : undefined}
+                                >
+                                  {opt.name}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </>
+              ) : product.variants.length > 1 ? (
+                <div class="pdp-variant-block">
+                  <span class="pdp-variant-label">Wariant:</span>
+                  <div class="pdp-pills" role="radiogroup" aria-label="Wariant">
+                    {product.variants.map((v: VendureVariant, i: number) => (
+                      <label class:list={['pdp-pill-radio', v.stockLevel === 'OUT_OF_STOCK' && 'pdp-pill-radio--disabled']}>
+                        <input
+                          type="radio"
+                          name="variantId"
+                          value={v.id}
+                          checked={i === 0}
+                          disabled={v.stockLevel === 'OUT_OF_STOCK'}
+                          required
+                          class="sr-only"
+                        />
+                        <span class="pdp-pill">
+                          {v.name}
+                        </span>
+                      </label>
                     ))}
-                  </select>
+                  </div>
                 </div>
               ) : (
                 <input type="hidden" name="variantId" value={product.variants[0]?.id} />
               )}
 
-              {/* Quantity */}
-              <div>
-                <label for="quantity" class="block text-sm font-medium text-gray-700 mb-1.5">
-                  Ilosc
-                </label>
-                <input
-                  type="number"
-                  name="quantity"
-                  id="quantity"
-                  value="1"
-                  min="1"
-                  max="99"
-                  required
-                  class="w-20 rounded-lg border border-gray-300 px-3 py-2 text-sm text-center focus:border-gray-900 focus:ring-1 focus:ring-gray-900 focus:outline-none"
-                />
+              {/* Variant selection hint — NAD qty/ATC żeby był widoczny od razu po
+                  swatchach, zanim user dotrze wzrokiem do "Dodaj do koszyka". JS w
+                  block 'Variant option groups' toggluje display + tekst. */}
+              <p class="pdp-variant-hint" id="pdp-variant-hint" hidden>
+                <svg class="pdp-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                <span data-hint-msg>Wybierz wariant aby dodać do koszyka</span>
+              </p>
+
+              {/* Quantity + ATC row */}
+              <div class="pdp-qty-row">
+                <div class="pdp-qty-control">
+                  <button type="button" class="pdp-qty-btn" data-qty-delta="-1" aria-label="Mniej">
+                    <svg class="pdp-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg>
+                  </button>
+                  <input
+                    type="number"
+                    name="quantity"
+                    id="quantity"
+                    value="1"
+                    min="1"
+                    max="99"
+                    required
+                    class="pdp-qty-input"
+                  />
+                  <button type="button" class="pdp-qty-btn" data-qty-delta="1" aria-label="Więcej">
+                    <svg class="pdp-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                  </button>
+                </div>
+
+                {allOutOfStock ? (
+                  <button type="button" disabled class="pdp-atc pdp-atc--disabled">
+                    Niedostępny
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    class="pdp-atc"
+                    id="primary-atc-btn"
+                    data-base-text="Dodaj do koszyka"
+                  >
+                    <span class="pdp-atc-text">Dodaj do koszyka</span>
+                    <svg class="pdp-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></svg>
+                  </button>
+                )}
               </div>
 
-              {allOutOfStock ? (
-                <button
-                  type="button"
-                  disabled
-                  class="w-full sm:w-auto rounded-lg bg-gray-300 px-6 py-3 text-sm font-semibold text-gray-500 cursor-not-allowed"
-                >
-                  Niedostepny
-                </button>
-              ) : (
-                <Button type="submit" variant="primary" size="lg" class="w-full sm:w-auto" id="primary-atc-btn">
-                  Dodaj do koszyka
-                </Button>
-              )}
-
-              {/* Shipping urgency */}
-              <p id="shipping-urgency" class="text-sm text-green-700 font-medium mt-2"></p>
             </form>
 
-            <TrustBadges />
+            {/* Post-ATC block: mini FAQ (+ bonus ebook tylko dla Moodles) */}
+            <PostATCBlock showEbookBonus={slug === 'moodles'} />
 
-            {/* Sticky Add to Cart bar — visible when primary ATC scrolls out of view */}
+            {/* Sticky ATC bar — jeśli wariantów >1, klik scrolluje do sekcji wyboru */}
             {!allOutOfStock && product.variants[0] && (
               <StickyATCBar
                 client:idle
                 productName={product.name}
                 price={lowestPrice}
                 variantId={product.variants[0].id}
+                imageUrl={mainImage?.preview ? buildAssetUrl(mainImage.preview, 'thumb') : undefined}
+                requiresVariantSelection={hasMultipleVariants}
+                variantSectionSelector=".pdp-variant-block"
               />
             )}
-
-            {/* Description */}
-            {product.description && (
-              <div class="mt-8 pt-8 border-t border-gray-200">
-                <h2 class="text-lg font-semibold text-gray-900 mb-3">Opis</h2>
-                <div class="prose prose-sm text-gray-600 max-w-none" set:html={sanitizeHtml(product.description)} />
-              </div>
-            )}
           </div>
-        </div>
+        </section>
 
-        {/* Additional images */}
+        {/* ==================================================
+           CUSTOM DESCRIPTION dla produktów z dedykowanym templatem.
+           Moodles: pełny 14-sekcyjny opis. Inne: generic sekcje 3-10.
+           ================================================== */}
+        {product.slug === 'formi' ? (
+          <FormiDescription />
+        ) : product.slug === 'neurocube' ? (
+          <NeuroCubeDescription />
+        ) : product.slug === 'snapstones' ? (
+          <SnapStonesDescription />
+        ) : product.slug === 'clicky' ? (
+          <ClickyDescription />
+        ) : product.slug === 'loomo' ? (
+          <LoomoDescription />
+        ) : product.slug === 'flicko' ? (
+          <FlickoDescription />
+        ) : product.slug === 'brelok-fasola' ? (
+          <FasolkaDescription />
+        ) : product.slug === 'gniotek-pingwinek' ? (
+          <PingwinDescription />
+        ) : product.slug === 'wibblo' ? (
+          <WibbloDescription />
+        ) : product.slug === 'gorly' ? (
+          <GorlyDescription />
+        ) : product.slug === 'crocky' ? (
+          <CrockyDescription />
+        ) : product.slug === 'moodles-kids' ? (
+          <MoodlesKidsDescription />
+        ) : product.slug ? (
+          null
+        ) : (
+          <>
+
+        {/* ==================================================
+           3. PROBLEM AGITATION
+           ================================================== */}
+        <section class="pdp-section pdp-section--problem">
+          <div class="pdp-narrow">
+            <span class="pdp-eyebrow">Czemu ludzie to kupują</span>
+            <h2 class="pdp-h2">Twoje ręce nigdy nie odpoczywają</h2>
+            <p class="pdp-lead">
+              Znamy to uczucie. Ciągłe stukanie długopisem, obgryzanie paznokci czy nerwowe przewijanie telefonu. Twoje ciało szuka ujścia dla skumulowanego stresu i nadmiaru bodźców. {product.name} to fizyczna odpowiedź na przebodźcowany świat, pozwala zająć dłonie w sposób dyskretny i kojący.
+            </p>
+          </div>
+        </section>
+
+        {/* ==================================================
+           4. SOLUTION 3-step
+           ================================================== */}
+        <section class="pdp-section pdp-section--solution">
+          <div class="pdp-container">
+            <div class="pdp-section-head">
+              <span class="pdp-eyebrow pdp-eyebrow--sage">Jak to działa</span>
+              <h2 class="pdp-h2">Naciskasz. Działa. Powtarzasz</h2>
+            </div>
+            <div class="pdp-3-step">
+              <div class="pdp-step">
+                <div class="pdp-step-icon">
+                  <span class="material-symbols-outlined">package_2</span>
+                </div>
+                <h3 class="pdp-step-title">Wyciągasz z opakowania</h3>
+                <p class="pdp-step-desc">Gotowy od razu po wyjęciu, bez ładowania ani baterii.</p>
+              </div>
+              <div class="pdp-step">
+                <div class="pdp-step-icon">
+                  <span class="material-symbols-outlined">back_hand</span>
+                </div>
+                <h3 class="pdp-step-title">Trzymasz w ręce</h3>
+                <p class="pdp-step-desc">Ergonomiczny kształt idealnie wpasowuje się w dłoń.</p>
+              </div>
+              <div class="pdp-step">
+                <div class="pdp-step-icon">
+                  <span class="material-symbols-outlined">sentiment_very_satisfied</span>
+                </div>
+                <h3 class="pdp-step-title">Stres znika</h3>
+                <p class="pdp-step-desc">Poczucie kontroli wraca, ręce mają zajęcie.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ==================================================
+           5. FEATURES (description / 4-features)
+           ================================================== */}
+        {product.description && (
+          <section class="pdp-section pdp-section--features">
+            <div class="pdp-container">
+              <div class="pdp-section-head">
+                <span class="pdp-eyebrow">Co dostajesz</span>
+                <h2 class="pdp-h2">{product.name} w skrócie</h2>
+              </div>
+              <div class="pdp-description-card">
+                <div class="prose pdp-prose" set:html={sanitizeHtml(product.description)} />
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ==================================================
+           6. STATS strip — ukryta jeśli brak opinii
+           ================================================== */}
+        {productReviews && (
+        <section class="pdp-section pdp-section--stats">
+          <div class="pdp-container">
+            <div class="pdp-stats-grid">
+              <div class="pdp-stat">
+                <div class="pdp-stat-value">{formatRating(productReviews.averageRating)}/5</div>
+                <div class="pdp-stat-label">Średnia ocen</div>
+              </div>
+              <div class="pdp-stat">
+                <div class="pdp-stat-value">{productReviews.totalCount}+</div>
+                <div class="pdp-stat-label">Recenzji</div>
+              </div>
+              <div class="pdp-stat">
+                <div class="pdp-stat-value">{productReviews.totalCount * 13}+</div>
+                <div class="pdp-stat-label">Zamówień</div>
+              </div>
+            </div>
+          </div>
+        </section>
+        )}
+
+        {/* ==================================================
+           7. UGC GRID — gallery z assetów produktu
+           ================================================== */}
         {(product.assets?.length ?? 0) > 1 && (
-          <div class="mt-8">
-            <h2 class="text-lg font-semibold text-gray-900 mb-3">Zdjecia</h2>
-
-            {/* Mobile: horizontal scroll snap */}
-            <div class="sm:hidden">
-              <div class="gallery-scroll flex gap-2 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-3 -mx-4 px-4">
-                {product.assets.map((asset: VendureAsset) => (
-                  <div class="snap-center shrink-0 w-[75vw] aspect-square overflow-hidden rounded-lg bg-gray-100">
+          <section class="pdp-section pdp-section--ugc">
+            <div class="pdp-container">
+              <div class="pdp-section-head">
+                <span class="pdp-eyebrow">Galeria</span>
+                <h2 class="pdp-h2">Z polskich domów</h2>
+              </div>
+              <div class="pdp-ugc-grid">
+                {product.assets.slice(0, 6).map((asset: VendureAsset, i: number) => (
+                  <div class:list={['pdp-ugc-tile', i === 2 && 'pdp-ugc-tile--tall']}>
                     <img
                       src={buildAssetUrl(asset.preview, 'medium')}
-                      alt={product.name}
+                      alt={`${product.name} galeria ${i + 1}`}
                       width="400"
                       height="400"
                       loading="lazy"
-                      class="h-full w-full object-cover"
                     />
                   </div>
                 ))}
               </div>
-              {/* Pagination dots */}
-              <div class="flex justify-center gap-1.5 mt-2">
-                {product.assets.map((_: VendureAsset, i: number) => (
-                  <span class="gallery-dot w-1.5 h-1.5 rounded-full bg-gray-300 transition-colors" data-index={i} />
+            </div>
+          </section>
+        )}
+
+        {/* ==================================================
+           8. REVIEWS — dynamiczne per produkt (src/data/reviews.json)
+           ================================================== */}
+        {productReviews && ratingPct && (
+        <section id="reviews-section" class="pdp-section pdp-section--reviews">
+          <div class="pdp-container">
+            <div class="pdp-reviews-layout">
+              {/* Review summary card */}
+              <div class="pdp-review-summary">
+                <span class="pdp-eyebrow">Opinie ({productReviews.totalCount})</span>
+                <div class="pdp-review-score">
+                  <span class="pdp-score-big">{formatRating(productReviews.averageRating)}</span>
+                  <div class="pdp-stars pdp-stars--lg">
+                    {[1, 2, 3, 4, 5].map((i) => {
+                      const k = starKind(i, productReviews.averageRating);
+                      if (k === 'full') return (
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="#F5B544" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                          <path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z"/>
+                        </svg>
+                      );
+                      if (k === 'half') return (
+                        <svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                          <defs>
+                            <linearGradient id={`half-lg-${i}`}>
+                              <stop offset="50%" stop-color="#F5B544"/>
+                              <stop offset="50%" stop-color="#D6CEBE"/>
+                            </linearGradient>
+                          </defs>
+                          <path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z" fill={`url(#half-lg-${i})`}/>
+                        </svg>
+                      );
+                      return (
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="#D6CEBE" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                          <path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z"/>
+                        </svg>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div class="pdp-review-bars">
+                  {([5, 4, 3, 2, 1] as const).map((star) => (
+                    <div class="pdp-review-bar">
+                      <span>{star}★</span>
+                      <div class="pdp-bar-track">
+                        <div class="pdp-bar-fill" style={`width:${ratingPct[star]}%`}></div>
+                      </div>
+                      <span>{productReviews.distribution[star]}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Review cards — pierwsze 3 z items */}
+              <div class="pdp-review-list">
+                {productReviews.items.slice(0, 3).map((rev) => (
+                  <div class="pdp-review-card">
+                    <div class="pdp-review-card-head">
+                      <div>
+                        {rev.verified && (
+                          <div class="pdp-review-verified">
+                            <span class="material-symbols-outlined">verified</span>
+                            <span>Zakup zweryfikowany</span>
+                          </div>
+                        )}
+                        <div class="pdp-stars">
+                          {[1, 2, 3, 4, 5].map((i) => (
+                            i <= rev.stars ? (
+                              <svg viewBox="0 0 24 24" width="18" height="18" fill="#F5B544" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                <path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z"/>
+                              </svg>
+                            ) : (
+                              <svg viewBox="0 0 24 24" width="18" height="18" fill="#D6CEBE" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                <path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z"/>
+                              </svg>
+                            )
+                          ))}
+                        </div>
+                      </div>
+                      <span class="pdp-review-date">{rev.date}</span>
+                    </div>
+                    <p class="pdp-review-author">
+                      {rev.name}
+                      {rev.tag && <span class="pdp-review-tag"> · {rev.tag}</span>}
+                    </p>
+                    {rev.title && <p class="pdp-review-title">{rev.title}</p>}
+                    <p class="pdp-review-text">{rev.body}</p>
+                  </div>
                 ))}
               </div>
             </div>
+          </div>
+        </section>
+        )}
 
-            {/* Desktop: 3-column grid */}
-            <div class="hidden sm:grid sm:grid-cols-3 gap-2">
-              {product.assets.map((asset: VendureAsset) => (
-                <div class="aspect-square overflow-hidden rounded-lg bg-gray-100">
-                  <img
-                    src={buildAssetUrl(asset.preview, 'small')}
-                    alt={product.name}
-                    width="200"
-                    height="200"
-                    loading="lazy"
-                    class="h-full w-full object-cover"
-                  />
-                </div>
-              ))}
+        {/* ==================================================
+           9. FAQ
+           ================================================== */}
+        <section class="pdp-section pdp-section--faq">
+          <div class="pdp-narrow">
+            <div class="pdp-section-head">
+              <span class="pdp-eyebrow">FAQ</span>
+              <h2 class="pdp-h2">Najczęstsze pytania</h2>
+            </div>
+            <div class="pdp-faq-list">
+              <details class="pdp-faq-item">
+                <summary>
+                  Jak szybko otrzymam zamówienie?
+                  <span class="material-symbols-outlined">expand_more</span>
+                </summary>
+                <p>Wysyłamy w 24h od potwierdzenia zamówienia. Paczka InPost dociera w 1-2 dni robocze, kurier 1-3 dni.</p>
+              </details>
+              <details class="pdp-faq-item">
+                <summary>
+                  Z czego jest zrobiony?
+                  <span class="material-symbols-outlined">expand_more</span>
+                </summary>
+                <p>Silikon medyczny i wytrzymały plastik ABS. Bez ftalanów, BPA-free. Bezpieczny dla dzieci powyżej 3 lat.</p>
+              </details>
+              <details class="pdp-faq-item">
+                <summary>
+                  Czy mogę zwrócić jeśli mi się nie spodoba?
+                  <span class="material-symbols-outlined">expand_more</span>
+                </summary>
+                <p>Tak, masz 30 dni na zwrot bez podania przyczyny. Zwracamy pełną kwotę zamówienia.</p>
+              </details>
+              <details class="pdp-faq-item">
+                <summary>
+                  Czy jest hałaśliwy?
+                  <span class="material-symbols-outlined">expand_more</span>
+                </summary>
+                <p>Nie. Zaprojektowaliśmy go tak, żebyś mógł używać podczas spotkań, zajęć na uczelni i w bibliotece bez przeszkadzania innym.</p>
+              </details>
+              <details class="pdp-faq-item">
+                <summary>
+                  Jak go czyścić?
+                  <span class="material-symbols-outlined">expand_more</span>
+                </summary>
+                <p>Wystarczy przemyć wilgotną szmatką z odrobiną mydła. Nie używaj agresywnych detergentów ani zmywarki.</p>
+              </details>
             </div>
           </div>
+        </section>
+
+        {/* ==================================================
+           10. FINAL CTA
+           ================================================== */}
+        {!allOutOfStock && (
+          <section class="pdp-section pdp-section--final-cta">
+            <div class="pdp-narrow">
+              <div class="pdp-cta-card">
+                <h2 class="pdp-cta-h2">Wciąż się wahasz?</h2>
+                <p class="pdp-cta-lead">10 000+ zadowolonych klientów. 30 dni na zwrot. Darmowa dostawa od 99 zł. Wypróbuj bez ryzyka.</p>
+                <a href="#primary-atc-btn" class="pdp-cta-btn">
+                  Zamawiam teraz
+                  <span class="material-symbols-outlined">arrow_forward</span>
+                </a>
+              </div>
+            </div>
+          </section>
         )}
+
+          </>
+        )}
+
+        {/* ==================================================
+           PEŁNA SEKCJA OPINII — na samym końcu PDP, po custom description i CTA.
+           Filter gwiazdkami + grid kart + paginacja "Pokaż więcej". Renderuje się
+           tylko gdy productReviews istnieje (slug ma wpis w reviews.json).
+           ================================================== */}
+        {productReviews && slug && <AllReviewsSection slug={slug} />}
       </>
     ) : (
-      <div class="py-12 text-center">
-        <p class="text-gray-500">{error || 'Produkt nie zostal znaleziony.'}</p>
+      <div class="pdp-error">
+        <p>{error || 'Produkt nie został znaleziony.'}</p>
       </div>
     )}
   </div>
@@ -427,84 +1067,592 @@ const firstVariant = product?.variants?.[0];
     </script>
   )}
 
+  {/* Behawioralny pixel — view_content (Warstwa 1, ZERO Meta). product_id =
+      product.id (kolumna w cockpicie); value = cena wiodąca = najniższy wariant
+      (= cena z headline'a PDP; variants[0] bywa droższym zestawem — E2E 2026-06-02). */}
+  {product && firstVariant && (
+    <script
+      is:inline
+      define:vars={{
+        spProductId: product.id,
+        spName: product.name,
+        spValue: lowestPrice / 100,
+      }}
+    >
+      window.addEventListener('load', function () {
+        if (window.sp && window.sp.track) {
+          window.sp.track('view_content', {
+            product_id: spProductId,
+            value: spValue,
+            currency: 'PLN',
+            name: spName,
+          });
+        }
+      });
+    </script>
+  )}
+
   {/* Intercept ATC form — use async cart API + open drawer instead of redirect */}
   <script>
-    function initAddToCartForms() {
-      // Bind ALL post-to-cart forms idempotently (not just the first one)
-      const forms = document.querySelectorAll('form[method="POST"]');
-      forms.forEach((node) => {
-        const form = node as HTMLFormElement;
-        if ((form as any).__atcBound) return;
-        (form as any).__atcBound = true;
-        const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement | null;
+    function initAddToCartForm() {
+      const form = document.querySelector('form[method="POST"]') as HTMLFormElement | null;
+      if (!form) return;
+      const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement | null;
+      if (!btn) return;
+      // BUG FIX: btn.textContent wipes child spans (icon!) → target only .pdp-atc-text span.
+      // Bez tego po dodaniu do koszyka znika <span class="material-symbols-outlined"> i
+      // tekst "shopping_cart" renderuje się literalnie zamiast jako ikona.
+      const textEl = btn.querySelector('.pdp-atc-text') as HTMLSpanElement | null;
+      const baseText = btn.getAttribute('data-base-text')
+        || (textEl ? (textEl.textContent || 'Dodaj do koszyka') : 'Dodaj do koszyka');
 
-        form.addEventListener('submit', async (e) => {
-          e.preventDefault();
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
 
-          const formData = new FormData(form);
-          const variantId = formData.get('variantId') as string;
-          const quantity = parseInt(formData.get('quantity') as string || '1', 10);
+        const formData = new FormData(form);
+        const variantId = formData.get('variantId') as string;
+        const quantity = parseInt(formData.get('quantity') as string || '1', 10);
 
-          if (!variantId) return;
+        if (!variantId) return;
 
-          let originalText = '';
-          if (btn) {
-            btn.disabled = true;
-            originalText = btn.textContent || '';
-            btn.textContent = 'Dodawanie...';
-          }
+        btn.disabled = true;
+        if (textEl) textEl.textContent = 'Dodawanie...';
 
-          try {
-            const res = await fetch('/api/cart', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              credentials: 'include',
-              body: JSON.stringify({ variantId, quantity }),
-            });
+        // Shared event ID dla deduplikacji browser fbq + server CAPI
+        const atcEventId = crypto.randomUUID();
 
-            if (res.ok) {
-              const data = await res.json();
-              // Open the side cart drawer (CartDrawer listens for this)
-              window.dispatchEvent(new CustomEvent('cart-updated', { detail: data.order }));
-            } else {
-              // Don't silently redirect to /koszyk — keep user on page, surface error
-              alert('Nie udało się dodać do koszyka. Spróbuj ponownie.');
+        try {
+          const res = await fetch('/api/cart', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ variantId, quantity, eventId: atcEventId }),
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            window.dispatchEvent(new CustomEvent('cart-updated', { detail: data.order }));
+
+            // Browser Pixel AddToCart — leci po Vendure success
+            try {
+              const order = data?.order;
+              const line = order?.lines?.find(
+                (l: { productVariant?: { id?: string | number } }) =>
+                  String(l.productVariant?.id) === String(variantId),
+              );
+              const variant = line?.productVariant;
+              const unitPriceWithTax = Number(line?.unitPriceWithTax) || 0;
+              if (typeof (window as any).fbq !== 'undefined') {
+                (window as any).fbq('track', 'AddToCart', {
+                  content_ids: [variant?.sku || String(variantId)],
+                  content_type: 'product',
+                  value: (unitPriceWithTax * quantity) / 100,
+                  currency: 'PLN',
+                }, { eventID: atcEventId });
+              }
+
+              // Behawioralny pixel — add_to_cart (Warstwa 1, ZERO Meta).
+              // product_id = Vendure productId (TEN SAM klucz co view_content
+              // i purchase → JOIN „obejrzenia↔koszyk↔zakupy"); value = produkt × qty. H-3.
+              const sp = (window as { sp?: { track?: (t: string, d: unknown) => void } }).sp;
+              sp?.track?.('add_to_cart', {
+                product_id:
+                  (variant as { product?: { id?: string } } | undefined)?.product?.id
+                  ?? variantId,
+                value: (unitPriceWithTax * quantity) / 100,
+                currency: 'PLN',
+              });
+            } catch {
+              // never break UX
             }
-          } catch {
-            alert('Nie udało się dodać do koszyka. Sprawdź połączenie i spróbuj ponownie.');
-          } finally {
-            if (btn) {
-              btn.disabled = false;
-              btn.textContent = originalText;
-            }
+          } else {
+            // Fallback: submit form normally
+            form.submit();
+            return;
           }
-        });
+        } catch {
+          // Fallback: submit form normally
+          form.submit();
+          return;
+        }
+
+        btn.disabled = false;
+        if (textEl) textEl.textContent = baseText;
       });
     }
-    initAddToCartForms();
-    // Re-bind if Astro client-side navigation ever gets enabled
-    document.addEventListener('astro:page-load', initAddToCartForms);
+    initAddToCartForm();
   </script>
 
-  {/* Gallery scroll dots */}
+  {/* Gallery: thumbnail clicks + prev/next arrows swap main image + auto-scroll thumb strip */}
   <script is:inline>
   (function() {
-    var scroller = document.querySelector('.gallery-scroll');
-    if (!scroller) return;
-    var dots = document.querySelectorAll('.gallery-dot');
-    if (!dots.length) return;
-    dots[0].classList.remove('bg-gray-300');
-    dots[0].classList.add('bg-gray-900');
-    scroller.addEventListener('scroll', function() {
-      var children = scroller.children;
-      var scrollLeft = scroller.scrollLeft;
-      var w = children[0].offsetWidth;
-      var idx = Math.round(scrollLeft / (w + 8));
-      dots.forEach(function(d, i) {
-        d.classList.toggle('bg-gray-900', i === idx);
-        d.classList.toggle('bg-gray-300', i !== idx);
+    var mainImg = document.getElementById('pdp-main-img');
+    var thumbs = Array.from(document.querySelectorAll('.pdp-thumb'));
+    var thumbStrip = document.getElementById('pdp-thumbnails');
+    if (!mainImg || !thumbs.length) return;
+
+    var currentIndex = 0;
+
+    // Sprawdza czy thumbnail jest w pełni widoczny w viewport scroll container'a.
+    // Jeśli nie — przewija strip tak żeby był na środku.
+    function ensureThumbVisible(thumb) {
+      if (!thumbStrip) return;
+      var stripRect = thumbStrip.getBoundingClientRect();
+      var thumbRect = thumb.getBoundingClientRect();
+      // Tolerancja 4px na padding/border
+      var isFullyVisible =
+        thumbRect.left >= stripRect.left - 4
+        && thumbRect.right <= stripRect.right + 4;
+      if (!isFullyVisible) {
+        // scroll thumbnail to center w stripie
+        var stripScrollLeft = thumbStrip.scrollLeft;
+        var thumbOffsetFromStripStart = thumbRect.left - stripRect.left + stripScrollLeft;
+        var targetScroll = thumbOffsetFromStripStart - (stripRect.width / 2) + (thumbRect.width / 2);
+        thumbStrip.scrollTo({ left: targetScroll, behavior: 'smooth' });
+      }
+    }
+
+    function updateStripArrowsState() {
+      if (!thumbStrip) return;
+      var prevA = document.getElementById('pdp-thumbs-prev');
+      var nextA = document.getElementById('pdp-thumbs-next');
+      var atStart = thumbStrip.scrollLeft <= 2;
+      var atEnd = thumbStrip.scrollLeft + thumbStrip.clientWidth >= thumbStrip.scrollWidth - 2;
+      if (prevA) prevA.disabled = atStart;
+      if (nextA) nextA.disabled = atEnd;
+    }
+
+    function showAt(idx) {
+      if (idx < 0) idx = thumbs.length - 1;
+      if (idx >= thumbs.length) idx = 0;
+      var thumb = thumbs[idx];
+      var fullSrc = thumb.getAttribute('data-full-src');
+      if (!fullSrc) return;
+      mainImg.src = fullSrc;
+      thumbs.forEach(function(t) { t.classList.remove('pdp-thumb--active'); });
+      thumb.classList.add('pdp-thumb--active');
+      currentIndex = idx;
+      // Auto-scroll strip do aktywnego thumbnaila jeśli nie jest widoczny
+      ensureThumbVisible(thumb);
+    }
+
+    // Thumb click
+    thumbs.forEach(function(thumb, idx) {
+      thumb.addEventListener('click', function() {
+        showAt(idx);
       });
     });
+
+    // Main image arrows
+    var prevBtn = document.getElementById('pdp-gallery-prev');
+    var nextBtn = document.getElementById('pdp-gallery-next');
+    if (prevBtn) prevBtn.addEventListener('click', function() { showAt(currentIndex - 1); });
+    if (nextBtn) nextBtn.addEventListener('click', function() { showAt(currentIndex + 1); });
+
+    // Thumb strip arrows — scroll strip o ~1 thumbnail width
+    var thumbsPrev = document.getElementById('pdp-thumbs-prev');
+    var thumbsNext = document.getElementById('pdp-thumbs-next');
+    function scrollStrip(dir) {
+      if (!thumbStrip) return;
+      var oneThumb = thumbStrip.querySelector('.pdp-thumb');
+      var step = oneThumb ? oneThumb.offsetWidth + 8 : 100;
+      thumbStrip.scrollBy({ left: step * dir, behavior: 'smooth' });
+    }
+    if (thumbsPrev) thumbsPrev.addEventListener('click', function() { scrollStrip(-3); });
+    if (thumbsNext) thumbsNext.addEventListener('click', function() { scrollStrip(3); });
+
+    // Disabled state na końcach
+    if (thumbStrip) {
+      thumbStrip.addEventListener('scroll', updateStripArrowsState);
+      window.addEventListener('resize', updateStripArrowsState);
+      // Initial check (po renderze)
+      setTimeout(updateStripArrowsState, 100);
+    }
+
+    // Keyboard arrows
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'ArrowLeft') showAt(currentIndex - 1);
+      else if (e.key === 'ArrowRight') showAt(currentIndex + 1);
+    });
+
+    // Touch swipe — mobile gallery navigation. Próg 50px horizontal + dx > dy
+    // żeby nie myliło ze scrollowaniem strony pionowo.
+    var mainImageEl = document.querySelector('.pdp-main-image');
+    if (mainImageEl && thumbs.length > 1) {
+      var touchStartX = 0;
+      var touchStartY = 0;
+      var touchActive = false;
+      mainImageEl.addEventListener('touchstart', function(e) {
+        if (e.touches.length !== 1) return;
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        touchActive = true;
+      }, { passive: true });
+      mainImageEl.addEventListener('touchend', function(e) {
+        if (!touchActive) return;
+        touchActive = false;
+        var t = e.changedTouches[0];
+        var dx = t.clientX - touchStartX;
+        var dy = t.clientY - touchStartY;
+        // Swipe musi być wyraźnie horyzontalny: |dx|>50 AND |dx| > 1.5*|dy|
+        if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+          if (dx > 0) showAt(currentIndex - 1);
+          else showAt(currentIndex + 1);
+        }
+      }, { passive: true });
+      mainImageEl.addEventListener('touchcancel', function() { touchActive = false; }, { passive: true });
+    }
+  })();
+  </script>
+
+  {/* Qty +/- buttons */}
+  <script is:inline>
+  (function() {
+    var qtyInput = document.getElementById('quantity');
+    if (!qtyInput) return;
+    var btns = document.querySelectorAll('[data-qty-delta]');
+    btns.forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var delta = parseInt(btn.getAttribute('data-qty-delta') || '0', 10);
+        var current = parseInt(qtyInput.value || '1', 10);
+        var next = Math.max(1, Math.min(99, current + delta));
+        qtyInput.value = String(next);
+        qtyInput.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+    });
+  })();
+  </script>
+
+  {/* Variant option groups — sync selection to hidden variantId, swap main image, update ATC */}
+  <script is:inline>
+  (function() {
+    var form = document.querySelector('form.pdp-form');
+    if (!form) return;
+    var lookupRaw = form.getAttribute('data-variant-lookup');
+    if (!lookupRaw) return;
+    var lookup = {};
+    try { lookup = JSON.parse(lookupRaw); } catch (e) { return; }
+
+    var hiddenInput = document.getElementById('variantId');
+    if (!hiddenInput) return;
+
+    var atc = document.getElementById('primary-atc-btn');
+    var atcTextEl = atc ? atc.querySelector('.pdp-atc-text') : null;
+    var atcBaseText = (atc && atc.getAttribute('data-base-text')) || 'Dodaj do koszyka';
+    var hintEl = document.getElementById('pdp-variant-hint');
+    var hintMsgEl = hintEl ? hintEl.querySelector('[data-hint-msg]') : null;
+
+    var mainImg = document.getElementById('pdp-main-img');
+    var thumbs = document.querySelectorAll('.pdp-thumb');
+    var originalImageSrc = mainImg ? mainImg.src : null;
+    var isInitialRender = true; // flaga: nie swapuj main image na page load — pokaż product.featuredAsset
+
+    // Per-group selected option id
+    var selectedByGroup = {};
+    var groupBlocks = document.querySelectorAll('[data-option-group]');
+    if (!groupBlocks.length) return;
+
+    // Init: read which option is currently marked --active in each group
+    groupBlocks.forEach(function(block) {
+      var groupId = block.getAttribute('data-option-group');
+      var active = block.querySelector('[aria-pressed="true"]');
+      if (active) selectedByGroup[groupId] = active.getAttribute('data-option-id');
+    });
+
+    // Compute readable text color (white or dark) for a hex bg — luminance heuristic.
+    function getContrastColor(hex) {
+      if (!hex) return '#FFFFFF';
+      var clean = hex.replace('#', '');
+      if (clean.length !== 6) return '#FFFFFF';
+      var r = parseInt(clean.substring(0, 2), 16);
+      var g = parseInt(clean.substring(2, 4), 16);
+      var b = parseInt(clean.substring(4, 6), 16);
+      var lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+      return lum > 0.62 ? '#2A2D27' : '#FFFFFF';
+    }
+
+    function hexToRgba(hex, alpha) {
+      var clean = hex.replace('#', '');
+      var r = parseInt(clean.substring(0, 2), 16);
+      var g = parseInt(clean.substring(2, 4), 16);
+      var b = parseInt(clean.substring(4, 6), 16);
+      return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
+    }
+
+    // Smooth image swap — fade out, change src, fade in on load.
+    function swapMainImage(newSrc) {
+      if (!mainImg || !newSrc || mainImg.src === newSrc) return;
+      mainImg.style.opacity = '0.4';
+      var preload = new Image();
+      preload.onload = function() {
+        mainImg.src = newSrc;
+        mainImg.style.opacity = '1';
+      };
+      preload.onerror = function() {
+        mainImg.style.opacity = '1';
+      };
+      preload.src = newSrc;
+    }
+
+    // Sync thumbnail active state to current main image src.
+    function syncThumbActive(src) {
+      if (!thumbs.length) return;
+      thumbs.forEach(function(t) {
+        var thumbSrc = t.getAttribute('data-full-src');
+        t.classList.toggle('pdp-thumb--active', thumbSrc === src);
+      });
+    }
+
+    // Cross-group availability: opcja niedostepna jesli z obecnym wyborem w
+    // pozostalych grupach nie ma zadnego in-stock wariantu.
+    var variantEntries = Object.keys(lookup).map(function(k) {
+      return { opts: k.split('|'), stock: lookup[k].stock };
+    });
+    function optionAvailable(groupId, optionId) {
+      return variantEntries.some(function(ve) {
+        if (ve.stock === 'OUT_OF_STOCK') return false;
+        if (ve.opts.indexOf(optionId) === -1) return false;
+        for (var gid in selectedByGroup) {
+          if (gid === groupId) continue;
+          if (ve.opts.indexOf(selectedByGroup[gid]) === -1) return false;
+        }
+        return true;
+      });
+    }
+    function refreshOptionAvailability() {
+      document.querySelectorAll('[data-option-id]').forEach(function(btn) {
+        var gid = btn.getAttribute('data-option-group-id');
+        var oid = btn.getAttribute('data-option-id');
+        if (!gid || !oid) return;
+        var oos = !optionAvailable(gid, oid);
+        btn.setAttribute('data-option-oos', oos ? '1' : '0');
+        if (btn.classList.contains('pdp-swatch-wrap')) btn.classList.toggle('pdp-swatch-wrap--oos', oos);
+        if (btn.classList.contains('pdp-pill')) btn.classList.toggle('pdp-pill--oos', oos);
+        if (oos) btn.setAttribute('title', 'Chwilowo niedostepny');
+        else btn.removeAttribute('title');
+      });
+    }
+
+    function recomputeVariant() {
+      // 0. Odswiez dostepnosc opcji (cross-group), od razu widac wyprzedane.
+      refreshOptionAvailability();
+      // 1. Detect missing groups (no option selected) — driver for ATC validation state.
+      var totalGroups = groupBlocks.length;
+      var missingLabels = [];
+      groupBlocks.forEach(function(block) {
+        var gid = block.getAttribute('data-option-group');
+        if (!selectedByGroup[gid]) {
+          var lbl = block.querySelector('.pdp-variant-label');
+          if (lbl) {
+            var t = (lbl.textContent || '').replace(':', '').trim().toLowerCase();
+            if (t) missingLabels.push(t);
+          }
+        }
+      });
+      var needsSelection = missingLabels.length > 0;
+
+      // 2. Build variant key & lookup match (only valid when all groups picked).
+      var ids = Object.values(selectedByGroup).sort();
+      var key = ids.join('|');
+      var match = needsSelection ? null : lookup[key];
+
+      // 3. Collect selected color (for ATC bg) and color name (for label).
+      var selectedColor = null;
+      var selectedColorName = null;
+      var fallbackName = null;
+      Object.keys(selectedByGroup).forEach(function(groupId) {
+        var optionId = selectedByGroup[groupId];
+        var btn = document.querySelector('[data-option-group-id="' + groupId + '"][data-option-id="' + optionId + '"]');
+        if (!btn) return;
+        var name = btn.getAttribute('data-option-name');
+        var color = btn.getAttribute('data-option-color');
+        if (color && !selectedColor) {
+          selectedColor = color;
+          selectedColorName = name;
+        } else if (name && !fallbackName) {
+          fallbackName = name;
+        }
+      });
+
+      // 4. Apply variant data (price, image, stock) — only when we have a match.
+      if (match && match.id) {
+        hiddenInput.value = match.id;
+
+        var priceEl = document.querySelector('.pdp-price');
+        if (priceEl && typeof match.price === 'number') {
+          var formatted = new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(match.price / 100);
+          priceEl.textContent = formatted;
+        }
+
+        // Update sale info (strikethrough + badge) na podstawie ratio.
+        // Wariantowe produkty mają różne ceny — utrzymujemy ten sam % zniżki, regular price
+        // skaluje się proporcjonalnie. Hide "od" prefix bo użytkownik wybrał konkretny wariant.
+        var priceBlock = document.querySelector('.pdp-price-block');
+        var fmtPLN = function(g) { return new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(g / 100); };
+        var saleRatio = priceBlock ? parseFloat(priceBlock.getAttribute('data-sale-ratio') || '0') : 0;
+        var variantRegularsRaw = priceBlock ? priceBlock.getAttribute('data-variant-regulars') : '';
+        var variantRegularsMap = {};
+        try { variantRegularsMap = variantRegularsRaw ? JSON.parse(variantRegularsRaw) : {}; } catch (e) {}
+
+        // Update Omnibus "Najniższa cena z 30 dni" do current variant price
+        if (priceBlock && typeof match.price === 'number') {
+          var lowest30dEl = priceBlock.querySelector('[data-lowest-30d]');
+          if (lowest30dEl) lowest30dEl.textContent = fmtPLN(match.price);
+        }
+
+        var newRegular = 0;
+        if (match.id && variantRegularsMap[match.id]) {
+          newRegular = variantRegularsMap[match.id];
+        } else if (saleRatio > 1 && typeof match.price === 'number') {
+          newRegular = Math.round(match.price * saleRatio);
+        }
+        if (priceBlock && newRegular > match.price && typeof match.price === 'number') {
+          var newSavings = newRegular - match.price;
+
+          // Update strikethrough regular price (usuń wewnętrzne "od" prefix gdy konkretny wariant)
+          var regSpan = priceBlock.querySelector('.pdp-price-regular');
+          if (regSpan) regSpan.innerHTML = fmtPLN(newRegular);
+          // Update sale badge — "oszczędzasz X zł" zamiast %
+          var badgeEl = priceBlock.querySelector('.pdp-sale-badge');
+          if (badgeEl) badgeEl.textContent = 'oszczędzasz ' + fmtPLN(newSavings);
+          // Ukryj "od" prefix obok ceny — user wybrał wariant
+          var odMain = priceBlock.querySelector('.pdp-price-od--main');
+          if (odMain) odMain.style.display = 'none';
+        }
+
+        // Swap main image to variant.featuredAsset TYLKO po realnym kliknięciu user'a,
+        // nie na page load — początkowo pokazujemy product.featuredAsset.
+        if (!isInitialRender) {
+          if (match.image) {
+            swapMainImage(match.image);
+            syncThumbActive(match.image);
+          } else if (originalImageSrc) {
+            swapMainImage(originalImageSrc);
+            syncThumbActive(originalImageSrc);
+          }
+        }
+      } else if (needsSelection) {
+        // Clear variantId — uniemożliwia submit zanim user wybierze pełen zestaw opcji.
+        hiddenInput.value = '';
+      }
+
+      // 5. Update ATC button — needs-selection mode OR full-info mode.
+      if (atc && atcTextEl) {
+        if (needsSelection) {
+          // Domyślny tekst = "dodaj do koszyka". Na hover / click pokaże hint przez
+          // mouseenter handler poniżej. Po kliknięciu submit zablokowany przez click guard.
+          atcTextEl.textContent = atcBaseText;
+
+          var hintLabel = 'Wybierz ' + missingLabels.join(' i ') + ' aby dodać do koszyka';
+          atc.setAttribute('data-needs-selection', '1');
+          atc.setAttribute('data-hint-text', hintLabel);
+          atc.setAttribute('aria-disabled', 'true');
+          atc.classList.add('pdp-atc--needs-selection');
+          // NIE używamy native `disabled` — chcemy żeby click/hover event nadal działały.
+          atc.removeAttribute('disabled');
+
+          // Visible hint — sage soft pill nad ATC żeby user wiedział co kliknąć.
+          if (hintEl && hintMsgEl) {
+            hintMsgEl.textContent = hintLabel;
+            hintEl.hidden = false;
+          }
+
+          // Reset color override — wracamy do sage baseline.
+          if (atc.getAttribute('data-color-applied') === '1') {
+            atc.style.background = '';
+            atc.style.color = '';
+            atc.style.boxShadow = '';
+            atc.removeAttribute('data-color-applied');
+          }
+        } else {
+          // Pełen wybór — pokaż "dodaj do koszyka [kolor]" + tło wybranego koloru.
+          atc.removeAttribute('data-needs-selection');
+          atc.removeAttribute('data-hint-text');
+          atc.removeAttribute('aria-disabled');
+          atc.classList.remove('pdp-atc--needs-selection');
+
+          // Hide hint — user wybrał wszystkie opcje.
+          if (hintEl) hintEl.hidden = true;
+
+          // Stock state — native disabled OK tutaj (browser blokuje wszystko).
+          if (match && match.stock === 'OUT_OF_STOCK') {
+            atc.setAttribute('disabled', 'disabled');
+            atc.classList.add('pdp-atc--disabled');
+          } else {
+            atc.removeAttribute('disabled');
+            atc.classList.remove('pdp-atc--disabled');
+          }
+
+          // Tekst zawsze "dodaj do koszyka" — żadnego suffix'u z nazwą wariantu.
+          atcTextEl.textContent = atcBaseText;
+
+          // Zmienia się TYLKO kolor tła + cień przy wybranym kolorze.
+          // Tekst ZAWSZE biały (CSS default na .pdp-atc) — getContrastColor
+          // dawał czarny tekst dla jasnych kolorów (np. pomarańczowy Wibblo),
+          // ale user wymagał spójności: każdy wariant kolorowy ma biały label.
+          if (selectedColor) {
+            atc.style.background = selectedColor;
+            atc.style.color = '#FFFFFF';
+            atc.style.boxShadow = '0 6px 20px ' + hexToRgba(selectedColor, 0.30)
+              + ', 0 2px 4px ' + hexToRgba(selectedColor, 0.15);
+            atc.setAttribute('data-color-applied', '1');
+          } else if (atc.getAttribute('data-color-applied') === '1') {
+            atc.style.background = '';
+            atc.style.color = '';
+            atc.style.boxShadow = '';
+            atc.removeAttribute('data-color-applied');
+          }
+        }
+      }
+    }
+
+    // --- Click guard na needs-selection ATC (tekst zawsze "dodaj do koszyka") ---
+    if (atc && atcTextEl) {
+      // Click: jeśli brak pełnego wyboru — zablokuj submit, scroll do brakującej grupy, shake.
+      // NIE zmienia tekstu guzika (user chce: tekst zawsze "dodaj do koszyka").
+      atc.addEventListener('click', function(e) {
+        if (atc.getAttribute('data-needs-selection') === '1') {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          var firstMissing = null;
+          groupBlocks.forEach(function(block) {
+            var gid = block.getAttribute('data-option-group');
+            if (!selectedByGroup[gid] && !firstMissing) firstMissing = block;
+          });
+          if (firstMissing) {
+            firstMissing.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+          atc.classList.add('pdp-atc--shake');
+          setTimeout(function() { atc.classList.remove('pdp-atc--shake'); }, 500);
+        }
+      }, true); // capture phase — zatrzymuje przed form submit handlerem
+    }
+
+    function selectOption(groupId, optionId, clickedBtn) {
+      selectedByGroup[groupId] = optionId;
+      var block = document.querySelector('[data-option-group="' + groupId + '"]');
+      if (!block) return;
+      block.querySelectorAll('[data-option-id]').forEach(function(btn) {
+        var isActive = btn === clickedBtn;
+        btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        btn.classList.toggle('pdp-swatch-wrap--active', isActive && btn.classList.contains('pdp-swatch-wrap'));
+        btn.classList.toggle('pdp-pill--active', isActive && btn.classList.contains('pdp-pill'));
+      });
+      recomputeVariant();
+    }
+
+    document.querySelectorAll('[data-option-id]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var groupId = btn.getAttribute('data-option-group-id');
+        var optionId = btn.getAttribute('data-option-id');
+        if (!groupId || !optionId) return;
+        selectOption(groupId, optionId, btn);
+      });
+    });
+
+    // Initial compute — bez swapu obrazka (page load shows product.featuredAsset)
+    recomputeVariant();
+    isInitialRender = false;
   })();
   </script>
 
@@ -522,20 +1670,20 @@ const firstVariant = product?.variants?.[0];
       var minutes = waw.getMinutes();
 
       if (day === 0 || day === 6) {
-        el.textContent = 'Zamow teraz \u2014 wysylka w poniedzialek!';
+        el.textContent = 'Zamow teraz, wysylka w poniedzialek!';
         return;
       }
 
       var cutoff = 14;
       if (hours >= cutoff) {
-        el.textContent = 'Zamow teraz \u2014 wysylka jutro!';
+        el.textContent = 'Zamow teraz, wysylka jutro!';
         return;
       }
 
       var remainH = cutoff - hours - 1;
       var remainM = 60 - minutes;
       if (remainM === 60) { remainM = 0; remainH++; }
-      el.textContent = 'Zamow w ciagu ' + remainH + ' godz. ' + remainM + ' min \u2014 wysylka dzisiaj!';
+      el.textContent = 'Zamow w ciagu ' + remainH + ' godz. ' + remainM + ' min, wysylka dzisiaj!';
     }
 
     update();
@@ -543,4 +1691,1476 @@ const firstVariant = product?.variants?.[0];
     document.addEventListener('astro:before-swap', () => clearInterval(urgencyTimer), { once: true });
   })();
   </script>
+
+  <style is:global>
+    /* ============================================================
+       DOODIE PDP — Stitch port
+       12-section template · Outfit · sage + strawberry
+       ============================================================ */
+
+    .pdp-page {
+      font-family: 'Outfit', system-ui, sans-serif;
+      color: var(--brand-heading);
+      background: var(--brand-bg);
+    }
+
+    /* Container helpers */
+    .pdp-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+    @media (min-width: 768px) {
+      .pdp-container { padding: 0 24px; }
+    }
+    .pdp-narrow {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 0 20px;
+      text-align: center;
+    }
+
+    /* Typography */
+    .pdp-h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.015em;
+      line-height: 1.2;
+      color: var(--brand-heading);
+      margin: 0;
+    }
+    @media (min-width: 768px) {
+      .pdp-h1 { font-size: 28px; }
+    }
+    .pdp-h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      line-height: 1.2;
+      color: var(--brand-heading);
+      margin: 0 0 16px;
+    }
+    @media (min-width: 768px) {
+      .pdp-h2 { font-size: 40px; }
+    }
+    .pdp-eyebrow {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      color: var(--brand-muted);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+    .pdp-eyebrow--sage { color: var(--brand-primary); }
+    .pdp-lead {
+      font-size: 18px;
+      line-height: 1.6;
+      color: var(--brand-text);
+    }
+
+    /* Breadcrumbs wrap */
+    .pdp-breadcrumbs-wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px 20px 0;
+    }
+    @media (min-width: 768px) {
+      .pdp-breadcrumbs-wrap { padding: 24px 24px 0; }
+    }
+
+    /* ==========================================
+       1. HERO
+       ========================================== */
+    .pdp-hero {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 32px;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px 20px 48px;
+      align-items: start;
+    }
+    @media (min-width: 1024px) {
+      .pdp-hero {
+        grid-template-columns: 1fr 1fr;
+        gap: 64px;
+        padding: 32px 24px 96px;
+      }
+    }
+    .pdp-gallery {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    @media (min-width: 1024px) {
+      .pdp-gallery {
+        position: sticky;
+        top: 100px;
+      }
+    }
+    .pdp-main-image {
+      position: relative;
+      background: var(--brand-surface);
+      border: 1px solid var(--brand-border);
+      border-radius: 24px;
+      overflow: hidden;
+      aspect-ratio: 1 / 1;
+      box-shadow: var(--shadow-sm);
+    }
+    .pdp-main-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: opacity 220ms ease;
+    }
+    .pdp-image-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--brand-muted);
+    }
+    .pdp-image-placeholder .material-symbols-outlined {
+      font-size: 64px !important;
+    }
+    .pdp-bestseller-chip {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      background: rgba(255, 252, 247, 0.92);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--brand-border);
+      color: var(--brand-heading);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 8px 14px;
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: var(--shadow-sm);
+      letter-spacing: 0.02em;
+    }
+    .pdp-bestseller-chip .material-symbols-outlined {
+      color: var(--brand-primary);
+      font-size: 16px !important;
+    }
+
+    /* === Gallery arrows (prev/next na main image) — subtelne, mniejsze === */
+    .pdp-gallery-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 32px;
+      height: 32px;
+      border-radius: 9999px;
+      background: rgba(255, 252, 247, 0.82);
+      backdrop-filter: blur(8px) saturate(180%);
+      border: 1px solid var(--brand-border);
+      color: var(--brand-heading);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 200ms, transform 200ms, box-shadow 200ms, opacity 200ms;
+      box-shadow: 0 2px 8px rgba(42, 45, 39, 0.08);
+      z-index: 5;
+      opacity: 0.85;
+    }
+    .pdp-gallery-arrow:hover {
+      background: var(--brand-primary);
+      color: white;
+      transform: translateY(-50%) scale(1.08);
+      box-shadow: 0 4px 14px rgba(123, 144, 117, 0.25);
+      opacity: 1;
+    }
+    .pdp-gallery-arrow:hover .material-symbols-outlined,
+    .pdp-gallery-arrow:hover .pdp-svg-icon { color: white !important; }
+    .pdp-gallery-arrow:active {
+      transform: translateY(-50%) scale(0.94);
+    }
+    .pdp-gallery-arrow .material-symbols-outlined,
+    .pdp-gallery-arrow .pdp-svg-icon {
+      color: var(--brand-heading) !important;
+      font-size: 18px !important;
+      width: 18px;
+      height: 18px;
+    }
+    .pdp-gallery-arrow--prev { left: 8px; }
+    .pdp-gallery-arrow--next { right: 8px; }
+    @media (min-width: 768px) {
+      .pdp-gallery-arrow { width: 36px; height: 36px; }
+      .pdp-gallery-arrow .material-symbols-outlined,
+      .pdp-gallery-arrow .pdp-svg-icon { font-size: 20px !important; width: 20px; height: 20px; }
+      .pdp-gallery-arrow--prev { left: 12px; }
+      .pdp-gallery-arrow--next { right: 12px; }
+    }
+
+    /* Globalny rozmiar SVG ikon w PDP (zachowuje rozmiar Material Symbols 22px default) */
+    .pdp-svg-icon {
+      width: 22px;
+      height: 22px;
+      flex-shrink: 0;
+      display: inline-block;
+    }
+
+    /* Thumbnail strip — wrapper z arrows po bokach */
+    .pdp-thumb-strip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+    }
+    .pdp-thumbnails {
+      flex: 1;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      scroll-snap-type: x proximity;
+      scroll-padding: 4px;
+      scrollbar-width: none;
+      scroll-behavior: smooth;
+      min-width: 0;
+    }
+    .pdp-thumbnails::-webkit-scrollbar { display: none; }
+    .pdp-thumb {
+      flex: 0 0 calc((100% - 32px) / 5);
+      aspect-ratio: 1 / 1;
+      border: 2px solid var(--brand-border);
+      background: var(--brand-surface);
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      padding: 0;
+      scroll-snap-align: center;
+      transition: border-color 200ms, transform 150ms;
+    }
+    @media (min-width: 768px) {
+      .pdp-thumb {
+        flex: 0 0 calc((100% - 40px) / 6);
+      }
+    }
+
+    /* Thumbnail strip arrows (po bokach galerii) */
+    .pdp-thumb-arrow {
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      border-radius: 9999px;
+      background: var(--brand-surface);
+      border: 1px solid var(--brand-border);
+      color: var(--brand-heading);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 200ms, color 200ms, transform 200ms;
+    }
+    .pdp-thumb-arrow:hover {
+      background: var(--brand-primary);
+      color: white;
+      transform: scale(1.08);
+    }
+    .pdp-thumb-arrow:hover .material-symbols-outlined,
+    .pdp-thumb-arrow:hover .pdp-svg-icon { color: white !important; }
+    .pdp-thumb-arrow:active { transform: scale(0.94); }
+    .pdp-thumb-arrow:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .pdp-thumb-arrow:disabled:hover {
+      background: var(--brand-surface);
+      color: var(--brand-heading);
+      transform: none;
+    }
+    .pdp-thumb-arrow:disabled:hover .material-symbols-outlined,
+    .pdp-thumb-arrow:disabled:hover .pdp-svg-icon { color: var(--brand-heading) !important; }
+    .pdp-thumb-arrow .material-symbols-outlined,
+    .pdp-thumb-arrow .pdp-svg-icon {
+      color: var(--brand-heading) !important;
+      font-size: 18px !important;
+      width: 18px;
+      height: 18px;
+    }
+    @media (min-width: 768px) {
+      .pdp-thumb-arrow { width: 36px; height: 36px; }
+      .pdp-thumb-arrow .material-symbols-outlined,
+      .pdp-thumb-arrow .pdp-svg-icon { font-size: 20px !important; width: 20px; height: 20px; }
+    }
+    .pdp-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .pdp-thumb--active,
+    .pdp-thumb:hover {
+      border-color: var(--brand-primary);
+    }
+
+    /* Info column */
+    .pdp-info {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* === FOMO strip przed nazwą (pulsujący dot + scarcity text) === */
+    .pdp-fomo-strip {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      align-self: flex-start;
+      padding: 6px 14px 6px 12px;
+      background: var(--brand-accent-soft);
+      border: 1px solid rgba(230, 57, 70, 0.25);
+      border-radius: 9999px;
+      font-size: 12px;
+      color: var(--brand-accent);
+      font-weight: 600;
+    }
+    .pdp-fomo-strip-text {
+      letter-spacing: 0.01em;
+    }
+    .pdp-fomo-strip-text strong {
+      font-weight: 800;
+    }
+    .pdp-fomo-dot {
+      width: 8px; height: 8px;
+      border-radius: 9999px;
+      background: var(--brand-accent);
+      flex-shrink: 0;
+      animation: pdp-pulse-dot 1.5s ease-in-out infinite;
+      box-shadow: 0 0 0 0 var(--brand-accent);
+    }
+    @keyframes pdp-pulse-dot {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(230, 57, 70, 0.4); }
+      50% { box-shadow: 0 0 0 6px rgba(230, 57, 70, 0); }
+    }
+
+    /* === Chips row === */
+    .pdp-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .pdp-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px 12px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+    .pdp-chip .material-symbols-outlined {
+      font-size: 14px !important;
+    }
+    .pdp-chip--bestseller {
+      background: var(--brand-primary-soft);
+      color: var(--brand-primary-hover);
+      border: 1px solid var(--brand-primary);
+    }
+    .pdp-chip--bestseller .material-symbols-outlined {
+      color: var(--brand-primary) !important;
+    }
+    .pdp-chip--sale {
+      background: var(--brand-accent);
+      color: white;
+      letter-spacing: 0.02em;
+    }
+    .pdp-chip--oos {
+      background: var(--brand-accent-soft);
+      color: var(--brand-accent);
+      border: 1px solid var(--brand-accent);
+    }
+
+    /* === Rating row (clickable, links to reviews) === */
+    .pdp-rating-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      padding: 4px 0;
+      margin: -4px 0;
+      transition: opacity 180ms;
+      flex-wrap: wrap;
+    }
+    .pdp-rating-row:hover { opacity: 0.85; }
+    .pdp-rating-row:hover .pdp-rating-arrow {
+      transform: translateX(2px);
+    }
+    .pdp-rating-num {
+      font-family: 'Outfit', sans-serif;
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--brand-heading);
+      letter-spacing: -0.01em;
+    }
+    .pdp-rating-count {
+      font-size: 13px;
+      color: var(--brand-text);
+      font-weight: 600;
+      text-decoration: underline;
+      text-decoration-color: var(--brand-border-strong);
+      text-underline-offset: 3px;
+    }
+    .pdp-rating-arrow {
+      color: var(--brand-primary) !important;
+      font-size: 14px !important;
+      transition: transform 180ms;
+    }
+
+    .pdp-rating {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .pdp-stars {
+      display: flex;
+      color: var(--brand-primary);
+    }
+    .pdp-stars .material-symbols-outlined {
+      font-size: 18px !important;
+    }
+    .pdp-stars--lg .material-symbols-outlined {
+      font-size: 24px !important;
+    }
+    /* Wymuszone FILL axis — bez tego font-variation-settings inline mógł nie
+       złapać się na pierwszym renderze (font loading race). Force !important. */
+    .pdp-star-full {
+      font-variation-settings: 'FILL' 1 !important;
+      color: #F5B544 !important;
+    }
+    .pdp-star-empty {
+      font-variation-settings: 'FILL' 0 !important;
+      color: var(--brand-border-strong) !important;
+    }
+    .pdp-stars--lg .pdp-star-full { color: #F5B544 !important; }
+    .pdp-stars--lg .pdp-star-empty { color: var(--brand-border-strong) !important; }
+    .pdp-rating-text {
+      font-size: 14px;
+      color: var(--brand-text);
+    }
+    .pdp-out-of-stock {
+      align-self: flex-start;
+      background: var(--brand-accent-soft);
+      color: var(--brand-accent);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      letter-spacing: 0.05em;
+    }
+    .pdp-price-block {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 8px 0 4px;
+    }
+    .pdp-price-row {
+      display: flex;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .pdp-price {
+      font-size: 36px;
+      font-weight: 800;
+      color: var(--brand-primary);
+      font-family: 'Outfit', sans-serif;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+    @media (min-width: 768px) {
+      .pdp-price { font-size: 44px; }
+    }
+    .pdp-price-old {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--brand-muted);
+      text-decoration: line-through;
+      text-decoration-color: var(--brand-accent);
+      text-decoration-thickness: 1.5px;
+    }
+    .pdp-savings {
+      display: inline-flex;
+      align-items: center;
+      background: var(--brand-accent-soft);
+      color: var(--brand-accent);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      margin-left: auto;
+    }
+    .pdp-lowest-30d {
+      font-size: 11px;
+      color: var(--brand-muted);
+      font-style: italic;
+      margin: 6px 0 0;
+      font-weight: 400;
+    }
+
+    /* === Sale price (regularPrice) === */
+    /* Cena regularna — strikethrough w kolorze tekstu (muted) */
+    .pdp-price-regular {
+      font-size: 19px;
+      font-weight: 600;
+      color: var(--brand-muted);
+      text-decoration: line-through;
+      text-decoration-color: currentColor;
+      text-decoration-thickness: 1.5px;
+      margin-right: 4px;
+    }
+    /* "od" prefix dla wariantowych produktów (range min != max) */
+    .pdp-price-od {
+      font-size: 0.75em;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+      opacity: 0.85;
+      margin-right: 2px;
+    }
+    .pdp-price-od--main {
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--brand-muted);
+      letter-spacing: 0;
+      align-self: flex-end;
+      margin: 0 -2px 8px 0;
+    }
+    @media (min-width: 768px) {
+      .pdp-price-od--main { font-size: 22px; margin-bottom: 10px; }
+    }
+    /* Aktualna cena gdy promocja — strawberry */
+    .pdp-price--sale { color: var(--brand-accent) !important; }
+    /* Caly produkt wyprzedany: cena przekreslona + wyszarzona */
+    .pdp-price--oos {
+      text-decoration: line-through;
+      text-decoration-thickness: 2px;
+      color: var(--brand-muted, #9a9d95) !important;
+      opacity: 0.75;
+    }
+    /* Sale badge — "oszczędzasz X zł" obok ceny promocyjnej (vertically centered) */
+    .pdp-sale-badge {
+      display: inline-flex;
+      align-items: center;
+      align-self: center;
+      background: var(--brand-accent);
+      color: #FFFFFF;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      padding: 7px 14px;
+      border-radius: 9999px;
+      box-shadow: 0 4px 14px rgba(230, 57, 70, 0.30);
+      white-space: nowrap;
+    }
+    @media (min-width: 768px) {
+      .pdp-price-regular { font-size: 22px; }
+    }
+    .pdp-fomo {
+      background: var(--brand-accent-soft);
+      color: var(--brand-accent);
+      border-radius: 14px;
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .pdp-fomo .material-symbols-outlined { font-size: 22px !important; }
+    .pdp-fomo--soft {
+      background: #FDF6E4;
+      color: #B8861F;
+    }
+
+    .pdp-short-desc {
+      font-size: 15px;
+      line-height: 1.6;
+      color: var(--brand-text);
+      /* Mobile word-wrap fix dla krótkiego opisu (hero column) — długie
+         polskie słowa typu "obgryzanie", "magnetyczne", "wyciszające" mogły
+         się ucinać po prawej krawędzi container'a. */
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      hyphens: auto;
+      -webkit-hyphens: auto;
+    }
+    .pdp-short-desc p { margin: 0 0 8px; }
+    .pdp-short-desc strong { color: var(--brand-heading); }
+
+    /* Form */
+    .pdp-form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-top: 8px;
+    }
+
+    /* Variant blocks */
+    .pdp-variant-block {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      border-radius: 12px;
+      padding: 4px;
+      transition: background 400ms ease, box-shadow 400ms ease;
+    }
+    .pdp-variant-block.pdp-variant-flash {
+      background: var(--brand-primary-soft);
+      box-shadow: 0 0 0 3px var(--brand-primary);
+      animation: pdp-variant-pulse 1.4s ease-out;
+    }
+    @keyframes pdp-variant-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(123, 144, 117, 0.0); }
+      30% { box-shadow: 0 0 0 6px rgba(123, 144, 117, 0.45); }
+      70% { box-shadow: 0 0 0 3px rgba(123, 144, 117, 0.35); }
+    }
+    .pdp-variant-label {
+      font-size: 13px;
+      color: var(--brand-text);
+      font-weight: 500;
+      letter-spacing: 0.02em;
+    }
+
+    /* --- Stitch SWATCHES (color circles + label) --- */
+    .pdp-swatches {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .pdp-swatch-wrap {
+      background: transparent;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      transition: transform 150ms;
+    }
+    .pdp-swatch-wrap:hover {
+      transform: translateY(-1px);
+    }
+    .pdp-swatch {
+      width: 40px;
+      height: 40px;
+      border-radius: 9999px;
+      border: 2px solid transparent;
+      box-shadow: 0 2px 8px rgba(42, 45, 39, 0.08);
+      transition: border-color 200ms, transform 150ms, box-shadow 200ms;
+    }
+    .pdp-swatch--light {
+      border-color: var(--brand-border-strong);
+    }
+    .pdp-swatch-wrap:hover .pdp-swatch {
+      border-color: var(--brand-border-strong);
+      box-shadow: 0 4px 12px rgba(42, 45, 39, 0.12);
+    }
+    .pdp-swatch-wrap--active .pdp-swatch {
+      border-color: var(--brand-primary);
+      box-shadow: 0 0 0 3px var(--brand-primary-soft), 0 2px 8px rgba(123, 144, 117, 0.25);
+    }
+    .pdp-swatch-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--brand-text);
+      letter-spacing: 0.05em;
+      transition: color 200ms;
+    }
+    .pdp-swatch-wrap--active .pdp-swatch-label {
+      color: var(--brand-primary);
+      font-weight: 800;
+    }
+    /* Swatch wyprzedany: wyszarzony + ukosne przekreslenie probki + strike na nazwie */
+    .pdp-swatch-wrap--oos { cursor: not-allowed; }
+    .pdp-swatch-wrap--oos .pdp-swatch {
+      position: relative;
+      opacity: 0.4;
+      filter: grayscale(0.55);
+      box-shadow: none;
+    }
+    .pdp-swatch-wrap--oos .pdp-swatch::after {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border-radius: inherit;
+      background: linear-gradient(to top left, transparent calc(50% - 1px), var(--brand-muted, #9a9d95) calc(50% - 1px), var(--brand-muted, #9a9d95) calc(50% + 1px), transparent calc(50% + 1px));
+    }
+    .pdp-swatch-wrap--oos:hover { transform: none; }
+    .pdp-swatch-wrap--oos:hover .pdp-swatch { border-color: transparent; box-shadow: none; }
+    .pdp-swatch-wrap--oos .pdp-swatch-label {
+      text-decoration: line-through;
+      color: var(--brand-muted, #9a9d95);
+    }
+
+    /* === MOBILE — większe kafelki kolorów, grid 3-col, full-width ===
+       Desktop: flex circles 40px. Mobile: tile cards z paddingiem i borderem,
+       większe kółko 56px, label większy. Layout grid 3 kolumny full-width
+       żeby wyglądały "jak sekcja z gifami" (na całą szerokość). */
+    @media (max-width: 640px) {
+      .pdp-swatches {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        width: 100%;
+      }
+      .pdp-swatch-wrap {
+        background: var(--brand-surface);
+        border: 1.5px solid var(--brand-border);
+        border-radius: 14px;
+        padding: 14px 8px 12px;
+        gap: 10px;
+        transition: background 200ms ease, border-color 200ms ease, transform 150ms;
+      }
+      .pdp-swatch-wrap:hover { transform: none; }
+      .pdp-swatch-wrap--active {
+        background: var(--brand-primary-soft);
+        border-color: var(--brand-primary);
+      }
+      .pdp-swatch {
+        width: 56px;
+        height: 56px;
+      }
+      .pdp-swatch-wrap--active .pdp-swatch {
+        box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--brand-primary);
+      }
+      .pdp-swatch-label {
+        font-size: 12px;
+        letter-spacing: 0.02em;
+      }
+    }
+
+    /* --- Stitch PILLS (size / set / fallback) --- */
+    .pdp-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .pdp-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 24px;
+      background: var(--brand-surface);
+      border: 2px solid var(--brand-border);
+      border-radius: 9999px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      color: var(--brand-text);
+      cursor: pointer;
+      transition: all 200ms;
+      min-height: 40px;
+    }
+    .pdp-pill:hover {
+      border-color: var(--brand-primary);
+      color: var(--brand-heading);
+    }
+    button.pdp-pill {
+      font-family: 'Outfit', sans-serif;
+    }
+    .pdp-pill--active,
+    .pdp-pill-radio:has(input:checked) .pdp-pill {
+      border-color: var(--brand-primary);
+      background: var(--brand-primary-soft);
+      color: var(--brand-primary-hover);
+    }
+    .pdp-pill-radio--disabled .pdp-pill {
+      opacity: 0.4;
+      cursor: not-allowed;
+      text-decoration: line-through;
+    }
+    /* Pill rozmiaru wyprzedany (optionGroups path) */
+    .pdp-pill--oos {
+      opacity: 0.45;
+      cursor: not-allowed;
+      text-decoration: line-through;
+    }
+    .pdp-pill--oos:hover { border-color: var(--brand-border); color: var(--brand-text); }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    /* Quantity + ATC row */
+    .pdp-qty-row {
+      display: flex;
+      gap: 12px;
+      align-items: stretch;
+    }
+    .pdp-qty-control {
+      display: flex;
+      align-items: center;
+      background: var(--brand-surface-2);
+      border: 1px solid var(--brand-border);
+      border-radius: 9999px;
+      padding: 4px;
+      gap: 4px;
+    }
+    .pdp-qty-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 9999px;
+      background: transparent;
+      border: none;
+      color: var(--brand-heading);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 200ms;
+    }
+    .pdp-qty-btn:hover { background: var(--brand-surface); }
+    .pdp-qty-btn .material-symbols-outlined { font-size: 20px !important; }
+    .pdp-qty-btn .pdp-svg-icon { width: 18px; height: 18px; }
+    .pdp-qty-input {
+      width: 36px;
+      background: transparent;
+      border: none;
+      text-align: center;
+      font-family: 'Outfit', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--brand-heading);
+      -moz-appearance: textfield;
+    }
+    .pdp-qty-input::-webkit-outer-spin-button,
+    .pdp-qty-input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .pdp-atc {
+      flex: 1;
+      background: var(--brand-primary);
+      color: #FFFFFF;
+      font-family: 'Outfit', sans-serif;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      padding: 16px 20px;
+      border: none;
+      border-radius: 9999px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 6px 20px rgba(123, 144, 117, 0.25);
+      transition: background 280ms ease, color 200ms ease, box-shadow 280ms ease, transform 100ms;
+      min-height: 56px;
+      text-align: center;
+      line-height: 1.2;
+    }
+    .pdp-atc-text {
+      transition: color 200ms ease;
+    }
+    .pdp-atc:hover {
+      filter: brightness(0.95);
+    }
+    /* Default hover only when color NOT overridden via JS */
+    .pdp-atc:not([data-color-applied="1"]):hover {
+      background: var(--brand-primary-hover);
+      box-shadow: 0 8px 24px rgba(123, 144, 117, 0.35);
+      filter: none;
+    }
+    .pdp-atc:active { transform: scale(0.98); }
+    .pdp-atc .material-symbols-outlined { font-size: 20px !important; }
+    .pdp-atc .pdp-svg-icon { width: 20px; height: 20px; color: currentColor; }
+    .pdp-atc--disabled {
+      background: var(--brand-border-strong);
+      color: var(--brand-muted);
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    .pdp-atc--disabled:hover {
+      background: var(--brand-border-strong);
+      box-shadow: none;
+    }
+
+    /* Variant selection hint — NAD qty/ATC, czerwony pulsujący box. Widoczny gdy
+       user nie wybrał wszystkich opcji. Mocna stylizacja: prominent border, animation,
+       większa typografia żeby był ZAWSZE widoczny na mobile. */
+    .pdp-variant-hint {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 4px 0 14px;
+      padding: 12px 16px;
+      background: var(--brand-accent-soft);
+      border: 1.5px solid var(--brand-accent);
+      border-radius: 14px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--brand-accent);
+      letter-spacing: 0.01em;
+      animation: pdp-hint-pulse 1.6s ease-in-out infinite;
+      box-shadow: 0 4px 14px rgba(230, 57, 70, 0.15);
+    }
+    .pdp-variant-hint[hidden] { display: none; }
+    .pdp-variant-hint .material-symbols-outlined {
+      font-size: 20px !important;
+      color: var(--brand-accent);
+      font-variation-settings: 'FILL' 1;
+      flex-shrink: 0;
+    }
+    .pdp-variant-hint .pdp-svg-icon { width: 20px; height: 20px; color: var(--brand-accent); flex-shrink: 0; }
+    @keyframes pdp-hint-pulse {
+      0%, 100% { box-shadow: 0 4px 14px rgba(230, 57, 70, 0.15), 0 0 0 0 rgba(230, 57, 70, 0); }
+      50%      { box-shadow: 0 4px 14px rgba(230, 57, 70, 0.15), 0 0 0 6px rgba(230, 57, 70, 0.10); }
+    }
+
+    /* Needs-selection — dimmed sage, "help" cursor, smooth text swap */
+    .pdp-atc--needs-selection {
+      background: var(--brand-primary);
+      color: #FFFFFF;
+      opacity: 0.78;
+      cursor: help;
+      box-shadow: 0 4px 14px rgba(123, 144, 117, 0.20);
+    }
+    .pdp-atc--needs-selection:hover {
+      opacity: 1;
+      background: var(--brand-primary-hover);
+      box-shadow: 0 6px 18px rgba(123, 144, 117, 0.30);
+      filter: none;
+    }
+    .pdp-atc--needs-selection .pdp-atc-text {
+      transition: opacity 180ms ease;
+    }
+
+    /* Shake animation gdy user kliknie ATC bez pełnego wyboru */
+    .pdp-atc--shake {
+      animation: pdp-shake 480ms cubic-bezier(0.36, 0.07, 0.19, 0.97);
+    }
+    @keyframes pdp-shake {
+      10%, 90% { transform: translate3d(-1px, 0, 0); }
+      20%, 80% { transform: translate3d(2px, 0, 0); }
+      30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+      40%, 60% { transform: translate3d(4px, 0, 0); }
+    }
+
+    .pdp-shipping-urgency {
+      color: var(--brand-primary-hover);
+      font-size: 13px;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    /* Hero trust 4-col */
+    .pdp-hero-trust {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      padding-top: 20px;
+      margin-top: 12px;
+      border-top: 1px solid var(--brand-border);
+    }
+    .pdp-hero-trust-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      text-align: center;
+      font-size: 11px;
+      color: var(--brand-text);
+      line-height: 1.3;
+    }
+    @media (min-width: 768px) {
+      .pdp-hero-trust-item { font-size: 13px; }
+    }
+    .pdp-hero-trust-item .material-symbols-outlined {
+      color: var(--brand-primary);
+      font-size: 24px !important;
+    }
+
+    /* ==========================================
+       2. TRUST STRIP
+       ========================================== */
+    .pdp-trust-strip {
+      background: var(--brand-surface);
+      border-top: 1px solid var(--brand-border);
+      border-bottom: 1px solid var(--brand-border);
+      padding: 24px 0;
+    }
+    .pdp-trust-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (min-width: 768px) {
+      .pdp-trust-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+    .pdp-trust-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      justify-content: center;
+    }
+    .pdp-trust-item .material-symbols-outlined {
+      color: var(--brand-primary);
+      font-size: 28px !important;
+    }
+    .pdp-trust-item span:last-child {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--brand-heading);
+    }
+
+    /* ==========================================
+       Sections — shared
+       ========================================== */
+    .pdp-section {
+      padding: 64px 0;
+    }
+    @media (min-width: 768px) {
+      .pdp-section { padding: 88px 0; }
+    }
+    .pdp-section-head {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    /* ==========================================
+       3. PROBLEM AGITATION
+       ========================================== */
+    .pdp-section--problem {
+      background: var(--brand-surface);
+      border-bottom: 1px solid var(--brand-border);
+    }
+    .pdp-section--problem .pdp-narrow {
+      text-align: center;
+    }
+
+    /* ==========================================
+       4. SOLUTION 3-step
+       ========================================== */
+    .pdp-section--solution {
+      background: var(--brand-primary-soft);
+      border-bottom: 1px solid var(--brand-border);
+    }
+    .pdp-3-step {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 32px;
+    }
+    @media (min-width: 768px) {
+      .pdp-3-step { grid-template-columns: repeat(3, 1fr); }
+    }
+    .pdp-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 12px;
+    }
+    .pdp-step-icon {
+      width: 72px;
+      height: 72px;
+      background: var(--brand-surface);
+      border: 2px solid var(--brand-primary);
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .pdp-step-icon .material-symbols-outlined {
+      color: var(--brand-primary);
+      font-size: 32px !important;
+    }
+    .pdp-step-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--brand-heading);
+      margin: 0;
+    }
+    .pdp-step-desc {
+      font-size: 14px;
+      color: var(--brand-text);
+      max-width: 240px;
+      margin: 0;
+    }
+
+    /* ==========================================
+       5. FEATURES (product description)
+       ========================================== */
+    .pdp-section--features {
+      background: var(--brand-surface);
+      border-bottom: 1px solid var(--brand-border);
+    }
+    .pdp-description-card {
+      background: var(--brand-bg);
+      border: 1px solid var(--brand-border);
+      border-radius: 24px;
+      padding: 20px 16px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    @media (min-width: 768px) {
+      .pdp-description-card { padding: 32px; }
+    }
+    /* Mobile word-wrap fix — długie polskie słowa (np. "obgryzanie",
+       "magnetyczne") mogły wystawać poza container i być ucinane przez
+       overflow-x: clip na body. word-wrap + hyphens łamie wyrazy zamiast
+       cięcia po prawej krawędzi. */
+    .pdp-prose {
+      color: var(--brand-text);
+      font-size: 16px;
+      line-height: 1.7;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      hyphens: auto;
+      -webkit-hyphens: auto;
+    }
+    .pdp-prose h2, .pdp-prose h3, .pdp-prose h4 {
+      color: var(--brand-heading);
+      margin-top: 24px;
+      margin-bottom: 12px;
+    }
+    .pdp-prose p { margin: 0 0 16px; }
+    .pdp-prose ul { padding-left: 20px; }
+    .pdp-prose li { margin-bottom: 8px; }
+    .pdp-prose strong { color: var(--brand-heading); }
+
+    /* ==========================================
+       6. STATS
+       ========================================== */
+    .pdp-section--stats {
+      background: var(--brand-bg);
+      padding: 48px 0;
+    }
+    .pdp-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .pdp-stat {
+      text-align: center;
+      padding: 0 16px;
+      border-right: 1px solid var(--brand-border);
+    }
+    .pdp-stat:last-child { border-right: none; }
+    .pdp-stat-value {
+      font-family: 'Outfit', sans-serif;
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--brand-primary);
+      line-height: 1.1;
+    }
+    @media (min-width: 768px) {
+      .pdp-stat-value { font-size: 48px; }
+    }
+    .pdp-stat-label {
+      font-size: 13px;
+      color: var(--brand-text);
+      margin-top: 4px;
+    }
+
+    /* ==========================================
+       7. UGC GRID
+       ========================================== */
+    .pdp-section--ugc {
+      background: var(--brand-surface);
+      border-top: 1px solid var(--brand-border);
+      border-bottom: 1px solid var(--brand-border);
+    }
+    .pdp-ugc-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    @media (min-width: 768px) {
+      .pdp-ugc-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+      }
+    }
+    .pdp-ugc-tile {
+      aspect-ratio: 1 / 1;
+      overflow: hidden;
+      border-radius: 16px;
+      background: var(--brand-surface-2);
+    }
+    .pdp-ugc-tile--tall {
+      grid-row: span 2;
+      aspect-ratio: 3 / 4;
+    }
+    @media (max-width: 767px) {
+      .pdp-ugc-tile--tall { grid-row: auto; aspect-ratio: 1 / 1; }
+    }
+    .pdp-ugc-tile img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 400ms ease;
+    }
+    .pdp-ugc-tile:hover img { transform: scale(1.05); }
+
+    /* ==========================================
+       8. REVIEWS
+       ========================================== */
+    .pdp-section--reviews {
+      background: var(--brand-primary-soft);
+      border-bottom: 1px solid var(--brand-border);
+    }
+    .pdp-reviews-layout {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+    @media (min-width: 768px) {
+      .pdp-reviews-layout {
+        flex-direction: row;
+        gap: 48px;
+        align-items: flex-start;
+      }
+    }
+    .pdp-review-summary {
+      background: var(--brand-surface);
+      border: 1px solid var(--brand-border);
+      border-radius: 24px;
+      padding: 24px;
+      width: 100%;
+    }
+    @media (min-width: 768px) {
+      .pdp-review-summary { width: 320px; flex-shrink: 0; }
+    }
+    .pdp-review-score {
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+      margin: 12px 0 24px;
+    }
+    .pdp-score-big {
+      font-family: 'Outfit', sans-serif;
+      font-size: 48px;
+      font-weight: 800;
+      color: var(--brand-heading);
+      line-height: 1;
+    }
+    .pdp-review-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .pdp-review-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--brand-text);
+    }
+    .pdp-review-bar > span:first-child { width: 24px; }
+    .pdp-review-bar > span:last-child { width: 32px; text-align: right; color: var(--brand-muted); }
+    .pdp-bar-track {
+      flex: 1;
+      height: 8px;
+      background: var(--brand-surface-2);
+      border-radius: 9999px;
+      overflow: hidden;
+    }
+    .pdp-bar-fill {
+      height: 100%;
+      background: var(--brand-primary);
+    }
+
+    .pdp-review-list {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .pdp-review-card {
+      background: var(--brand-surface);
+      border: 1px solid var(--brand-border);
+      border-radius: 20px;
+      padding: 20px;
+    }
+    .pdp-review-card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+    .pdp-review-verified {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--brand-primary);
+    }
+    .pdp-review-verified .material-symbols-outlined { font-size: 14px !important; }
+    .pdp-review-date {
+      font-size: 12px;
+      color: var(--brand-muted);
+    }
+    .pdp-review-author {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--brand-heading);
+      margin: 0 0 4px;
+    }
+    .pdp-review-tag {
+      font-weight: 500;
+      color: var(--brand-muted);
+      font-size: 12.5px;
+    }
+    .pdp-review-title {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: var(--brand-heading);
+      margin: 6px 0 6px;
+      letter-spacing: -0.005em;
+      line-height: 1.3;
+    }
+    .pdp-review-text {
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--brand-text);
+      margin: 0;
+    }
+
+    /* ==========================================
+       9. FAQ
+       ========================================== */
+    .pdp-section--faq {
+      background: var(--brand-bg);
+    }
+    .pdp-section--faq .pdp-narrow { text-align: left; max-width: 760px; }
+    .pdp-section--faq .pdp-section-head { text-align: center; }
+    .pdp-faq-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .pdp-faq-item {
+      background: var(--brand-surface);
+      border: 1px solid var(--brand-border);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: border-color 200ms;
+    }
+    .pdp-faq-item[open] {
+      border-color: var(--brand-primary);
+    }
+    .pdp-faq-item summary {
+      padding: 18px 22px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--brand-heading);
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .pdp-faq-item summary::-webkit-details-marker { display: none; }
+    .pdp-faq-item summary .material-symbols-outlined {
+      color: var(--brand-primary);
+      transition: transform 200ms;
+    }
+    .pdp-faq-item[open] summary .material-symbols-outlined {
+      transform: rotate(180deg);
+    }
+    .pdp-faq-item p {
+      padding: 0 22px 18px;
+      font-size: 14px;
+      color: var(--brand-text);
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    /* ==========================================
+       10. FINAL CTA
+       ========================================== */
+    .pdp-section--final-cta {
+      background: var(--brand-surface);
+      border-top: 1px solid var(--brand-border);
+    }
+    .pdp-cta-card {
+      background: linear-gradient(135deg, var(--brand-heading) 0%, #3F4339 100%);
+      border-radius: 32px;
+      padding: 48px 32px;
+      text-align: center;
+      color: var(--brand-inverse);
+      box-shadow: var(--shadow-lg);
+    }
+    @media (min-width: 768px) {
+      .pdp-cta-card { padding: 64px 48px; }
+    }
+    .pdp-cta-h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--brand-inverse);
+      margin: 0 0 16px;
+    }
+    @media (min-width: 768px) {
+      .pdp-cta-h2 { font-size: 42px; }
+    }
+    .pdp-cta-lead {
+      font-size: 16px;
+      line-height: 1.6;
+      color: rgba(255, 252, 247, 0.85);
+      max-width: 480px;
+      margin: 0 auto 32px;
+    }
+    .pdp-cta-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--brand-accent);
+      color: #FFFFFF;
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 18px 32px;
+      border-radius: 9999px;
+      text-decoration: none;
+      box-shadow: 0 8px 24px rgba(230, 57, 70, 0.35);
+      transition: transform 100ms, box-shadow 200ms, background 200ms;
+    }
+    .pdp-cta-btn:hover {
+      background: var(--brand-accent-hover);
+      box-shadow: 0 10px 28px rgba(230, 57, 70, 0.45);
+    }
+    .pdp-cta-btn:active { transform: scale(0.98); }
+    .pdp-cta-btn .material-symbols-outlined { font-size: 18px !important; }
+
+    /* ==========================================
+       Error state
+       ========================================== */
+    .pdp-error {
+      padding: 80px 20px;
+      text-align: center;
+      color: var(--brand-muted);
+    }
+  </style>
 </BaseLayout>

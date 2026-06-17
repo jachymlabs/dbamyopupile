@@ -5,7 +5,6 @@ import {
   buildResponse,
   ORDER_FRAGMENT,
 } from '@/lib/vendure-api';
-import { assertSameOrigin } from '@/lib/security';
 import { withCartGuards, parseCartBody } from '@/lib/cart-helpers';
 
 const APPLY_COUPON = `mutation ApplyCouponCode($couponCode: String!) {
@@ -63,29 +62,29 @@ export const POST: APIRoute = withCartGuards(
   },
 );
 
-/** DELETE: Remove coupon code (bez rate-limit — to czysta cleanup operacja
- * po stronie usera; brak ataku surface, brak side effects poza odjęciem rabatu). */
-export const DELETE: APIRoute = async ({ request }) => {
-  // CSRF: secondary defense (primary is SameSite=Lax cookie).
-  const blocked = assertSameOrigin(request);
-  if (blocked) return blocked;
+/** DELETE: Remove coupon code.
+ * HIGH-2: dodano rate-limit (10/min) — bez tego endpoint mozna spamowac petlami
+ * (kazdy DELETE = 1 query do Vendure DB, recalc promo-context, zaprasza DoS-style abuse). */
+export const DELETE: APIRoute = withCartGuards(
+  { rateLimitKey: 'coupon-remove', rateLimitMax: 10 },
+  async ({ request }) => {
+    const token = getToken(request);
+    const parsed = await parseCartBody<{ couponCode?: unknown }>(request);
+    if ('error' in parsed) return parsed.error;
 
-  const token = getToken(request);
-  const parsed = await parseCartBody<{ couponCode?: unknown }>(request);
-  if ('error' in parsed) return parsed.error;
+    const validated = validateCouponCode(parsed.data.couponCode);
+    if ('error' in validated) return validated.error;
 
-  const validated = validateCouponCode(parsed.data.couponCode);
-  if ('error' in validated) return validated.error;
+    const { data, newToken } = await vendureQuery(
+      REMOVE_COUPON,
+      { couponCode: validated.code },
+      token,
+    );
 
-  const { data, newToken } = await vendureQuery(
-    REMOVE_COUPON,
-    { couponCode: validated.code },
-    token,
-  );
-
-  const result = data?.removeCouponCode;
-  if (result?.__typename === 'Order') {
-    return buildResponse({ order: result }, newToken);
-  }
-  return buildResponse({ order: null, error: 'Nie udalo sie usunac kodu' }, newToken);
-};
+    const result = data?.removeCouponCode;
+    if (result?.__typename === 'Order') {
+      return buildResponse({ order: result }, newToken);
+    }
+    return buildResponse({ order: null, error: 'Nie udalo sie usunac kodu' }, newToken);
+  },
+);

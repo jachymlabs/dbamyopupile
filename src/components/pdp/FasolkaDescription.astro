@@ -1,0 +1,2237 @@
+---
+/**
+ * FasolkaDescription — pełny opis produktu Fasolka (brelok-strąk z groszkami).
+ * Silikonowy brelok pop-it w kształcie strąka groszku, antystresowy fidget dla rąk.
+ *
+ * Assety w /public/brelok-fasola/photos/ (9 webp).
+ * Struktura: 18 sekcji 1:1 z MoodlesDescription. Brand voice: sentence case,
+ * brak em-dashy, Founder "Hubert i Patryk", brand names z dużej.
+ */
+import { shopApi } from '@/lib/vendure';
+import { SEARCH_PRODUCTS } from '@/lib/queries';
+import { getProductReviews, formatRating, ratingPercentages, opiniiPlural, starKind } from '@/lib/reviews';
+import { getRegularPrice } from '@/lib/prices';
+
+const ASSET_BASE = '/brelok-fasola/photos';
+
+// Reviews — z osobnego JSON per produkt (brelok-fasola tutaj)
+const reviews = getProductReviews('brelok-fasola');
+const ratingPct = reviews ? ratingPercentages(reviews) : null;
+
+// Fetch related products — exclude brelok-fasola, take first 5
+let relatedProducts: any[] = [];
+try {
+  const data = await shopApi<any>(SEARCH_PRODUCTS, {
+    input: { groupByProduct: true, take: 12 },
+  }, Astro.request);
+  relatedProducts = (data.search?.items ?? [])
+    .filter((p: any) => p.slug !== 'brelok-fasola')
+    .slice(0, 5);
+} catch (e: any) {
+  if (import.meta.env.DEV) console.error('FasolkaDescription related products fetch failed:', e?.message);
+}
+
+function formatPrice(grosze: number): string {
+  return (grosze / 100).toLocaleString('pl-PL', { style: 'currency', currency: 'PLN', minimumFractionDigits: 2 });
+}
+
+function extractPrice(p: any): number {
+  const pw = p?.priceWithTax;
+  if (!pw) return 0;
+  if (typeof pw === 'number') return pw;
+  // SinglePrice { value } | PriceRange { min, max }
+  if (typeof pw.value === 'number') return pw.value;
+  if (typeof pw.min === 'number') return pw.min;
+  return 0;
+}
+---
+
+<div class="md-pdp">
+
+  {/* ========== 01 — HERO 4 ZDJĘCIA (PC: 4-up grid, no arrows; mobile: carousel) ========== */}
+  <section class="md-hero-gifs">
+    <div class="md-gif-carousel" id="md-gif-carousel">
+      <div class="md-gif-item"><img src={`${ASSET_BASE}/fasolka-01.webp`} alt="" loading="eager" /></div>
+      <div class="md-gif-item"><img src={`${ASSET_BASE}/fasolka-07.webp`} alt="" loading="lazy" /></div>
+      <div class="md-gif-item"><img src={`${ASSET_BASE}/fasolka-04.webp`} alt="" loading="lazy" /></div>
+      <div class="md-gif-item"><img src={`${ASSET_BASE}/fasolka-03.webp`} alt="" loading="lazy" /></div>
+    </div>
+    <div class="md-mobile-arrows">
+      <button type="button" class="md-arrow" data-md-carousel-prev="md-gif-carousel" aria-label="Poprzedni">
+        <span class="material-symbols-outlined">chevron_left</span>
+      </button>
+      <button type="button" class="md-arrow" data-md-carousel-next="md-gif-carousel" aria-label="Następny">
+        <span class="material-symbols-outlined">chevron_right</span>
+      </button>
+    </div>
+  </section>
+
+  {/* ========== 02 — PROBLEM → SOLUTION (refined split) ========== */}
+  <section class="md-section md-section--surface md-section--compact">
+    <div class="md-container">
+      <div class="md-center" style="margin-bottom: 36px;">
+        <span class="md-eyebrow md-eyebrow--sage">Od nerwowego nawyku do spokojnego rytuału</span>
+        <h2>Daj rękom coś <span class="md-em">cichego</span> do roboty</h2>
+      </div>
+      <div class="md-problem-solve">
+        <div class="md-ps-side md-ps-side--problem">
+          <div class="md-ps-head">
+            <span class="md-ps-emoji" aria-hidden="true">⨯</span>
+            <span class="md-ps-tag md-ps-tag--problem">Co teraz</span>
+          </div>
+          <ul class="md-ps-list">
+            <li><span class="material-symbols-outlined">close</span>Skubiesz etykietki na butelce</li>
+            <li><span class="material-symbols-outlined">close</span>Klikasz długopisem aż ktoś patrzy krzywo</li>
+            <li><span class="material-symbols-outlined">close</span>Zaciskasz dłonie pod stołem, kiedy czekasz</li>
+            <li><span class="material-symbols-outlined">close</span>Bierzesz telefon, bo ręce nie wiedzą gdzie być</li>
+          </ul>
+          <p class="md-ps-foot">Ręce zawsze coś znajdą. Pytanie tylko co, i czy skończy się na pogniecionej kartce i spojrzeniach przy stole.</p>
+        </div>
+        <div class="md-ps-bridge" aria-hidden="true">
+          <div class="md-ps-bridge-circle">
+            <span class="md-ps-bridge-arrow">→</span>
+          </div>
+          <span class="md-ps-bridge-label">Fasolka</span>
+        </div>
+        <div class="md-ps-side md-ps-side--solution">
+          <div class="md-ps-head">
+            <span class="md-ps-emoji" aria-hidden="true">✓</span>
+            <span class="md-ps-tag md-ps-tag--solution">Co dostajesz</span>
+          </div>
+          <ul class="md-ps-list md-ps-list--ok">
+            <li><span class="material-symbols-outlined md-icon-fill">check_circle</span>Jeden groszek, jeden miękki pop</li>
+            <li><span class="material-symbols-outlined md-icon-fill">check_circle</span>Nieskończona pętla bez ładowania</li>
+            <li><span class="material-symbols-outlined md-icon-fill">check_circle</span>Zupełnie cicho, tylko dla siebie</li>
+            <li><span class="material-symbols-outlined md-icon-fill">check_circle</span>Wisi przy kluczach, zawsze pod ręką</li>
+          </ul>
+          <p class="md-ps-foot">Wyciskasz groszek ze strąka, przeskakuje na drugą stronę z cichym pop. Wracasz. Powtarzasz. Ręce wiedzą co robić.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {/* ========== 03 — PROBLEM (text + image LEWO) ========== */}
+  <section class="md-section">
+    <div class="md-split">
+      <div class="md-img-square">
+        <img src={`${ASSET_BASE}/fasolka-05.webp`} alt="" loading="lazy" />
+      </div>
+      <div>
+        <h2><span class="md-em">Koniec</span> sięgania po telefon, kiedy ręce się nudzą</h2>
+        <p class="md-body">Kolejka, długa lekcja, nudna prezentacja. Ręce szukają, mózg szuka, razem lądują na telefonie, bo nic innego nie ma pod ręką. Fasolka nie walczy z telefonem ani z tym, że lubisz coś mieć w dłoni. Po prostu daje rękom lepszą robotę. Miękki silikonowy strąk, kilka groszków w środku, jeden pop i wracasz do tego, czym się zajmowałeś przed chwilą. Bez ekranu, bez powiadomień, bez nieskończonego scrolla.</p>
+      </div>
+    </div>
+  </section>
+
+  {/* ========== 04 — SOLUTION MIRROR (text LEWO, image PRAWO) ========== */}
+  <section class="md-section md-section--surface">
+    <div class="md-split md-split--mirror">
+      <div class="md-img-square">
+        <img src={`${ASSET_BASE}/fasolka-01.webp`} alt="" loading="lazy" />
+      </div>
+      <div>
+        <h2>Zielony strąk, kilka groszków z buźkami</h2>
+        <p class="md-body">Fasolka to silikonowy strąk w stylu edamame, miękki i zielony, około sześciu centymetrów długości. Otwiera się wzdłuż na dwie połówki, w środku siedzą małe groszki z kawaii twarzyczkami. Kciukiem wypychasz <strong>groszek ze strąka</strong>, przeskakuje na drugą stronę z miękkim, cichym pop. Wracasz z powrotem, powtarzasz. Można to robić godzinami i żaden groszek tego nie pamięta, zawsze jest gotowy na następne wciśnięcie. Na górze <strong>metalowy łańcuszek kulkowy</strong> i zielona pętelka, do kluczy, do plecaka, do suwaka kurtki.</p>
+      </div>
+    </div>
+  </section>
+
+  {/* ========== CUSTOMER STORY (pozycja 5) — featured = pierwsza opinia 5-star ========== */}
+  {reviews && reviews.items[0] && (
+  <section class="md-section md-section--sage-soft">
+    <div class="md-split md-split--mirror">
+      <div class="md-img-square">
+        <img src={`${ASSET_BASE}/fasolka-09.webp`} alt="" loading="lazy" />
+      </div>
+      <div>
+        <span class="md-eyebrow md-eyebrow--sage">Prawdziwa historia</span>
+        <blockquote class="md-customer-quote">{reviews.items[0].body}</blockquote>
+        <div class="md-customer-author">
+          <div class="md-stars">
+            {Array.from({ length: reviews.items[0].stars }).map(() => (
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="#F5B544" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z"/></svg>
+            ))}
+          </div>
+          <div>
+            <strong>{reviews.items[0].name}</strong>
+            <span>
+              {reviews.items[0].age ? ` · ${reviews.items[0].age} lat` : ''}
+              {reviews.items[0].tag ? ` · ${reviews.items[0].tag}` : ''}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  )}
+
+  {/* ========== COMPARISON TABLE (pozycja 6) — Fasolka vs fidget spinner / pop-it / squishy klasyczny ========== */}
+  <section class="md-section">
+    <div class="md-container">
+      <div class="md-center" style="margin-bottom: 36px;">
+        <span class="md-eyebrow md-eyebrow--sage">Porównanie</span>
+        <h2>Fasolka kontra inne fidgety</h2>
+      </div>
+      <div class="md-compare-wrap">
+        <table class="md-compare-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th class="md-compare-col-us"><span>Fasolka</span></th>
+              <th>Fidget spinner</th>
+              <th>Pop-it</th>
+              <th>Klasyczny squishy</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Cichy, można używać w klasie</td>
+              <td class="md-compare-cell-us"><span class="material-symbols-outlined md-yes">check_circle</span></td>
+              <td><span class="material-symbols-outlined md-no">cancel</span></td>
+              <td><span class="material-symbols-outlined md-no">cancel</span></td>
+              <td><span class="material-symbols-outlined md-yes">check_circle</span></td>
+            </tr>
+            <tr>
+              <td>Wisi przy kluczach, zawsze przy sobie</td>
+              <td class="md-compare-cell-us"><span class="material-symbols-outlined md-yes">check_circle</span></td>
+              <td><span class="material-symbols-outlined md-no">cancel</span></td>
+              <td><span class="material-symbols-outlined md-no">cancel</span></td>
+              <td><span class="material-symbols-outlined md-no">cancel</span></td>
+            </tr>
+            <tr>
+              <td>Mieści się w kieszeni</td>
+              <td class="md-compare-cell-us"><span class="material-symbols-outlined md-yes">check_circle</span></td>
+              <td><span class="material-symbols-outlined md-no">cancel</span></td>
+              <td><span class="material-symbols-outlined md-no">cancel</span></td>
+              <td><span class="material-symbols-outlined md-yes">check_circle</span></td>
+            </tr>
+            <tr>
+              <td>Nie znudzi się po tygodniu</td>
+              <td class="md-compare-cell-us"><span class="material-symbols-outlined md-yes">check_circle</span></td>
+              <td><span class="material-symbols-outlined md-no">cancel</span></td>
+              <td><span class="material-symbols-outlined md-yes">check_circle</span></td>
+              <td><span class="material-symbols-outlined md-no">cancel</span></td>
+            </tr>
+            <tr>
+              <td>Działa od pierwszego wciśnięcia</td>
+              <td class="md-compare-cell-us"><span class="material-symbols-outlined md-yes">check_circle</span></td>
+              <td><span class="material-symbols-outlined md-yes">check_circle</span></td>
+              <td><span class="material-symbols-outlined md-yes">check_circle</span></td>
+              <td><span class="material-symbols-outlined md-yes">check_circle</span></td>
+            </tr>
+            <tr>
+              <td>Wygląda dobrze przy biurku</td>
+              <td class="md-compare-cell-us"><span class="material-symbols-outlined md-yes">check_circle</span></td>
+              <td><span class="material-symbols-outlined md-no">cancel</span></td>
+              <td><span class="material-symbols-outlined md-no">cancel</span></td>
+              <td><span class="material-symbols-outlined md-no">cancel</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      {/* Mobile swipe hint — pokazuje się tylko gdy tabela się scrolluje */}
+      <p class="md-compare-hint">
+        <span class="material-symbols-outlined">swipe</span>
+        Przesuń w lewo i prawo, aby zobaczyć całą tabelę
+      </p>
+    </div>
+  </section>
+
+  {/* ========== TABBED USE CASES (pozycja 7) — Dla kogo jest Fasolka ========== */}
+  <section class="md-section md-section--surface">
+    <div class="md-tabs-wrap">
+      <div class="md-center" style="margin-bottom: 32px;">
+        <h2>Dla kogo jest Fasolka?</h2>
+      </div>
+      <div class="md-tabs-nav" role="tablist">
+        <button class="md-tab-btn md-tab-btn--active" data-md-tab="0">Dorośli przy biurku</button>
+        <button class="md-tab-btn" data-md-tab="1">Dzieci squish it</button>
+        <button class="md-tab-btn" data-md-tab="2">BFRB self regulation</button>
+        <button class="md-tab-btn" data-md-tab="3">Prezent pod ręką</button>
+      </div>
+      <div class="md-tab-content md-tab-content--active">
+        <div class="md-tab-grid">
+          <div class="md-img-square">
+            <img src={`${ASSET_BASE}/fasolka-09.webp`} alt="" loading="lazy" />
+          </div>
+          <div>
+            <h3 style="font-size: 22px;">Reset przy biurku w dziesięć sekund</h3>
+            <p class="md-body">Telekonferencja się dłuży, mail się kompiluje, projekt utknął na chwilę. Wyciągasz Fasolkę z kieszeni albo zsuwasz z karabińczyka przy kluczach, wyciskasz parę groszków i wracasz do roboty. Ręce mają co robić, mózg dostaje mikro pauzę, telefon zostaje na biurku. Brelok nie wygląda jak zabawka dla dzieci, więc nikt na zoomie nie zwróci uwagi.</p>
+          </div>
+        </div>
+      </div>
+      <div class="md-tab-content">
+        <div class="md-tab-grid">
+          <div class="md-img-square">
+            <img src={`${ASSET_BASE}/fasolka-04.webp`} alt="" loading="lazy" />
+          </div>
+          <div>
+            <h3 style="font-size: 22px;">Pierwsze fidgetowanie, które nie stuka</h3>
+            <p class="md-body">Od mniej więcej trzech lat. Miękki silikon, żadnych ostrych krawędzi, żadnych małych elementów do zgubienia. Groszki siedzą w strąku, mają buźki, są zielone i trochę śmieszne. Dzieci lubią to wyciskać z prostego powodu, że lubią. Cichy pop nie przeszkadza na lekcji, brelok można przyczepić do plecaka albo piórnika. Przy najmłodszych warto być obok dla spokoju rodziców, nie groszków.</p>
+          </div>
+        </div>
+      </div>
+      <div class="md-tab-content">
+        <div class="md-tab-grid">
+          <div class="md-img-square">
+            <img src={`${ASSET_BASE}/fasolka-03.webp`} alt="" loading="lazy" />
+          </div>
+          <div>
+            <h3 style="font-size: 22px;">Ręce, które same szukają zajęcia</h3>
+            <p class="md-body">Obgryzanie paznokci, skubanie skórek, wyrywanie włosów, klikanie długopisem. Ręce same szukają bodźca, bo mózg potrzebuje rozproszenia. Fasolka przekierowuje tę energię na konkretny, satysfakcjonujący ruch. Jeden groszek, jeden pop, potem drugi. Po dwóch tygodniach palce wyglądają inaczej, a stary nawyk traci napęd. To nie zastępuje terapii, ale dobrze uzupełnia codzienne strategie radzenia sobie.</p>
+          </div>
+        </div>
+      </div>
+      <div class="md-tab-content">
+        <div class="md-tab-grid">
+          <div class="md-img-square">
+            <img src={`${ASSET_BASE}/fasolka-02.webp`} alt="" loading="lazy" />
+          </div>
+          <div>
+            <h3 style="font-size: 22px;">Mały prezent, który nie ląduje w szufladzie</h3>
+            <p class="md-body">Do urodzinowego zestawu, jako wisząca rzecz przy plecaku, do szkolnej paczki ze słodyczami i naklejkami. Fasolka ma buźki, jest zielona, wygląda jak edamame, to się pamięta. I działa od pierwszego wciśnięcia, bez tłumaczenia zasad. Cena na tyle niska, że można kupić kilka sztuk i rozdać całej klasie albo całemu zespołowi.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {/* ========== POLECANE PRODUKTY (pozycja 8) ========== */}
+  {relatedProducts.length > 0 && (
+    <section class="md-section md-section--sage-soft">
+      <div class="md-container">
+        <div class="md-center" style="margin-bottom: 36px;">
+          <span class="md-eyebrow md-eyebrow--sage">Jeszcze coś z naszego sklepu</span>
+          <h2>Polecane produkty</h2>
+        </div>
+        <div class="md-related-grid">
+          {relatedProducts.map((p: any) => {
+            const currentPrice = extractPrice(p);
+            const regularPrice = getRegularPrice(p.slug);
+            const hasSale = regularPrice && regularPrice > currentPrice;
+            const productReviews = getProductReviews(p.slug);
+            const productRating = productReviews ? formatRating(productReviews.averageRating) : '';
+            const productCount = productReviews?.totalCount ?? 0;
+            return (
+              <a href={`/produkty/${p.slug}`} class="md-related-card">
+                <div class="md-related-img">
+                  {p.productAsset?.preview ? (
+                    <img src={p.productAsset.preview} alt={p.productName} loading="lazy" />
+                  ) : (
+                    <div class="md-related-img-empty"><span class="material-symbols-outlined">image</span></div>
+                  )}
+                </div>
+                <div class="md-related-body">
+                  <h3>{p.productName}</h3>
+                  {productReviews && productCount > 0 && (
+                    <div class="md-related-rating">
+                      <div class="md-related-stars" aria-label={`Ocena ${productRating} na 5`}>
+                        {[1, 2, 3, 4, 5].map((i) => {
+                          const k = starKind(i, productReviews.averageRating);
+                          if (k === 'full') return <svg class="md-related-star md-related-star--full" viewBox="0 0 24 24" width="13" height="13" fill="#F5B544" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z"/></svg>;
+                          if (k === 'half') return <svg class="md-related-star md-related-star--half" viewBox="0 0 24 24" width="13" height="13" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><linearGradient id={`md-rel-half-${p.slug}-${i}`}><stop offset="50%" stop-color="#F5B544"/><stop offset="50%" stop-color="#D6CEBE"/></linearGradient></defs><path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z" fill={`url(#md-rel-half-${p.slug}-${i})`}/></svg>;
+                          return <svg class="md-related-star md-related-star--empty" viewBox="0 0 24 24" width="13" height="13" fill="#D6CEBE" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z"/></svg>;
+                        })}
+                      </div>
+                      <span class="md-related-rating-num">{productRating}</span>
+                      <span class="md-related-rating-count">({productCount})</span>
+                    </div>
+                  )}
+                  <p class="md-related-price-row">
+                    {hasSale && <span class="md-related-price-regular">{formatPrice(regularPrice)}</span>}
+                    <span class={`md-related-price${hasSale ? ' md-related-price--sale' : ''}`}>
+                      {formatPrice(currentPrice)}
+                    </span>
+                  </p>
+                </div>
+              </a>
+            );
+          })}
+        </div>
+        <div class="md-related-mobile-hint">
+          <span class="material-symbols-outlined">swipe</span>
+          przesuń, żeby zobaczyć więcej
+        </div>
+      </div>
+    </section>
+  )}
+
+  {/* ========== TRUST STRIP — pozycja 9 ========== */}
+  <section class="md-trust-strip">
+    <div class="md-trust-grid">
+      <div class="md-trust-cell">
+        <span class="material-symbols-outlined">groups</span>
+        <span>10k+ klientów</span>
+      </div>
+      <div class="md-trust-cell">
+        <span class="material-symbols-outlined">local_shipping</span>
+        <span>Dostawa 24h</span>
+      </div>
+      <div class="md-trust-cell">
+        <span class="material-symbols-outlined">published_with_changes</span>
+        <span>14 dni na zwrot</span>
+      </div>
+      <div class="md-trust-cell">
+        <span class="material-symbols-outlined">award_star</span>
+        <span>Polska marka</span>
+      </div>
+    </div>
+  </section>
+
+  {/* ========== VARIANT SHOWCASE — 3 karty użycia (pozycja 10, mobile: scroll-snap carousel) ========== */}
+  <section class="md-section md-section--surface">
+    <div class="md-container">
+      <div class="md-center" style="margin-bottom: 32px;">
+        <span class="md-eyebrow md-eyebrow--sage">Trzy sposoby na Fasolkę</span>
+        <h2>Mały brelok, kilka różnych powodów, żeby go mieć</h2>
+        <p class="md-variants-swipe-hint">
+          <span class="material-symbols-outlined">swipe</span>
+          przesuń, żeby zobaczyć więcej
+        </p>
+      </div>
+      <div class="md-variants-grid">
+        <div class="md-variant-card md-variant-card--forest">
+          <div class="md-variant-img"><img src={`${ASSET_BASE}/fasolka-04.webp`} alt="" loading="lazy" /></div>
+          <div class="md-variant-body">
+            <span class="md-variant-dot" style="background: #4A7A52;"></span>
+            <h3>Dla dzieci</h3>
+            <p>Od trzech lat, pod opieką dorosłego. Cichy pop nie przeszkadza na lekcji ani w bibliotece. Przyczepiasz do plecaka i Fasolka jedzie do szkoły razem z piórnikiem.</p>
+          </div>
+        </div>
+        <div class="md-variant-card md-variant-card--lavender">
+          <div class="md-variant-img"><img src={`${ASSET_BASE}/fasolka-03.webp`} alt="" loading="lazy" /></div>
+          <div class="md-variant-body">
+            <span class="md-variant-dot" style="background: #A78BCC;"></span>
+            <h3>Do szkoły i na studia</h3>
+            <p>Na długim wykładzie, przy odrabianiu zadań, w autobusie między zajęciami. Mała pętla pop pomaga zostać w jednym miejscu myślami, kiedy ciało chciałoby gdzieś iść.</p>
+          </div>
+        </div>
+        <div class="md-variant-card md-variant-card--strawberry">
+          <div class="md-variant-img"><img src={`${ASSET_BASE}/fasolka-09.webp`} alt="" loading="lazy" /></div>
+          <div class="md-variant-body">
+            <span class="md-variant-dot" style="background: #E63946;"></span>
+            <h3>Do pracy</h3>
+            <p>Przy rozmowie telefonicznej, przy czekaniu na maila, przy myśleniu. Ręce mają co robić i przestają szukać telefonu. Wygląda jak silikonowy brelok, nie różowa piłeczka antystresowa.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {/* ========== 11 — REVIEWS (dynamiczne z reviews.json) ========== */}
+  {reviews && ratingPct && (
+  <section id="reviews-section" class="md-section">
+    <div class="md-reviews">
+      <div class="md-center" style="margin-bottom: 32px;">
+        <h2>{(reviews.totalCount * 35).toLocaleString('pl-PL')}+ osób już wypróbowało Fasolkę</h2>
+      </div>
+      <div class="md-reviews-header">
+        <div class="md-reviews-big-rating">
+          <div class="md-reviews-big-num">{formatRating(reviews.averageRating)}</div>
+          <div class="md-reviews-big-stars">
+            {[1, 2, 3, 4, 5].map((i) => {
+              const k = starKind(i, reviews.averageRating);
+              return k === 'full'
+                ? <svg viewBox="0 0 24 24" width="24" height="24" fill="#F5B544" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z"/></svg>
+                : k === 'half'
+                ? <svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><linearGradient id={`md-big-half-${i}`}><stop offset="50%" stop-color="#F5B544"/><stop offset="50%" stop-color="#D6CEBE"/></linearGradient></defs><path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z" fill={`url(#md-big-half-${i})`}/></svg>
+                : <svg viewBox="0 0 24 24" width="24" height="24" fill="#D6CEBE" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z"/></svg>;
+            })}
+          </div>
+          <div class="md-reviews-big-meta">z {reviews.totalCount} {opiniiPlural(reviews.totalCount)} · zakup zweryfikowany</div>
+        </div>
+        <div class="md-reviews-bars">
+          {([5, 4, 3, 2, 1] as const).map((star) => (
+            <div class="md-reviews-bar">
+              <div class="md-stars-mini">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  i <= star
+                    ? <svg viewBox="0 0 24 24" width="14" height="14" fill="#F5B544" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z"/></svg>
+                    : <svg viewBox="0 0 24 24" width="14" height="14" fill="#D6CEBE" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z"/></svg>
+                ))}
+              </div>
+              <div class="md-track"><div class="md-fill" style={`width: ${ratingPct[star]}%;`}></div></div>
+              <span class="md-count">{reviews.distribution[star]}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div class="md-reviews-grid">
+        {reviews.items.slice(0, 3).map((rev) => (
+          <div class="md-review-card">
+            <div class="md-stars-row">
+              {[1, 2, 3, 4, 5].map((i) => (
+                i <= rev.stars
+                  ? <svg viewBox="0 0 24 24" width="18" height="18" fill="#F5B544" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z"/></svg>
+                  : <svg viewBox="0 0 24 24" width="18" height="18" fill="#D6CEBE" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z"/></svg>
+              ))}
+            </div>
+            {rev.verified && (
+              <span class="md-verified"><span class="material-symbols-outlined md-icon-fill">verified</span> zakup zweryfikowany</span>
+            )}
+            <p class="md-quote">„{rev.body}"</p>
+            <div class="md-review-footer">
+              <strong>{rev.name}</strong>
+              <span>{rev.date}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+  )}
+
+  {/* ========== BENEFIT 1 (md-split copy — image LEWO) ========== */}
+  <section class="md-section">
+    <div class="md-split">
+      <div class="md-img-square">
+        <img src={`${ASSET_BASE}/fasolka-01.webp`} alt="" loading="lazy" />
+      </div>
+      <div>
+        <h2>Miękki pop, który nie nudzi się po tygodniu</h2>
+        <p class="md-body">Groszek wychodzi ze strąka z cichym, miękkim przeskokiem, nie z trzaskiem, nie ze stukiem, nie z piskiem. Silikon robi tu całą robotę. Jest wystarczająco sprężysty, żeby czuć opór, i wystarczająco miękki, żeby palce nie bolały po dwudziestej próbie. Pętla nie ma końca i to jest sedno, groszek nie pamięta, że już go wyciskałeś. Następny pop jest taki sam jak pierwszy.</p>
+      </div>
+    </div>
+  </section>
+
+  {/* ========== BENEFIT 2 — infografika „zero technologii" ========== */}
+  <section class="md-section md-section--surface">
+    <div class="md-container">
+      <div class="md-center" style="margin-bottom: 36px;">
+        <span class="md-eyebrow md-eyebrow--sage">Prosto z założenia</span>
+        <h2>Nie potrzebujesz nic więcej</h2>
+      </div>
+      <div class="md-notech">
+        <div class="md-notech-item">
+          <div class="md-notech-icon"><span class="material-symbols-outlined">battery_0_bar</span></div>
+          <h3>Bez baterii</h3>
+          <p>Nie ma czego ładować ani wymieniać. Wyciągasz z kieszeni i jest gotowa, tak samo jak tydzień temu i tak samo jak za rok.</p>
+        </div>
+        <div class="md-notech-item">
+          <div class="md-notech-icon"><span class="material-symbols-outlined">app_blocking</span></div>
+          <h3>Bez aplikacji</h3>
+          <p>Żadnej instalacji, żadnego konta, żadnej aktualizacji, która wyskoczy w najgorszym momencie. Kupujesz raz, używasz do oporu, bez abonamentu.</p>
+        </div>
+        <div class="md-notech-item">
+          <div class="md-notech-icon"><span class="material-symbols-outlined">tv_off</span></div>
+          <h3>Bez ekranu</h3>
+          <p>Twój dzień jest już pełen ekranów. Telefon, laptop, telewizor. Fasolka nie dokłada kolejnego, tylko dłonie, silikon i cichy pop.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {/* ========== EXTRA 02 — FOUNDER STORY (mirror split + image rounded) ========== */}
+  <section class="md-section md-section--surface">
+    <div class="md-founder">
+      <div class="md-founder-img">
+        <img src={`${ASSET_BASE}/fasolka-06.webp`} alt="" loading="lazy" />
+        <div class="md-founder-stamp">
+          <span>est.</span>
+          <strong>2024</strong>
+        </div>
+      </div>
+      <div class="md-founder-body">
+        <span class="md-eyebrow md-eyebrow--sage">Od założycieli</span>
+        <h2>Sami szukaliśmy czegoś dla rąk i nic nie było tak po prostu dobre</h2>
+        <p class="md-body">Spinnery brzęczą i po tygodniu lądują w szufladzie. Piłeczki antystresowe są fajne przez godzinę. Kostki fidget stukają tak głośno, że człowiek wstydzi się je wyciągnąć w pracy. Szukaliśmy czegoś cichego, miłego, co po prostu działa, bez tłumaczenia co to jest i po co.</p>
+        <p class="md-body">Fasolka to ta rzecz, którą sami chcieliśmy mieć przy kluczach. Zielony strąk z groszkami z buźkami, które się wyciska w nieskończoność. Jeden miękki pop, potem drugi, i jakoś mija stres, kolejka, nudny wykład.</p>
+        <div class="md-founder-sign">
+          <div class="md-founder-sign-line"></div>
+          <span>Hubert i Patryk</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {/* ========== EXTRA 04 — STATS BENTO (asymetryczne kafelki light) — przeniesione przed specyfikację ========== */}
+  <section class="md-section">
+    <div class="md-container">
+      <div class="md-center" style="margin-bottom: 36px;">
+        <span class="md-eyebrow md-eyebrow--sage">Bez ściemy</span>
+        <h2>Fasolka w liczbach</h2>
+      </div>
+      <div class="md-bento">
+        <div class="md-bento-cell md-bento-cell--xl">
+          <div class="md-bento-icon"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">favorite</span></div>
+          <div class="md-bento-num">{reviews ? (reviews.totalCount * 31000).toLocaleString('pl-PL') : '2 480 000'}</div>
+          <div class="md-bento-label">Groszków wciśniętych przez naszych klientów</div>
+          <p class="md-bento-sub">Liczymy orientacyjnie. Przy takim tempie dokładna liczba nie zmieściłaby się na stronie.</p>
+        </div>
+        <div class="md-bento-cell">
+          <div class="md-bento-num">{reviews ? formatRating(reviews.averageRating) : '4,56'}<small>/5</small></div>
+          <div class="md-bento-label">Średnia ocen</div>
+          <div class="md-bento-foot">
+            Z {reviews ? reviews.totalCount : 89} zweryfikowanych {reviews ? opiniiPlural(reviews.totalCount) : 'opinii'}
+          </div>
+        </div>
+        <div class="md-bento-cell md-bento-cell--sage">
+          <div class="md-bento-num">87<small>%</small></div>
+          <div class="md-bento-label">Klientów ma Fasolkę przy kluczach codziennie</div>
+          <div class="md-bento-foot">Na podstawie badań wśród klientów dbamyopupile</div>
+        </div>
+        <div class="md-bento-cell md-bento-cell--strawberry">
+          <div class="md-bento-num">14<small> dni</small></div>
+          <div class="md-bento-label">Zwrot bez pytań</div>
+          <div class="md-bento-foot">Chcesz zwrócić? Napisz nam o tym!</div>
+        </div>
+        <div class="md-bento-cell">
+          <div class="md-bento-num">24<small>h</small></div>
+          <div class="md-bento-label">Średni czas dostawy</div>
+          <div class="md-bento-foot">Zamówienia wysyłamy przez partnera InPost</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {/* ========== SPECYFIKACJA — przeniesione na koniec, przed FAQ ========== */}
+  <section class="md-section md-section--surface">
+    <div class="md-spec-card md-spec-card--mirror">
+      <div class="md-img-square">
+        <img src={`${ASSET_BASE}/fasolka-08.webp`} alt="" loading="lazy" />
+      </div>
+      <div>
+        <h2>Co dokładnie jest w środku</h2>
+        <ul class="md-spec-list">
+          <li><span class="material-symbols-outlined">science</span> <span><strong>Materiał</strong> miękki silikon, gatunek spożywczy, bezpieczny w kontakcie ze skórą</span></li>
+          <li><span class="material-symbols-outlined">straighten</span> <span><strong>Rozmiar</strong> strąk ok. 6 do 7 cm długości</span></li>
+          <li><span class="material-symbols-outlined">touch_app</span> <span><strong>Miękkość</strong> elastyczna, sprężysta, cichy pop bez stukania</span></li>
+          <li><span class="material-symbols-outlined">grain</span> <span><strong>Zawartość</strong> kilka groszków z kawaii buźkami w stylu edamame</span></li>
+          <li><span class="material-symbols-outlined">link</span> <span><strong>Łańcuszek</strong> metalowy kulkowy z zieloną pętelką</span></li>
+          <li><span class="material-symbols-outlined">key</span> <span><strong>Mocowanie</strong> brelok do kluczy, plecaka, piórnika, suwaka kurtki</span></li>
+          <li><span class="material-symbols-outlined">verified</span> <span><strong>Bezpieczne</strong> od 3 lat, najmłodsze dzieci pod opieką dorosłego</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  {/* ========== FAQ ========== */}
+  <section class="md-section md-section--surface">
+    <div class="md-narrow">
+      <div class="md-center" style="margin-bottom: 40px;">
+        <h2>Najczęściej zadawane pytania</h2>
+      </div>
+      <div class="md-faq-list">
+        <details class="md-faq-item" open>
+          <summary>Czy Fasolka jest cicha? Można jej używać w klasie? <span class="material-symbols-outlined">expand_more</span></summary>
+          <p>Tak. Pop jest miękki i bardzo cichy, nie słychać go z odległości metra. Można używać w klasie, na zebraniu, w pociągu. Nikomu nie przeszkadza i nie wymusza włączania trybu ciszy.</p>
+        </details>
+        <details class="md-faq-item">
+          <summary>Czy strąk się porwie albo groszki wypadną? <span class="material-symbols-outlined">expand_more</span></summary>
+          <p>Silikon jest wytrzymały i sprężysty, więc strąk nie porwie się przy normalnym używaniu. Groszki siedzą w strąku bezpiecznie i wychodzą dopiero kiedy celowo przyciśniesz kciukiem. W kieszeni i przy kluczach nie ma jak się wypchać przypadkowo.</p>
+        </details>
+        <details class="md-faq-item">
+          <summary>Jak czyścić Fasolkę? <span class="material-symbols-outlined">expand_more</span></summary>
+          <p>Wystarczy letnia woda z odrobiną mydła. Silikon jest gładki i nie wchłania zapachów, więc po przemyciu Fasolka jest jak nowa. Metalowy łańcuszek przetrzyj suchą ściereczką, nie mocz go za długo, żeby z czasem nie zardzewiał.</p>
+        </details>
+        <details class="md-faq-item">
+          <summary>Czy Fasolka jest bezpieczna dla dzieci? <span class="material-symbols-outlined">expand_more</span></summary>
+          <p>Tak. Bezpieczna od 3 lat, miękki silikon bez ostrych krawędzi, żadnych małych elementów do zgubienia. Przy najmłodszych dzieciach warto być obok, żeby nic nie poszło do buzi. Wielu rodziców przypina Fasolkę do plecaka albo piórnika i jedzie razem do szkoły.</p>
+        </details>
+        <details class="md-faq-item">
+          <summary>Dlaczego fasolka? <span class="material-symbols-outlined">expand_more</span></summary>
+          <p>Bo wygląda dokładnie tak. Zielony strąk, w środku kilka groszków, jak małe edamame. Wzór działa, bo mózg lubi proste, organiczne kształty. A buźki na groszkach sprawiają, że dorośli też chętnie po nią sięgają, nie tylko dzieci. To brelok, nie zabawka, więc nie wstydzisz się wyciągnąć go w pracy.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  {/* ========== FINAL CTA — contained card na cream bg (nie full-bg, kontrast z footerem) ========== */}
+  <section class="md-section md-section--last">
+    <div class="md-cta-card">
+      <div class="md-cta-card-img">
+        <img src={`${ASSET_BASE}/fasolka-07.webp`} alt="" loading="lazy" />
+      </div>
+      <div class="md-cta-card-body">
+        <span class="md-cta-card-eyebrow">Jeśli doczytałeś do tutaj</span>
+        <h2>Daj rękom ten jeden miękki pop. I drugi. I następny</h2>
+        <p>Silikonowy brelok-strąk z groszkami z buźkami, łańcuszek w komplecie. Wszystko, czego potrzebujesz, żeby ręce w końcu mogły odpocząć.</p>
+        <div class="md-cta-card-actions">
+          <a href="#primary-atc-btn" class="md-cta-card-btn">
+            dodaj do koszyka
+            <span class="material-symbols-outlined">arrow_forward</span>
+          </a>
+          {reviews && (
+            <a href="#reviews-section" class="md-cta-card-link">
+              albo przeczytaj {reviews.totalCount} {opiniiPlural(reviews.totalCount)} →
+            </a>
+          )}
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<style is:global>
+  /* =====================================================
+     FASOLKA DESCRIPTION — 18 sekcji 1:1 z Moodles
+     Brand voice doodie (sage + strawberry + Outfit)
+     ===================================================== */
+
+  .md-pdp {
+    font-family: 'Outfit', system-ui, sans-serif;
+    color: var(--brand-heading);
+    line-height: 1.6;
+  }
+
+  .md-pdp h2 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+    color: var(--brand-heading);
+    margin: 0 0 16px;
+  }
+  @media (min-width: 768px) { .md-pdp h2 { font-size: 42px; } }
+
+  .md-pdp h3 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0 0 6px;
+    color: var(--brand-heading);
+  }
+
+  .md-eyebrow {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    color: var(--brand-muted);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .md-eyebrow--sage { color: var(--brand-primary); }
+
+  .md-pdp p.md-body {
+    color: var(--brand-text);
+    font-size: 16px;
+    margin: 0;
+  }
+  @media (min-width: 768px) { .md-pdp p.md-body { font-size: 17px; } }
+
+  .md-center { text-align: center; }
+
+  .md-icon-fill { font-variation-settings: 'FILL' 1; }
+
+  .md-img-square {
+    aspect-ratio: 1 / 1;
+    border-radius: 24px;
+    overflow: hidden;
+    border: 1px solid var(--brand-border);
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+  .md-img-square img {
+    width: 100%; height: 100%;
+    object-fit: cover; display: block;
+  }
+
+  /* ---------- Containers ---------- */
+  .md-container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+  @media (min-width: 768px) { .md-container { padding: 0 24px; } }
+  .md-narrow { max-width: 760px; margin: 0 auto; padding: 0 20px; }
+
+  /* ---------- Section base ---------- */
+  .md-section {
+    padding: 56px 20px;
+  }
+  @media (min-width: 768px) { .md-section { padding: 80px 32px; } }
+  .md-section--surface {
+    background: var(--brand-surface);
+    border-top: 1px solid var(--brand-border);
+    border-bottom: 1px solid var(--brand-border);
+  }
+  .md-section--sage-soft {
+    background: var(--brand-primary-soft);
+    border-top: 1px solid var(--brand-border);
+    border-bottom: 1px solid var(--brand-border);
+  }
+  .md-section--cta { padding: 96px 20px; }
+  .md-section--last { border-bottom: none; }
+  /* Kompaktowa wersja — np. dla manifestu, mniejszy vertical breathing room */
+  .md-section--compact { padding: 40px 20px; }
+  @media (min-width: 768px) { .md-section--compact { padding: 56px 32px; } }
+
+  .md-split {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 32px;
+    align-items: center;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  @media (min-width: 768px) { .md-split { grid-template-columns: 1fr 1fr; gap: 56px; } }
+  .md-split--mirror > div:first-child { order: 0; }
+  @media (min-width: 768px) { .md-split--mirror > div:first-child { order: 1; } }
+
+  /* ---------- 01 HERO GIFY ---------- */
+  .md-hero-gifs {
+    background: var(--brand-surface);
+    border-top: 1px solid var(--brand-border);
+    border-bottom: 1px solid var(--brand-border);
+    padding: 56px 20px;
+  }
+  .md-gif-carousel {
+    display: flex; gap: 16px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding: 20px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    max-width: 1200px; margin: 0 auto;
+  }
+  .md-gif-carousel::-webkit-scrollbar { display: none; }
+  .md-gif-item {
+    flex: 0 0 calc(85% - 40px);
+    scroll-snap-align: center;
+    aspect-ratio: 4 / 5;
+    border-radius: 20px;
+    overflow: hidden;
+    background: var(--brand-surface-2);
+    border: 1px solid var(--brand-border);
+  }
+  @media (min-width: 768px) {
+    .md-gif-carousel { gap: 12px; overflow-x: visible; }
+    .md-gif-item { flex: 1 1 0; }
+  }
+  .md-gif-item img,
+  .md-gif-item video { width: 100%; height: 100%; object-fit: cover; }
+  .md-mobile-arrows { display: flex; justify-content: center; gap: 12px; margin-top: 24px; }
+  @media (min-width: 768px) { .md-mobile-arrows { display: none; } }
+  .md-arrow {
+    width: 44px; height: 44px; border-radius: 9999px;
+    background: var(--brand-surface); border: 1px solid var(--brand-border);
+    color: var(--brand-primary); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 200ms, color 200ms;
+  }
+  .md-arrow:hover { background: var(--brand-primary); color: white; }
+  .md-arrow .material-symbols-outlined { color: inherit; font-size: 22px; }
+
+  /* ---------- 02 MANIFESTO ---------- */
+  .md-manifesto { text-align: center; max-width: 720px; margin: 0 auto; }
+  .md-manifesto-eyebrow {
+    display: block;
+    font-size: 12px; font-weight: 700; letter-spacing: 0.22em;
+    color: var(--brand-primary); text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .md-manifesto h2 { font-size: 32px; line-height: 1.12; font-weight: 800; letter-spacing: -0.025em; }
+  @media (min-width: 768px) { .md-manifesto h2 { font-size: 48px; } }
+  .md-em { color: var(--brand-primary); }
+  .md-manifesto-divider {
+    width: 32px; height: 2px; background: var(--brand-primary);
+    margin: 24px auto; border-radius: 2px;
+  }
+  .md-manifesto p.md-body { font-size: 15px; max-width: 540px; margin: 0 auto; line-height: 1.6; }
+  @media (min-width: 768px) { .md-manifesto p.md-body { font-size: 16px; } }
+
+  /* ---------- 05 TIMELINE ---------- */
+  .md-timeline {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 32px;
+    max-width: 1100px; margin: 0 auto;
+    position: relative;
+  }
+  @media (min-width: 768px) {
+    .md-timeline { grid-template-columns: repeat(4, 1fr); gap: 16px; align-items: start; }
+    .md-timeline::before {
+      content: ''; position: absolute; top: 36px; left: 12.5%; right: 12.5%;
+      height: 2px;
+      background: repeating-linear-gradient(to right, var(--brand-primary) 0 8px, transparent 8px 14px);
+      z-index: 0;
+    }
+  }
+  .md-timeline-step { text-align: center; position: relative; z-index: 1; }
+  .md-timeline-circle {
+    width: 72px; height: 72px;
+    background: var(--brand-surface);
+    border: 2px solid var(--brand-primary);
+    border-radius: 9999px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px;
+    position: relative; z-index: 1;
+  }
+  .md-timeline-circle .material-symbols-outlined {
+    font-size: 32px !important;
+    color: var(--brand-primary);
+  }
+  .md-timeline-num {
+    display: inline-block;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.18em;
+    color: var(--brand-primary); text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .md-timeline-step h3 { font-size: 16px; margin-bottom: 4px; }
+  .md-timeline-step p { font-size: 13px; }
+
+  /* ---------- 06 STICKY SCROLL — polished ---------- */
+  .md-sticky-min {
+    display: grid; grid-template-columns: 1fr; gap: 40px;
+    max-width: 1100px; margin: 0 auto;
+    align-items: start;
+  }
+  @media (min-width: 1024px) { .md-sticky-min { grid-template-columns: 1fr 1.05fr; gap: 72px; } }
+  @media (min-width: 1024px) {
+    .md-sticky-img { position: sticky; top: 100px; align-self: start; }
+  }
+  .md-sticky-img .md-img-square {
+    border-radius: 20px;
+    box-shadow: 0 18px 48px rgba(42, 45, 39, 0.10);
+  }
+  .md-sticky-text {
+    display: grid; grid-template-columns: 1fr; gap: 18px;
+    max-width: 1100px; margin: 0 auto;
+  }
+  @media (min-width: 768px) { .md-sticky-text { grid-template-columns: repeat(3, 1fr); gap: 20px; } }
+
+  /* ---------- BENEFIT 2 — infografika no-tech ---------- */
+  .md-notech {
+    display: grid; grid-template-columns: 1fr; gap: 18px;
+    max-width: 1000px; margin: 0 auto;
+  }
+  @media (min-width: 768px) { .md-notech { grid-template-columns: repeat(3, 1fr); gap: 24px; } }
+  .md-notech-item {
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-radius: 20px;
+    padding: 32px 28px;
+    text-align: center;
+  }
+  .md-notech-icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 56px; height: 56px; border-radius: 16px;
+    background: var(--brand-primary-soft);
+    margin-bottom: 16px;
+  }
+  .md-notech-icon .material-symbols-outlined { font-size: 30px; color: var(--brand-primary-hover); }
+  .md-notech-item h3 {
+    font-size: 19px; font-weight: 700; margin: 0 0 8px; color: var(--brand-heading);
+  }
+  .md-notech-item p {
+    font-size: 14.5px; line-height: 1.6; color: var(--brand-text); margin: 0;
+  }
+  .md-sticky-block {
+    position: relative;
+    padding: 28px 28px 28px 88px;
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-radius: 18px;
+    transition: border-color 240ms ease, box-shadow 240ms ease, transform 240ms ease;
+  }
+  .md-sticky-block:hover {
+    border-color: var(--brand-primary);
+    box-shadow: 0 10px 28px rgba(123, 144, 117, 0.14);
+    transform: translateY(-2px);
+  }
+  .md-sticky-num {
+    position: absolute;
+    top: 26px;
+    left: 26px;
+    width: 42px;
+    height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Outfit', sans-serif;
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    color: var(--brand-primary-hover);
+    background: var(--brand-primary-soft);
+    border: 1.5px solid var(--brand-primary);
+    border-radius: 50%;
+  }
+  .md-sticky-block h3 {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    margin: 0 0 8px;
+    color: var(--brand-heading);
+    line-height: 1.25;
+  }
+  .md-sticky-block .md-body {
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--brand-text);
+    margin: 0;
+  }
+  @media (max-width: 640px) {
+    .md-sticky-block {
+      padding: 22px 22px 22px 74px;
+      border-radius: 16px;
+    }
+    .md-sticky-num {
+      top: 22px;
+      left: 22px;
+      width: 38px;
+      height: 38px;
+      font-size: 14px;
+    }
+    .md-sticky-block h3 { font-size: 18px; }
+  }
+
+  /* ---------- TRUST STRIP (between sticky scroll and stats) ---------- */
+  .md-trust-strip {
+    background: var(--brand-bg);
+    border-top: 1px solid var(--brand-border);
+    border-bottom: 1px solid var(--brand-border);
+    padding: 28px 20px;
+  }
+  @media (min-width: 768px) { .md-trust-strip { padding: 32px 32px; } }
+  .md-trust-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  @media (min-width: 768px) {
+    .md-trust-grid { grid-template-columns: repeat(4, 1fr); gap: 24px; }
+  }
+  .md-trust-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .md-trust-cell .material-symbols-outlined {
+    color: var(--brand-primary);
+    font-size: 26px !important;
+  }
+  .md-trust-cell span:last-child {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--brand-heading);
+  }
+  @media (min-width: 768px) {
+    .md-trust-cell span:last-child { font-size: 14px; }
+  }
+
+  /* ---------- 07 STATS image + numbers vertical ---------- */
+  .md-stats-img-num {
+    display: grid; grid-template-columns: 1fr; gap: 32px; align-items: center;
+    max-width: 1100px; margin: 0 auto;
+  }
+  @media (min-width: 768px) { .md-stats-img-num { grid-template-columns: 1fr 1fr; gap: 64px; } }
+  .md-stats-vlist {
+    display: flex; flex-direction: column; gap: 24px;
+  }
+  .md-stat-vrow {
+    display: flex; align-items: baseline; gap: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--brand-border);
+  }
+  .md-stat-vrow:last-child { border-bottom: none; padding-bottom: 0; }
+  .md-stat-vrow-num {
+    font-family: 'Outfit', sans-serif; font-weight: 800;
+    font-size: 44px; line-height: 1; color: var(--brand-primary);
+    letter-spacing: -0.025em;
+    min-width: 110px; flex-shrink: 0;
+  }
+  @media (min-width: 768px) { .md-stat-vrow-num { font-size: 56px; min-width: 140px; } }
+  .md-stat-vrow-num small {
+    font-size: 0.45em; color: var(--brand-muted);
+    font-weight: 600; margin-left: 3px;
+  }
+  .md-stat-vrow-text { flex: 1; }
+  .md-stat-vrow-text h3 { font-size: 15px; margin-bottom: 4px; }
+  .md-stat-vrow-text p { font-size: 13px; }
+
+  /* ---------- 08 SPECS ---------- */
+  .md-spec-card {
+    display: grid; grid-template-columns: 1fr; gap: 32px; align-items: center;
+    max-width: 1100px; margin: 0 auto;
+  }
+  @media (min-width: 768px) { .md-spec-card { grid-template-columns: 1fr 1fr; gap: 64px; } }
+  .md-spec-card--mirror > div:first-child { order: 0; }
+  @media (min-width: 768px) { .md-spec-card--mirror > div:first-child { order: 1; } }
+  .md-spec-list { list-style: none; padding: 0; margin: 16px 0 0; }
+  .md-spec-list li {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--brand-border);
+    font-size: 15px; color: var(--brand-text);
+  }
+  .md-spec-list li:last-child { border-bottom: none; }
+  .md-spec-list li strong {
+    color: var(--brand-heading);
+    font-weight: 700; font-size: 13px;
+    display: inline-block; min-width: 100px;
+  }
+  .md-spec-list li .material-symbols-outlined {
+    font-size: 18px !important;
+    flex-shrink: 0; margin-top: 2px;
+  }
+
+  /* ---------- 09 TABS ---------- */
+  .md-tabs-wrap { max-width: 1000px; margin: 0 auto; }
+  .md-tabs-nav {
+    display: flex; gap: 6px; flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 32px;
+  }
+  .md-tab-btn {
+    padding: 12px 22px;
+    border: none; background: transparent; cursor: pointer;
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px; font-weight: 700;
+    letter-spacing: 0.02em; color: var(--brand-muted);
+    transition: color 200ms, background 200ms;
+    border-radius: 9999px;
+  }
+  .md-tab-btn.md-tab-btn--active {
+    background: var(--brand-primary);
+    color: white;
+  }
+  .md-tab-btn:hover:not(.md-tab-btn--active) {
+    color: var(--brand-heading);
+    background: var(--brand-surface-2);
+  }
+  .md-tab-content { display: none; }
+  .md-tab-content.md-tab-content--active {
+    display: block;
+    animation: md-tab-fade 280ms ease;
+  }
+  @keyframes md-tab-fade {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .md-tab-grid {
+    display: grid; grid-template-columns: 1fr; gap: 32px; align-items: center;
+    max-width: 1000px; margin: 0 auto;
+  }
+  @media (min-width: 768px) { .md-tab-grid { grid-template-columns: 1fr 1fr; gap: 56px; } }
+
+  /* ---------- 10 CUSTOMER STORY ---------- */
+  .md-customer-quote {
+    font-family: 'Outfit', sans-serif;
+    font-style: italic;
+    font-size: 24px; line-height: 1.35;
+    color: var(--brand-heading);
+    margin: 0 0 24px;
+    padding-left: 24px;
+    border-left: 3px solid var(--brand-primary);
+  }
+  @media (min-width: 768px) { .md-customer-quote { font-size: 30px; } }
+  .md-customer-author {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 14px;
+  }
+  .md-stars { color: var(--brand-primary); display: inline-flex; gap: 1px; }
+  .md-stars .material-symbols-outlined { font-size: 16px !important; }
+  .md-customer-author strong { font-weight: 700; color: var(--brand-heading); }
+  .md-customer-author span { color: var(--brand-muted); }
+
+  /* ---------- 11 REVIEWS ---------- */
+  .md-reviews { max-width: 1100px; margin: 0 auto; }
+  .md-reviews-header {
+    display: grid; grid-template-columns: 1fr; gap: 24px; align-items: center;
+    margin-bottom: 40px; padding-bottom: 32px;
+    border-bottom: 1px solid var(--brand-border);
+  }
+  @media (min-width: 768px) { .md-reviews-header { grid-template-columns: 1fr 1fr; gap: 48px; } }
+  .md-reviews-big-rating { text-align: center; }
+  .md-reviews-big-num {
+    font-family: 'Outfit', sans-serif; font-weight: 800;
+    font-size: 72px; line-height: 1;
+    color: var(--brand-heading);
+    letter-spacing: -0.03em;
+  }
+  @media (min-width: 768px) { .md-reviews-big-num { font-size: 96px; } }
+  .md-reviews-big-stars { color: var(--brand-primary); margin: 12px 0 8px; }
+  .md-reviews-big-stars .material-symbols-outlined { font-size: 24px !important; }
+  .md-reviews-big-meta { font-size: 14px; color: var(--brand-muted); }
+  .md-reviews-bars { display: flex; flex-direction: column; gap: 10px; }
+  .md-reviews-bar {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 13px; color: var(--brand-text);
+  }
+  .md-stars-mini { color: var(--brand-primary); display: inline-flex; gap: 1px; }
+  .md-stars-mini .material-symbols-outlined { font-size: 14px !important; }
+  .md-track {
+    flex: 1; height: 8px;
+    background: var(--brand-surface-2);
+    border-radius: 9999px; overflow: hidden;
+  }
+  .md-fill {
+    height: 100%; background: var(--brand-primary);
+    border-radius: 9999px;
+  }
+  .md-count {
+    color: var(--brand-muted); font-size: 12px;
+    min-width: 32px; text-align: right;
+  }
+  .md-reviews-grid {
+    display: grid; grid-template-columns: 1fr; gap: 16px;
+  }
+  @media (min-width: 768px) { .md-reviews-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; } }
+  .md-review-card {
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-radius: 20px;
+    padding: 22px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .md-stars-row { color: var(--brand-primary); display: inline-flex; gap: 1px; }
+  .md-stars-row .material-symbols-outlined { font-size: 18px !important; }
+  .md-verified {
+    font-size: 11px; font-weight: 700;
+    color: var(--brand-primary);
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .md-verified .material-symbols-outlined { font-size: 14px !important; }
+  .md-quote {
+    font-size: 14px; color: var(--brand-text);
+    line-height: 1.55; margin: 0;
+  }
+  .md-review-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-top: 12px;
+    border-top: 1px solid var(--brand-border);
+    font-size: 13px;
+  }
+  .md-review-footer strong { color: var(--brand-heading); font-weight: 700; }
+  .md-review-footer span { color: var(--brand-muted); font-size: 12px; }
+
+  /* ---------- 12 GUARANTEE ---------- */
+  .md-guarantee {
+    display: grid; grid-template-columns: 1fr; gap: 32px; align-items: center;
+    max-width: 1100px; margin: 0 auto;
+  }
+  @media (min-width: 768px) { .md-guarantee { grid-template-columns: 1fr 1.4fr; gap: 64px; } }
+  .md-guarantee-badge {
+    width: 200px; height: 200px;
+    border-radius: 9999px;
+    background: var(--brand-primary-soft);
+    border: 4px solid var(--brand-primary);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center;
+    margin: 0 auto;
+    position: relative;
+  }
+  .md-guarantee-badge::before {
+    content: ''; position: absolute; inset: -16px;
+    border: 1px dashed var(--brand-primary);
+    border-radius: 9999px;
+  }
+  .md-guarantee-num {
+    font-family: 'Outfit', sans-serif;
+    font-size: 56px; font-weight: 800;
+    color: var(--brand-primary);
+    line-height: 1; letter-spacing: -0.03em;
+  }
+  .md-guarantee-label {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.18em;
+    color: var(--brand-primary); text-transform: uppercase;
+    margin-top: 4px;
+  }
+  .md-trust-row {
+    display: flex; flex-wrap: wrap; gap: 16px;
+    margin-top: 24px;
+  }
+  .md-trust-item {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 13px; color: var(--brand-text);
+  }
+  .md-trust-item .material-symbols-outlined {
+    font-size: 18px !important;
+    color: var(--brand-primary);
+  }
+
+  /* ---------- 13 FINAL CTA ---------- */
+  .md-cta {
+    text-align: center;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  .md-cta-eyebrow {
+    display: block;
+    font-size: 13px; font-weight: 700; letter-spacing: 0.24em;
+    color: var(--brand-accent); text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  .md-cta h2 { font-size: 40px; line-height: 1.1; margin: 0 0 16px; }
+  @media (min-width: 768px) { .md-cta h2 { font-size: 64px; } }
+  .md-cta p.md-body {
+    font-size: 17px;
+    margin: 0 0 40px;
+  }
+  .md-btn-strawberry {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: var(--brand-accent); color: white;
+    padding: 22px 48px; border-radius: 9999px;
+    font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
+    font-size: 16px; text-decoration: none;
+    box-shadow: 0 12px 32px rgba(230, 57, 70, 0.4);
+    transition: transform 150ms, box-shadow 200ms;
+  }
+  .md-btn-strawberry:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 40px rgba(230, 57, 70, 0.5);
+  }
+  .md-btn-strawberry .material-symbols-outlined {
+    color: white;
+    font-size: 20px !important;
+  }
+  .md-cta-trust {
+    display: inline-flex; gap: 20px;
+    margin-top: 28px;
+    font-size: 13px; color: var(--brand-muted);
+    flex-wrap: wrap; justify-content: center;
+  }
+  .md-cta-trust span {
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .md-cta-trust .material-symbols-outlined {
+    font-size: 16px !important;
+    color: var(--brand-primary);
+  }
+
+  /* ---------- 14 FAQ ---------- */
+  .md-faq-list { max-width: 760px; margin: 0 auto; }
+  .md-faq-item {
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-radius: 16px;
+    margin-bottom: 8px;
+    overflow: hidden;
+    transition: border-color 200ms;
+  }
+  .md-faq-item[open] { border-color: var(--brand-primary); }
+  .md-faq-item summary {
+    padding: 18px 22px;
+    font-weight: 700; font-size: 15px;
+    cursor: pointer; list-style: none;
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 12px;
+  }
+  .md-faq-item summary::-webkit-details-marker { display: none; }
+  .md-faq-item summary .material-symbols-outlined {
+    color: var(--brand-primary);
+    transition: transform 200ms;
+  }
+  .md-faq-item[open] summary .material-symbols-outlined {
+    transform: rotate(180deg);
+  }
+  .md-faq-item p {
+    padding: 0 22px 18px;
+    margin: 0;
+    font-size: 14px; color: var(--brand-text);
+    line-height: 1.6;
+  }
+
+  /* =====================================================
+     VARIETY SECTIONS — visual rhythm
+     ===================================================== */
+
+  /* Swipe hint — widoczny tylko na mobile */
+  .md-variants-swipe-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 14px 0 0;
+    font-size: 12.5px;
+    color: var(--brand-muted);
+    font-weight: 600;
+  }
+  .md-variants-swipe-hint .material-symbols-outlined {
+    font-size: 16px;
+    color: var(--brand-primary);
+  }
+  @media (min-width: 768px) { .md-variants-swipe-hint { display: none; } }
+
+  /* ---------- VARIANT SHOWCASE — 3 cards (mobile: scroll-snap carousel) ---------- */
+  .md-variants-grid {
+    display: flex;
+    gap: 14px;
+    max-width: 1100px;
+    margin: 0 auto;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding: 4px 9% 16px;
+    scrollbar-width: none;
+  }
+  .md-variants-grid::-webkit-scrollbar { display: none; }
+  .md-variants-grid > .md-variant-card {
+    scroll-snap-align: center;
+    flex: 0 0 82%;
+    min-width: 0;
+  }
+  @media (min-width: 768px) {
+    .md-variants-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      overflow: visible;
+      padding: 0;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .md-variants-grid > .md-variant-card { flex: initial; min-width: 0; }
+  }
+  .md-variant-card {
+    background: var(--brand-bg);
+    border-radius: 24px;
+    overflow: hidden;
+    transition: transform 280ms ease, box-shadow 280ms ease;
+    position: relative;
+    isolation: isolate;
+  }
+  .md-variant-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 50%, rgba(42, 45, 39, 0.04) 100%);
+    pointer-events: none;
+    z-index: 1;
+  }
+  .md-variant-card:hover {
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: 0 20px 48px rgba(42, 45, 39, 0.12);
+  }
+  .md-variant-img {
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
+  }
+  .md-variant-img img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: transform 600ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .md-variant-card:hover .md-variant-img img { transform: scale(1.04); }
+  .md-variant-body {
+    padding: 22px 24px 26px;
+    position: relative;
+    z-index: 2;
+  }
+  .md-variant-dot {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 6px rgba(42, 45, 39, 0.15);
+  }
+  .md-variant-card h3 {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--brand-heading);
+    margin: 0 0 6px;
+    letter-spacing: -0.02em;
+  }
+  .md-variant-card p {
+    margin: 0;
+    font-size: 14.5px;
+    color: var(--brand-text);
+    line-height: 1.55;
+  }
+
+  /* ---------- EXTRA 02 — FOUNDER STORY ---------- */
+  .md-founder {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 32px;
+    max-width: 1100px;
+    margin: 0 auto;
+    align-items: center;
+  }
+  @media (min-width: 768px) { .md-founder { grid-template-columns: 1.05fr 1fr; gap: 64px; } }
+  .md-founder-img {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 24px 56px rgba(42,45,39,0.14);
+  }
+  .md-founder-img img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .md-founder-stamp {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: 80px;
+    height: 80px;
+    background: var(--brand-primary);
+    color: #FFFCF7;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Outfit', sans-serif;
+    letter-spacing: 0.02em;
+    transform: rotate(-8deg);
+    box-shadow: 0 8px 20px rgba(123,144,117,0.40);
+  }
+  .md-founder-stamp span { font-size: 9px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.8; }
+  .md-founder-stamp strong { font-size: 22px; font-weight: 800; }
+  .md-founder-body h2 {
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    color: var(--brand-heading);
+    margin: 14px 0 18px;
+    line-height: 1.1;
+  }
+  @media (min-width: 768px) { .md-founder-body h2 { font-size: 40px; } }
+  .md-founder-body .md-body { font-size: 15px; line-height: 1.65; margin: 0 0 14px; }
+  @media (min-width: 768px) { .md-founder-body .md-body { font-size: 16px; } }
+  .md-founder-sign {
+    margin-top: 22px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    color: var(--brand-muted);
+    font-size: 13.5px;
+    font-style: italic;
+  }
+  .md-founder-sign-line {
+    width: 32px; height: 2px;
+    background: var(--brand-primary);
+    border-radius: 2px;
+  }
+
+  /* ---------- EXTRA 03 — COMPARISON TABLE ---------- */
+  .md-compare-wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    mask-image: linear-gradient(to right, black 0, black calc(100% - 24px), transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, black 0, black calc(100% - 24px), transparent 100%);
+  }
+  .md-compare-hint {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin: 14px auto 0;
+    padding: 8px 14px;
+    font-size: 12.5px;
+    color: var(--brand-muted);
+    font-style: italic;
+    text-align: center;
+    max-width: max-content;
+    background: var(--brand-surface-2);
+    border-radius: 9999px;
+  }
+  .md-compare-hint .material-symbols-outlined {
+    font-size: 16px !important;
+    color: var(--brand-primary);
+    animation: md-swipe-pulse 2s ease-in-out infinite;
+  }
+  @keyframes md-swipe-pulse {
+    0%, 100% { transform: translateX(0); opacity: 0.7; }
+    50% { transform: translateX(6px); opacity: 1; }
+  }
+  @media (max-width: 640px) {
+    .md-compare-hint { display: inline-flex; }
+  }
+  .md-compare-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    min-width: 580px;
+  }
+  .md-compare-table th,
+  .md-compare-table td {
+    padding: 14px 16px;
+    text-align: center;
+    font-size: 14px;
+    color: var(--brand-text);
+    border-bottom: 1px solid var(--brand-border);
+  }
+  .md-compare-table thead th {
+    font-weight: 600;
+    color: var(--brand-muted);
+    font-size: 13px;
+    border-bottom: 2px solid var(--brand-border);
+    padding-bottom: 18px;
+  }
+  .md-compare-table tbody td:first-child {
+    text-align: left;
+    font-weight: 600;
+    color: var(--brand-heading);
+    background: var(--brand-bg);
+    border-radius: 10px 0 0 10px;
+  }
+  .md-compare-col-us {
+    background: var(--brand-primary-soft);
+    border-radius: 10px 10px 0 0;
+    color: var(--brand-primary-hover) !important;
+    font-weight: 800 !important;
+    font-size: 15px !important;
+  }
+  .md-compare-col-us span {
+    display: inline-block;
+    padding: 4px 14px;
+    background: var(--brand-primary);
+    color: #FFFCF7;
+    border-radius: 999px;
+    font-size: 14px;
+  }
+  .md-compare-cell-us {
+    background: var(--brand-primary-soft);
+  }
+  .md-compare-table tbody tr:last-child .md-compare-cell-us {
+    border-radius: 0 0 10px 10px;
+  }
+  .md-yes { color: var(--brand-primary); font-size: 24px !important; }
+  .md-no { color: rgba(42,45,39,0.20); font-size: 24px !important; }
+
+  /* ---------- STATS — BENTO GRID (asymetryczny, light bg) ---------- */
+  .md-bento {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  @media (min-width: 768px) {
+    .md-bento {
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: auto auto;
+      gap: 18px;
+    }
+  }
+  .md-bento-cell {
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-radius: 22px;
+    padding: 26px 24px 28px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease;
+  }
+  .md-bento-cell:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 18px 36px rgba(42,45,39,0.10);
+  }
+  .md-bento-cell--xl {
+    background: linear-gradient(160deg, var(--brand-primary) 0%, var(--brand-primary-hover) 100%);
+    color: #FFFCF7;
+    border: none;
+    padding: 32px 30px 36px;
+  }
+  @media (min-width: 768px) {
+    .md-bento-cell--xl { grid-column: 1; grid-row: 1 / span 2; padding: 40px 36px; }
+  }
+  .md-bento-cell--xl .md-bento-num { color: #FFFCF7; font-size: 56px; }
+  @media (min-width: 768px) { .md-bento-cell--xl .md-bento-num { font-size: 72px; } }
+  .md-bento-cell--xl .md-bento-label { color: rgba(255,252,247,0.92); font-size: 15px; font-weight: 700; }
+  .md-bento-cell--xl .md-bento-sub { color: rgba(255,252,247,0.72); font-size: 13.5px; margin: 12px 0 0; line-height: 1.55; }
+  .md-bento-cell--sage {
+    background: var(--brand-primary-soft);
+    border-color: var(--brand-primary);
+  }
+  .md-bento-cell--strawberry {
+    background: var(--brand-accent-soft);
+    border-color: var(--brand-accent);
+  }
+  .md-bento-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background: rgba(255,252,247,0.18);
+    color: #FFFCF7;
+    border-radius: 12px;
+    margin-bottom: 4px;
+  }
+  .md-bento-icon .material-symbols-outlined { font-size: 24px; }
+  .md-bento-num {
+    font-family: 'Outfit', sans-serif;
+    font-size: 40px;
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    color: var(--brand-heading);
+    line-height: 1;
+  }
+  @media (min-width: 768px) { .md-bento-num { font-size: 46px; } }
+  .md-bento-num small {
+    font-size: 0.45em;
+    font-weight: 600;
+    color: var(--brand-muted);
+    margin-left: 2px;
+    letter-spacing: -0.02em;
+  }
+  .md-bento-cell--xl .md-bento-num small { color: rgba(255,252,247,0.55); }
+  .md-bento-label {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--brand-heading);
+    line-height: 1.3;
+  }
+  .md-bento-cell--sage .md-bento-label,
+  .md-bento-cell--sage .md-bento-num { color: var(--brand-primary-hover); }
+  .md-bento-cell--strawberry .md-bento-label,
+  .md-bento-cell--strawberry .md-bento-num { color: var(--brand-accent-hover); }
+  .md-bento-foot {
+    font-size: 12.5px;
+    color: var(--brand-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+  }
+  .md-bento-cell--sage .md-bento-foot { color: var(--brand-primary-hover); opacity: 0.85; }
+  .md-bento-cell--strawberry .md-bento-foot { color: var(--brand-accent-hover); opacity: 0.85; }
+  .md-bento-star {
+    color: #E8A317;
+    font-size: 15px !important;
+  }
+
+  /* ---------- SECTION 2 — PROBLEM → SOLUTION SPLIT ---------- */
+  .md-problem-solve {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    align-items: stretch;
+  }
+  @media (min-width: 768px) {
+    .md-problem-solve {
+      grid-template-columns: 1fr auto 1fr;
+      gap: 24px;
+      align-items: center;
+    }
+  }
+  .md-ps-side {
+    background: var(--brand-bg);
+    border: 1px solid var(--brand-border);
+    border-radius: 22px;
+    padding: 26px 24px;
+  }
+  .md-ps-side--solution {
+    background: var(--brand-primary-soft);
+    border-color: var(--brand-primary);
+  }
+  .md-ps-tag {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+  .md-ps-tag--problem {
+    background: var(--brand-accent-soft);
+    color: var(--brand-accent);
+  }
+  .md-ps-tag--solution {
+    background: var(--brand-primary);
+    color: #FFFCF7;
+  }
+  .md-ps-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .md-ps-list li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 15.5px;
+    font-weight: 500;
+    color: var(--brand-text);
+    line-height: 1.35;
+  }
+  .md-ps-list li .material-symbols-outlined {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    background: var(--brand-accent-soft);
+    color: var(--brand-accent);
+    border-radius: 50%;
+  }
+  .md-ps-list--ok li {
+    color: var(--brand-heading);
+    font-weight: 600;
+  }
+  .md-ps-list--ok li .material-symbols-outlined {
+    background: transparent;
+    color: var(--brand-primary);
+    font-size: 22px;
+    width: auto;
+    height: auto;
+  }
+  .md-ps-bridge {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: var(--brand-primary);
+  }
+  @media (min-width: 768px) {
+    .md-ps-bridge { flex-direction: column; gap: 6px; }
+  }
+  .md-ps-bridge-arrow {
+    font-size: 32px;
+    line-height: 1;
+    color: var(--brand-primary);
+    font-weight: 300;
+    transform: rotate(0);
+  }
+  @media (min-width: 768px) {
+    .md-ps-bridge-arrow { transform: rotate(0); font-size: 40px; }
+  }
+  .md-ps-bridge-label {
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--brand-primary-hover);
+  }
+
+  /* ---------- PROBLEM → SOLUTION — refined polish ---------- */
+  .md-ps-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .md-ps-emoji {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    font-family: 'Outfit', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .md-ps-side--problem .md-ps-emoji {
+    background: var(--brand-accent-soft);
+    color: var(--brand-accent);
+  }
+  .md-ps-side--solution .md-ps-emoji {
+    background: var(--brand-primary);
+    color: #FFFCF7;
+  }
+  .md-ps-side {
+    padding: 28px 26px;
+    border-radius: 22px;
+    box-shadow: 0 4px 16px rgba(42,45,39,0.04);
+    transition: transform 240ms ease, box-shadow 240ms ease;
+  }
+  .md-ps-side:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 32px rgba(42,45,39,0.08);
+  }
+  .md-ps-foot {
+    margin: 20px 0 0;
+    padding-top: 16px;
+    border-top: 1px solid var(--brand-border);
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--brand-muted);
+    font-style: italic;
+  }
+  .md-ps-side--solution .md-ps-foot { border-top-color: var(--brand-primary); opacity: 0.85; }
+  .md-ps-bridge-circle {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--brand-surface);
+    border: 2px solid var(--brand-primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 18px rgba(123,144,117,0.25);
+  }
+  .md-ps-bridge-circle .md-ps-bridge-arrow {
+    color: var(--brand-primary);
+    font-size: 28px;
+    font-weight: 600;
+    line-height: 1;
+  }
+  @media (max-width: 768px) {
+    .md-ps-bridge-circle .md-ps-bridge-arrow { transform: rotate(90deg); display: inline-block; }
+  }
+
+  /* ---------- POLECANE PRODUKTY — related products ---------- */
+  .md-related-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  @media (max-width: 900px) {
+    .md-related-grid {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      padding: 4px 16px 16px;
+      margin-left: -16px;
+      margin-right: -16px;
+      scrollbar-width: none;
+    }
+    .md-related-grid::-webkit-scrollbar { display: none; }
+    .md-related-card {
+      flex: 0 0 65%;
+      scroll-snap-align: start;
+    }
+  }
+  @media (max-width: 640px) {
+    .md-related-card { flex-basis: 72%; }
+  }
+  .md-related-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-radius: 16px;
+    overflow: hidden;
+    text-decoration: none;
+    transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+  }
+  .md-related-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--brand-primary);
+    box-shadow: 0 14px 28px rgba(42,45,39,0.10);
+  }
+  .md-related-img {
+    aspect-ratio: 1;
+    background: var(--brand-primary-soft);
+    overflow: hidden;
+  }
+  .md-related-img img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: transform 480ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .md-related-card:hover .md-related-img img { transform: scale(1.05); }
+  .md-related-img-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--brand-muted);
+  }
+  .md-related-img-empty .material-symbols-outlined { font-size: 40px; }
+  .md-related-body {
+    padding: 14px 16px 16px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .md-related-body h3 {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--brand-heading);
+    margin: 0;
+    line-height: 1.3;
+    letter-spacing: -0.005em;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .md-related-price {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--brand-primary-hover);
+    letter-spacing: -0.01em;
+    line-height: 1;
+  }
+  .md-related-price-row {
+    margin: auto 0 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .md-related-price-regular {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--brand-muted);
+    text-decoration: line-through;
+    text-decoration-color: currentColor;
+    text-decoration-thickness: 1.5px;
+    line-height: 1;
+  }
+  .md-related-price--sale {
+    color: var(--brand-accent);
+    font-size: 16px;
+  }
+
+  .md-related-rating {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: var(--brand-muted);
+    margin: 2px 0;
+  }
+  .md-related-stars {
+    display: inline-flex;
+    align-items: center;
+    gap: 1px;
+  }
+  .md-related-star {
+    font-size: 13px !important;
+    line-height: 1;
+    font-variation-settings: 'FILL' 1;
+  }
+  .md-related-star--full,
+  .md-related-star--half {
+    color: #F5B544;
+  }
+  .md-related-star--empty {
+    color: var(--brand-border-strong);
+    font-variation-settings: 'FILL' 0;
+  }
+  .md-related-rating-num {
+    font-weight: 700;
+    color: var(--brand-heading);
+    font-size: 12px;
+  }
+  .md-related-rating-count {
+    color: var(--brand-muted);
+    font-size: 11.5px;
+  }
+  .md-related-mobile-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 16px;
+    font-size: 12.5px;
+    color: var(--brand-muted);
+    font-weight: 600;
+  }
+  .md-related-mobile-hint .material-symbols-outlined {
+    font-size: 16px;
+    color: var(--brand-primary);
+  }
+  @media (min-width: 901px) { .md-related-mobile-hint { display: none; } }
+
+  /* ---------- FINAL CTA — contained card (nie full-bg, daje breathing room z dark footerem) ---------- */
+  .md-cta-card {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-radius: 24px;
+    box-shadow: 0 24px 56px rgba(42,45,39,0.10);
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 900px) {
+    .md-cta-card { grid-template-columns: 5fr 7fr; }
+  }
+  .md-cta-card-img {
+    background: var(--brand-primary-soft);
+    aspect-ratio: 16 / 11;
+    overflow: hidden;
+  }
+  @media (min-width: 900px) {
+    .md-cta-card-img { aspect-ratio: auto; min-height: 100%; }
+  }
+  .md-cta-card-img img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .md-cta-card-body {
+    padding: 28px 26px 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  @media (min-width: 768px) { .md-cta-card-body { padding: 44px 44px; } }
+  .md-cta-card-eyebrow {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--brand-primary);
+    margin-bottom: 14px;
+  }
+  .md-cta-card-body h2 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+    color: var(--brand-heading);
+    margin: 0 0 14px;
+  }
+  @media (min-width: 768px) { .md-cta-card-body h2 { font-size: 34px; } }
+  .md-cta-card-body p {
+    margin: 0 0 26px;
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--brand-text);
+  }
+  .md-cta-card-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+    margin-bottom: 22px;
+  }
+  @media (min-width: 640px) {
+    .md-cta-card-actions { flex-direction: row; align-items: center; gap: 16px; }
+  }
+  .md-cta-card-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 15px 28px;
+    background: var(--brand-primary);
+    color: #FFFCF7;
+    font-weight: 800;
+    font-size: 14px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border-radius: 999px;
+    text-decoration: none;
+    transition: background 200ms ease, transform 200ms ease, box-shadow 200ms ease;
+    box-shadow: 0 10px 24px rgba(123,144,117,0.30);
+  }
+  .md-cta-card-btn:hover {
+    background: var(--brand-primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 14px 32px rgba(123,144,117,0.40);
+  }
+  .md-cta-card-btn .material-symbols-outlined { font-size: 18px; }
+  .md-cta-card-link {
+    color: var(--brand-text);
+    font-weight: 600;
+    font-size: 14px;
+    text-decoration: none;
+    transition: color 200ms ease;
+  }
+  .md-cta-card-link:hover { color: var(--brand-primary-hover); }
+
+  /* =====================================================
+     MOBILE TUNING — wszystkie sekcje
+     ===================================================== */
+  @media (max-width: 640px) {
+    .md-section { padding: 40px 16px; }
+    .md-section--compact { padding: 28px 16px; }
+    .md-section--last { padding-bottom: 40px; }
+
+    .md-center h2, .md-split h2, .md-section h2 {
+      font-size: 26px !important;
+      letter-spacing: -0.02em;
+    }
+    .md-body, .md-section p { font-size: 14.5px; line-height: 1.55; }
+
+    .md-problem-solve { gap: 12px; }
+    .md-ps-side { padding: 20px 18px; }
+    .md-ps-list li { font-size: 14.5px; }
+    .md-ps-bridge { padding: 6px 0; }
+    .md-ps-bridge-arrow { transform: rotate(90deg); font-size: 28px; }
+    .md-ps-bridge-label { font-size: 11px; }
+
+    .md-split, .md-split--mirror { gap: 22px; }
+    .md-split .md-img-square, .md-split--mirror .md-img-square { border-radius: 16px; }
+
+    .md-variants-grid { gap: 14px; }
+    .md-variant-card { border-radius: 18px; }
+    .md-variant-body { padding: 18px 20px 22px; }
+    .md-variant-card h3 { font-size: 19px; }
+
+    .md-trust-strip { padding: 20px 16px; }
+
+    .md-tabs-nav { gap: 6px; flex-wrap: wrap; justify-content: center; }
+    .md-tab-btn { font-size: 12.5px; padding: 8px 14px; }
+
+    .md-customer-quote { font-size: 18px; line-height: 1.4; }
+
+    .md-reviews-big-num { font-size: 56px; }
+
+    .md-spec-card { gap: 22px; }
+    .md-spec-list li { font-size: 13.5px; }
+
+    .md-founder { gap: 28px; }
+    .md-founder-img { border-radius: 18px; }
+    .md-founder-stamp {
+      width: 64px; height: 64px; bottom: 14px; right: 14px;
+    }
+    .md-founder-stamp strong { font-size: 18px; }
+    .md-founder-body h2 { font-size: 26px !important; }
+    .md-founder-body .md-body { font-size: 14.5px; }
+
+    .md-compare-table { font-size: 12.5px; min-width: 460px; }
+    .md-compare-table th, .md-compare-table td { padding: 10px 8px; }
+
+    .md-bento { gap: 12px; }
+    .md-bento-cell { padding: 22px 22px 24px; border-radius: 18px; }
+    .md-bento-cell--xl { padding: 28px 26px 30px; }
+    .md-bento-cell--xl .md-bento-num { font-size: 48px; }
+    .md-bento-num { font-size: 36px; }
+
+    .md-faq-item summary { padding: 14px 18px; font-size: 14.5px; }
+
+    .md-cta-card { border-radius: 20px; }
+    .md-cta-card-img { aspect-ratio: 16 / 10; }
+    .md-cta-card-body { padding: 24px 22px 28px; }
+    .md-cta-card-body h2 { font-size: 22px !important; line-height: 1.2; }
+    .md-cta-card-body p { font-size: 14.5px; margin-bottom: 22px; }
+    .md-cta-card-btn { width: 100%; min-width: 0; padding: 14px 22px; }
+  }
+</style>
+
+<script is:inline>
+  // Carousel arrows (mobile)
+  document.querySelectorAll('[data-md-carousel-prev], [data-md-carousel-next]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-md-carousel-prev') || btn.getAttribute('data-md-carousel-next');
+      const dir = btn.getAttribute('data-md-carousel-prev') ? -1 : 1;
+      const el = document.getElementById(id);
+      if (!el) return;
+      const item = el.firstElementChild;
+      if (!item) return;
+      const gap = parseFloat(getComputedStyle(el).gap) || 16;
+      el.scrollBy({ left: (item.offsetWidth + gap) * dir, behavior: 'smooth' });
+    });
+  });
+
+  // Tabs
+  document.querySelectorAll('.md-tab-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const idx = Number(btn.getAttribute('data-md-tab'));
+      document.querySelectorAll('.md-tab-btn').forEach((b) => b.classList.remove('md-tab-btn--active'));
+      document.querySelectorAll('.md-tab-content').forEach((c) => c.classList.remove('md-tab-content--active'));
+      btn.classList.add('md-tab-btn--active');
+      const all = document.querySelectorAll('.md-tab-content');
+      if (all[idx]) all[idx].classList.add('md-tab-content--active');
+    });
+  });
+</script>

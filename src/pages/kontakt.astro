@@ -1,413 +1,567 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
+
+// (FormSubmit redirect URL już nie używany — form submit'uje przez /api/contact)
+// Działa zarówno na localhost, dev.dbamyopupile.pl jak i dbamyopupile.pl bez hardcoded URL.
 ---
 
 <BaseLayout
   title="Kontakt"
-  description="Skontaktuj się z nami — telefon 577 723 506, email sklep@dbamyopupile.pl. Dostawa, zwroty, gwarancja, FAQ."
+  description="Skontaktuj się z nami, telefon 577 723 506, email sklep@dbamyopupile.pl. Dostawa, zwroty, FAQ."
 >
-  <div class="help-page">
-    <!-- HERO -->
-    <section class="help-hero">
-      <div class="help-wrap">
-        <span class="help-pill">KONTAKT</span>
-        <h1 class="help-h1">Napisz albo zadzwoń.</h1>
-        <p class="help-lede">
-          Odbieramy telefon w godzinach 9–17 (pon–pt). Na maile odpowiadamy zwykle w ciągu kilku godzin — bez chatbotów, bez ticketów.
+  <div class="kp-page">
+
+    {/* ====== HERO ====== */}
+    <section class="kp-hero">
+      <div class="kp-wrap">
+        <span class="kp-pill">
+          <span class="material-symbols-outlined" style="font-size:14px; vertical-align:middle;">forum</span>
+          Kontakt
+        </span>
+        <h1 class="kp-h1">Pomożemy ci wybrać dobrze</h1>
+        <p class="kp-lede">
+          Odbieramy telefon w godzinach <strong>9–17 (pon–pt)</strong>. Maile czytamy na bieżąco i zwykle odpowiadamy w kilka godzin, bez chatbotów, bez ticketów, po ludzku.
         </p>
 
-        <div class="help-contact-cards">
-          <a href="tel:577723506" class="help-contact-card">
-            <div class="help-contact-icon">
-              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.33 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/>
-              </svg>
+        <div class="kp-contact-cards">
+          <a href="tel:577723506" class="kp-contact-card">
+            <div class="kp-contact-icon">
+              <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">call</span>
             </div>
-            <div>
-              <div class="help-contact-label">Zadzwoń</div>
-              <div class="help-contact-value">577 723 506</div>
-              <div class="help-contact-meta">Pon–pt 9:00–17:00</div>
+            <div class="kp-contact-body">
+              <div class="kp-contact-label">Zadzwoń</div>
+              <div class="kp-contact-value">577 723 506</div>
+              <div class="kp-contact-meta">Pon–pt · 9:00–17:00</div>
             </div>
+            <span class="material-symbols-outlined kp-contact-chev">arrow_outward</span>
           </a>
 
-          <a href="mailto:sklep@dbamyopupile.pl" class="help-contact-card">
-            <div class="help-contact-icon">
-              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                <polyline points="22,6 12,13 2,6"/>
-              </svg>
+          <a href="mailto:sklep@dbamyopupile.pl" class="kp-contact-card">
+            <div class="kp-contact-icon">
+              <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">mail</span>
             </div>
-            <div>
-              <div class="help-contact-label">Napisz mail</div>
-              <div class="help-contact-value">sklep@dbamyopupile.pl</div>
-              <div class="help-contact-meta">Odpowiedź w kilka godzin</div>
+            <div class="kp-contact-body">
+              <div class="kp-contact-label">Napisz mail</div>
+              <div class="kp-contact-value">sklep@dbamyopupile.pl</div>
+              <div class="kp-contact-meta">Odpowiedź zwykle w kilka godzin</div>
             </div>
+            <span class="material-symbols-outlined kp-contact-chev">arrow_outward</span>
           </a>
+        </div>
+
+      </div>
+    </section>
+
+    {/* ====== CONTACT FORM ====== */}
+    <section class="kp-form-sec">
+      <div class="kp-wrap kp-wrap--narrow">
+        <div class="kp-form-head">
+          <span class="kp-eyebrow">Formularz kontaktowy</span>
+          <h2 class="kp-h2">Napisz do nas wiadomość</h2>
+          <p class="kp-form-sub">Odpowiedź wyślemy na podany adres email, zazwyczaj w kilka godzin. Bez chatbotów, bez ticketów, po ludzku.</p>
+        </div>
+
+        {/* Form submit przez własny /api/contact endpoint (server-side proxy do
+            FormSubmit). Brak CORS issues, clean error handling. Po pierwszym
+            submission FormSubmit wyśle email aktywacyjny na sklep@dbamyopupile.pl —
+            wymaga jednorazowego potwierdzenia linku w mailu. */}
+        <form class="kp-form" id="kp-form" novalidate>
+          {/* Honeypot — bot wypełni, real user nie. */}
+          <input type="text" name="_honey" style="display:none" tabindex="-1" autocomplete="off" />
+
+          <div class="kp-form-row">
+            <label class="kp-form-field">
+              <span>Imię i nazwisko *</span>
+              <input type="text" name="name" required maxlength="100" placeholder="Jan Kowalski" />
+            </label>
+            <label class="kp-form-field">
+              <span>Email *</span>
+              <input type="email" name="email" required maxlength="100" placeholder="jan@przyklad.pl" />
+            </label>
+          </div>
+
+          <label class="kp-form-field">
+            <span>Temat</span>
+            <input type="text" name="topic" maxlength="120" placeholder="Pytanie o produkt, zwrot, faktura…" />
+          </label>
+
+          <label class="kp-form-field">
+            <span>Adres (opcjonalny)</span>
+            <input type="text" name="address" maxlength="200" placeholder="Ulica, kod pocztowy, miasto — jeśli sprawa dotyczy zamówienia" />
+          </label>
+
+          <label class="kp-form-field">
+            <span>Wiadomość *</span>
+            <textarea name="message" required maxlength="2000" rows="6" placeholder="Napisz w czym możemy pomóc…"></textarea>
+          </label>
+
+          <p class="kp-form-meta">
+            <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle; color: var(--brand-primary);">lock</span>
+            Twoje dane nie są publikowane ani sprzedawane. Wykorzystujemy je tylko aby się z tobą skontaktować.
+          </p>
+
+          <p class="kp-form-error" id="kp-form-error" hidden>
+            <span class="material-symbols-outlined">error</span>
+            <span data-error-msg>Nie udało się wysłać wiadomości. Spróbuj ponownie albo napisz bezpośrednio na sklep@dbamyopupile.pl</span>
+          </p>
+
+          <button type="submit" class="kp-form-submit" id="kp-form-submit">
+            <span data-submit-label>Wyślij wiadomość</span>
+            <span class="material-symbols-outlined">send</span>
+          </button>
+        </form>
+
+        <div class="kp-form-success" id="kp-form-success" hidden>
+          <span class="material-symbols-outlined">task_alt</span>
+          <h3>Wiadomość wysłana!</h3>
+          <p>Dziękujemy, odpowiemy w ciągu kilku godzin (godziny pracy: pon–pt 9–17).</p>
         </div>
       </div>
     </section>
 
-    <!-- QUICK INFO -->
-    <section class="help-section">
-      <div class="help-wrap">
-        <h2 class="help-h2">Najważniejsze informacje</h2>
+    {/* ====== QUICK INFO CARDS ====== */}
+    <section class="kp-info">
+      <div class="kp-wrap">
+        <h2 class="kp-h2">Najważniejsze informacje</h2>
 
-        <div class="help-info-grid">
-          <article class="help-info-card">
-            <div class="help-info-icon">
-              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="1" y="3" width="15" height="13"/>
-                <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
-                <circle cx="5.5" cy="18.5" r="2.5"/>
-                <circle cx="18.5" cy="18.5" r="2.5"/>
-              </svg>
+        <div class="kp-info-grid">
+          <article class="kp-info-card">
+            <div class="kp-info-icon">
+              <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">local_shipping</span>
             </div>
             <h3>Dostawa</h3>
             <ul>
-              <li>Paczkomat InPost — 9,99 zł</li>
-              <li>Kurier InPost — 14,99 zł</li>
-              <li><strong>Darmowa dostawa przy zestawach 2+1 i 3+2</strong></li>
-              <li>Wysyłka do 24h od zamówienia</li>
+              <li>Paczkomat InPost — <strong>9,99 zł</strong></li>
+              <li>Kurier InPost — <strong>11,99 zł</strong></li>
+              <li><strong>Darmowa dostawa od 99 zł</strong></li>
+              <li>Wysyłka w 24h od zamówienia</li>
             </ul>
           </article>
 
-          <article class="help-info-card">
-            <div class="help-info-icon">
-              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="1 4 1 10 7 10"/>
-                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
-              </svg>
+          <article class="kp-info-card">
+            <div class="kp-info-icon">
+              <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">published_with_changes</span>
             </div>
-            <h3>Zwroty i gwarancja</h3>
+            <h3>Zwroty</h3>
             <ul>
-              <li><strong>30 dni gwarancji satysfakcji</strong></li>
-              <li>14 dni na odstąpienie od umowy</li>
+              <li><strong>14 dni na zwrot</strong> bez pytań</li>
               <li>Zwrot pieniędzy w 5 dni roboczych</li>
-              <li>Pies nie podchodzi? Zwracamy bez pytań</li>
+              <li>Etykieta zwrotna gratis</li>
+              <li>Produkt nie pasuje? Oddaj.</li>
             </ul>
           </article>
 
-          <article class="help-info-card">
-            <div class="help-info-icon">
-              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="2" y="5" width="20" height="14" rx="2"/>
-                <line x1="2" y1="10" x2="22" y2="10"/>
-              </svg>
+          <article class="kp-info-card">
+            <div class="kp-info-icon">
+              <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">payments</span>
             </div>
             <h3>Płatności</h3>
             <ul>
-              <li>BLIK — najszybciej</li>
-              <li>Karta — Visa / Mastercard</li>
+              <li>BLIK, najszybciej</li>
+              <li>Karta, Visa / Mastercard</li>
               <li>Przelew online (PayU)</li>
-              <li>PayPo — kup teraz, zapłać za 30 dni</li>
+              <li>PayPo, kup teraz, zapłać później</li>
             </ul>
           </article>
         </div>
       </div>
     </section>
 
-    <!-- FAQ -->
-    <section class="help-section help-section-soft">
-      <div class="help-wrap">
-        <h2 class="help-h2">Najczęstsze pytania</h2>
+    {/* ====== FAQ ====== */}
+    <section class="kp-faq-sec">
+      <div class="kp-wrap kp-wrap--narrow">
+        <h2 class="kp-h2">Najczęstsze pytania</h2>
 
-        <div class="help-faq">
-          <details name="help-faq" class="help-faq-item">
+        <div class="kp-faq">
+          <details class="kp-faq-item">
             <summary>
-              <span>Jak długo trwa dostawa?</span>
-              <span class="help-faq-icon"></span>
+              <span>Jaki jest czas dostawy?</span>
+              <span class="material-symbols-outlined kp-faq-chev">expand_more</span>
             </summary>
-            <div class="help-faq-body">
-              Zamówienia złożone do 14:00 w dni robocze wysyłamy tego samego dnia. Paczkomat InPost dociera zwykle następnego dnia, kurier w 1-2 dni robocze. Wysyłamy z magazynu w Polsce.
+            <div class="kp-faq-body">
+              Zamówienia złożone do <strong>13:00</strong> wysyłamy tego samego dnia. Paczkomat InPost dociera następnego dnia (95% przypadków), kurier InPost 1–2 dni robocze. Wysyłka z magazynu w Tarnowie.
             </div>
           </details>
 
-          <details name="help-faq" class="help-faq-item">
+          <details class="kp-faq-item">
+            <summary>
+              <span>Ile kosztuje dostawa?</span>
+              <span class="material-symbols-outlined kp-faq-chev">expand_more</span>
+            </summary>
+            <div class="kp-faq-body">
+              Paczkomat InPost — <strong>9,99 zł</strong>. Kurier InPost — <strong>11,99 zł</strong>. <strong>Darmowa dostawa</strong> przy zamówieniach od 99 zł, niezależnie od metody.
+            </div>
+          </details>
+
+          <details class="kp-faq-item">
             <summary>
               <span>Jak zwrócić produkt?</span>
-              <span class="help-faq-icon"></span>
+              <span class="material-symbols-outlined kp-faq-chev">expand_more</span>
             </summary>
-            <div class="help-faq-body">
-              Masz 30 dni na zwrot bez podawania powodu. Wystarczy mail na <a href="mailto:sklep@dbamyopupile.pl">sklep@dbamyopupile.pl</a> z numerem zamówienia — odeślesz paczkę na adres, który podamy w odpowiedzi. Pieniądze wracają na konto w 5 dni roboczych od otrzymania zwrotu.
+            <div class="kp-faq-body">
+              Masz <strong>14 dni na odstąpienie od umowy</strong>. Wystarczy mail na <a href="mailto:sklep@dbamyopupile.pl">sklep@dbamyopupile.pl</a> z numerem zamówienia. Wysyłamy etykietę zwrotną InPost, zostawiasz paczkę w paczkomacie. Pieniądze wracają na konto w 5 dni roboczych.
             </div>
           </details>
 
-          <details name="help-faq" class="help-faq-item">
+          <details class="kp-faq-item">
             <summary>
-              <span>Czy mogę zmienić zamówienie?</span>
-              <span class="help-faq-icon"></span>
+              <span>Jak się z wami skontaktować?</span>
+              <span class="material-symbols-outlined kp-faq-chev">expand_more</span>
             </summary>
-            <div class="help-faq-body">
-              Tak — jeśli paczka jeszcze nie poszła. Zadzwoń pod <a href="tel:577723506">577 723 506</a> albo napisz mail. Im szybciej, tym lepiej — wysyłamy zwykle do kilku godzin od zamówienia.
-            </div>
-          </details>
-
-          <details name="help-faq" class="help-faq-item">
-            <summary>
-              <span>Czy Bryza pasuje na każdego psa?</span>
-              <span class="help-faq-icon"></span>
-            </summary>
-            <div class="help-faq-body">
-              Chustę zawiązujesz psu na karku i dopasowujesz ją do szyi — od małego pieska po dużego psa. Jeśli masz wątpliwości, napisz lub zadzwoń — doradzimy.
-            </div>
-          </details>
-
-          <details name="help-faq" class="help-faq-item">
-            <summary>
-              <span>Jak wystawić fakturę?</span>
-              <span class="help-faq-icon"></span>
-            </summary>
-            <div class="help-faq-body">
-              W formularzu zamówienia jest pole "Faktura" — zaznacz i podaj dane firmy (NIP, nazwa). Fakturę wysyłamy mailem razem z potwierdzeniem zamówienia.
-            </div>
-          </details>
-
-          <details name="help-faq" class="help-faq-item">
-            <summary>
-              <span>Jak używać chusty Bryza?</span>
-              <span class="help-faq-icon"></span>
-            </summary>
-            <div class="help-faq-body">
-              Przy pierwszym użyciu zostaw chustę na kilka minut w zimnej wodzie, aż kryształki w środku napęcznieją. Potem wystarczy ją zmoczyć, wykręcić i zawiązać psu na karku. Gdy wyschnie — po prostu zmocz ją ponownie. Lodówka nie jest potrzebna, ale schłodzona chusta daje jeszcze przyjemniejszy chłód.
+            <div class="kp-faq-body">
+              Najszybciej: telefon <a href="tel:577723506">577 723 506</a> (pon–pt, 9–17) albo mail na <a href="mailto:sklep@dbamyopupile.pl">sklep@dbamyopupile.pl</a>. Możesz też skorzystać z <a href="#kp-form-success" onclick="document.querySelector('.kp-form input[name=name]').focus(); return false;">formularza powyżej</a>. Odpowiadamy zazwyczaj w kilka godzin.
             </div>
           </details>
         </div>
       </div>
     </section>
 
-    <!-- DANE FIRMY -->
-    <section class="help-company">
-      <div class="help-wrap">
-        <h2>Dane firmy</h2>
-        <div class="help-company-grid">
-          <div class="help-company-card">
-            <p class="help-company-label">Nazwa</p>
-            <p class="help-company-value">PATRYK JACHYM LABS</p>
+    {/* ====== FINAL CTA + DANE FIRMY ====== */}
+    <section class="kp-final">
+      <div class="kp-wrap">
+        <div class="kp-final-cta">
+          <div class="kp-final-cta-body">
+            <h2>Nie znalazłeś odpowiedzi?</h2>
+            <p>Zadzwoń albo napisz, odpowiadamy szybko, po ludzku.</p>
           </div>
-          <div class="help-company-card">
-            <p class="help-company-label">Adres</p>
-            <p class="help-company-value">ul. Tarnowskich 71p/1<br/>33-100 Tarnów</p>
-          </div>
-          <div class="help-company-card">
-            <p class="help-company-label">NIP</p>
-            <p class="help-company-value">9930710781</p>
-          </div>
-          <div class="help-company-card">
-            <p class="help-company-label">REGON</p>
-            <p class="help-company-value">542607372</p>
+          <div class="kp-final-cta-actions">
+            <a href="tel:577723506" class="kp-btn-primary">
+              <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1; font-size: 18px;">call</span>
+              577 723 506
+            </a>
+            <a href="mailto:sklep@dbamyopupile.pl" class="kp-btn-secondary">
+              sklep@dbamyopupile.pl
+            </a>
           </div>
         </div>
-        <p class="help-company-meta">Działalność wpisana do CEIDG. Adres do zwrotów towaru: ul. Torowa 1, 33-100 Tarnów.</p>
-      </div>
-    </section>
 
-    <!-- STILL NEED HELP -->
-    <section class="help-cta-final">
-      <div class="help-wrap">
-        <h2>Nie znalazłaś odpowiedzi?</h2>
-        <p>Zadzwoń albo napisz — odpowiadamy szybko, po ludzku, bez chatbotów.</p>
-        <div class="help-cta-row">
-          <a href="tel:577723506" class="help-btn-primary">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.33 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/>
-            </svg>
-            577 723 506
-          </a>
-          <a href="mailto:sklep@dbamyopupile.pl" class="help-btn-secondary">
-            sklep@dbamyopupile.pl
-          </a>
+        <div class="kp-company">
+          <div class="kp-company-head">
+            <span class="material-symbols-outlined" style="font-size: 18px;">business</span>
+            <h3>Dane firmy</h3>
+          </div>
+          <div class="kp-company-grid">
+            <div class="kp-company-cell">
+              <span class="kp-company-label">Nazwa</span>
+              <span class="kp-company-value">PATRYK JACHYM LABS</span>
+            </div>
+            <div class="kp-company-cell">
+              <span class="kp-company-label">Adres</span>
+              <span class="kp-company-value">ul. Tarnowskich 71p/1<br/>33-100 Tarnów</span>
+            </div>
+            <div class="kp-company-cell">
+              <span class="kp-company-label">NIP</span>
+              <span class="kp-company-value">9930710781</span>
+            </div>
+            <div class="kp-company-cell">
+              <span class="kp-company-label">REGON</span>
+              <span class="kp-company-value">542607372</span>
+            </div>
+          </div>
+          <p class="kp-company-meta">Działalność wpisana do CEIDG. Adres do zwrotów towaru: ul. Tarnowskich 71p/1, 33-100 Tarnów.</p>
         </div>
       </div>
     </section>
   </div>
 
   <style is:inline slot="head">
-    .help-page {
-      --hp-navy: #1E3A5F;
-      --hp-blue: #B8D8E8;
-      --hp-canvas: #FAF7F2;
-      --hp-text: #1A1A1A;
-      --hp-muted: #6B7280;
-      --hp-rule: #E5E7EB;
-      font-family: 'Inter', system-ui, sans-serif;
-      color: var(--hp-text);
+    .kp-page {
+      font-family: 'Outfit', system-ui, sans-serif;
+      color: var(--brand-text);
+      background: var(--brand-bg);
     }
-    .help-wrap { max-width: 1180px; margin: 0 auto; padding: 0 16px; }
-    @media (min-width: 640px) { .help-wrap { padding: 0 24px; } }
+    .kp-wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+    .kp-wrap--narrow { max-width: 860px; }
+    @media (min-width: 640px) { .kp-wrap { padding: 0 24px; } }
+    @media (min-width: 1024px) { .kp-wrap { padding: 0 32px; } }
 
-    /* HERO */
-    .help-hero {
-      background: linear-gradient(180deg, var(--hp-canvas) 0%, #fff 100%);
+    /* ============ HERO ============ */
+    .kp-hero {
+      background:
+        radial-gradient(60% 80% at 90% 0%, rgba(123, 144, 117, 0.10) 0%, transparent 60%),
+        radial-gradient(45% 60% at 0% 100%, rgba(230, 57, 70, 0.06) 0%, transparent 60%),
+        linear-gradient(180deg, var(--brand-primary-soft) 0%, var(--brand-bg) 100%);
       padding: 56px 0 64px;
     }
-    @media (min-width: 900px) { .help-hero { padding: 80px 0 88px; } }
-    .help-pill {
-      display: inline-block;
-      padding: 6px 12px;
-      background: var(--hp-blue);
-      color: var(--hp-navy);
-      font-size: 11px;
+    @media (min-width: 900px) { .kp-hero { padding: 88px 0 96px; } }
+
+    .kp-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: var(--brand-surface);
+      color: var(--brand-primary-hover);
+      font-size: 11.5px;
       font-weight: 700;
       letter-spacing: 0.08em;
       text-transform: uppercase;
       border-radius: 999px;
-      margin-bottom: 18px;
+      margin-bottom: 20px;
+      border: 1px solid var(--brand-primary);
     }
-    .help-h1 {
-      font-family: 'Fraunces', Georgia, serif;
-      font-size: clamp(32px, 5vw, 48px);
-      font-weight: 700;
+
+    .kp-h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: clamp(34px, 5.5vw, 56px);
+      font-weight: 800;
       line-height: 1.05;
-      letter-spacing: -0.02em;
-      color: var(--hp-navy);
-      margin: 0 0 14px;
+      letter-spacing: -0.025em;
+      color: var(--brand-heading);
+      margin: 0 0 18px;
+      max-width: 720px;
     }
-    .help-lede {
-      font-size: clamp(15px, 2vw, 17px);
-      line-height: 1.6;
-      color: var(--hp-muted);
-      max-width: 540px;
+    .kp-lede {
+      font-size: clamp(15px, 1.8vw, 17px);
+      line-height: 1.65;
+      color: var(--brand-text);
+      max-width: 580px;
       margin: 0 0 36px;
     }
-    .help-contact-cards {
+    .kp-lede strong { color: var(--brand-heading); font-weight: 700; }
+
+    .kp-contact-cards {
       display: grid;
       grid-template-columns: 1fr;
       gap: 14px;
+      max-width: 800px;
     }
     @media (min-width: 640px) {
-      .help-contact-cards { grid-template-columns: repeat(2, 1fr); gap: 16px; max-width: 720px; }
+      .kp-contact-cards { grid-template-columns: repeat(2, 1fr); gap: 16px; }
     }
-    .help-contact-card {
+    .kp-contact-card {
+      position: relative;
       display: flex;
       align-items: center;
       gap: 16px;
-      padding: 20px 22px;
-      background: #fff;
-      border: 1px solid var(--hp-rule);
-      border-radius: 16px;
+      padding: 18px 22px;
+      background: var(--brand-surface);
+      border: 1px solid var(--brand-border);
+      border-radius: 18px;
       text-decoration: none;
-      color: var(--hp-text);
+      color: var(--brand-text);
       transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+      overflow: hidden;
     }
-    .help-contact-card:hover {
+    .kp-contact-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(123,144,117,0.06) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 240ms ease;
+      pointer-events: none;
+    }
+    .kp-contact-card:hover {
       transform: translateY(-2px);
-      border-color: var(--hp-blue);
-      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+      border-color: var(--brand-primary);
+      box-shadow: 0 14px 32px rgba(123, 144, 117, 0.15);
     }
-    .help-contact-icon {
+    .kp-contact-card:hover::before { opacity: 1; }
+    .kp-contact-icon {
       flex-shrink: 0;
-      width: 48px;
-      height: 48px;
-      background: var(--hp-blue);
-      color: var(--hp-navy);
-      border-radius: 12px;
+      width: 52px;
+      height: 52px;
+      background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-hover) 100%);
+      color: #FFFFFF;
+      border-radius: 14px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      box-shadow: 0 4px 14px rgba(123, 144, 117, 0.30);
     }
-    .help-contact-label {
+    .kp-contact-icon .material-symbols-outlined { font-size: 24px; }
+    .kp-contact-body { flex: 1; min-width: 0; }
+    .kp-contact-label {
       font-size: 11px;
-      font-weight: 600;
+      font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: var(--hp-muted);
+      letter-spacing: 0.08em;
+      color: var(--brand-muted);
     }
-    .help-contact-value {
-      font-family: 'Fraunces', Georgia, serif;
+    .kp-contact-value {
+      font-family: 'Outfit', sans-serif;
       font-size: 19px;
       font-weight: 700;
-      color: var(--hp-navy);
+      color: var(--brand-heading);
       margin-top: 2px;
       letter-spacing: -0.01em;
+      word-break: break-word;
     }
-    .help-contact-meta {
-      font-size: 13px;
-      color: var(--hp-muted);
-      margin-top: 2px;
+    .kp-contact-meta {
+      font-size: 12.5px;
+      color: var(--brand-muted);
+      margin-top: 3px;
+    }
+    .kp-contact-chev {
+      color: var(--brand-muted);
+      font-size: 18px;
+      transition: transform 200ms ease, color 200ms ease;
+      flex-shrink: 0;
+    }
+    .kp-contact-card:hover .kp-contact-chev {
+      transform: translate(2px, -2px);
+      color: var(--brand-primary);
     }
 
-    /* SECTIONS */
-    .help-section { padding: 56px 0; }
-    @media (min-width: 900px) { .help-section { padding: 80px 0; } }
-    .help-section-soft { background: var(--hp-canvas); }
-    .help-h2 {
-      font-family: 'Fraunces', Georgia, serif;
-      font-size: clamp(26px, 4vw, 36px);
-      font-weight: 700;
-      color: var(--hp-navy);
+    .kp-social {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin-top: 32px;
+      font-size: 13.5px;
+    }
+    .kp-social-label {
+      color: var(--brand-muted);
+      font-weight: 500;
+      margin-right: 4px;
+    }
+    .kp-social-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
+      background: var(--brand-surface);
+      border: 1px solid var(--brand-border);
+      border-radius: 999px;
+      text-decoration: none;
+      color: var(--brand-heading);
+      font-weight: 600;
+      transition: all 200ms;
+    }
+    .kp-social-link:hover {
+      border-color: var(--brand-primary);
+      background: var(--brand-primary-soft);
+      color: var(--brand-primary-hover);
+      transform: translateY(-1px);
+    }
+    .kp-social-link .material-symbols-outlined {
+      font-size: 16px;
+      color: var(--brand-primary);
+    }
+
+    /* ============ SECTIONS HEADING ============ */
+    .kp-h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: clamp(24px, 3.5vw, 36px);
+      font-weight: 800;
+      color: var(--brand-heading);
       letter-spacing: -0.02em;
       margin: 0 0 32px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .kp-h2::before {
+      content: '';
+      display: inline-block;
+      width: 8px;
+      height: 28px;
+      background: var(--brand-primary);
+      border-radius: 999px;
     }
 
-    /* INFO GRID */
-    .help-info-grid {
+    /* ============ INFO CARDS ============ */
+    .kp-info {
+      padding: 64px 0;
+    }
+    @media (min-width: 900px) { .kp-info { padding: 88px 0; } }
+
+    .kp-info-grid {
       display: grid;
       grid-template-columns: 1fr;
       gap: 16px;
     }
-    @media (min-width: 768px) { .help-info-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; } }
-    .help-info-card {
-      background: #fff;
-      border: 1px solid var(--hp-rule);
-      border-radius: 16px;
-      padding: 24px;
+    @media (min-width: 768px) { .kp-info-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; } }
+
+    .kp-info-card {
+      background: var(--brand-surface);
+      border: 1px solid var(--brand-border);
+      border-radius: 20px;
+      padding: 26px 26px 28px;
+      transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
     }
-    .help-info-icon {
-      width: 44px;
-      height: 44px;
-      background: var(--hp-canvas);
-      color: var(--hp-navy);
-      border-radius: 12px;
+    .kp-info-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--brand-primary);
+      box-shadow: 0 10px 30px rgba(123, 144, 117, 0.12);
+    }
+    .kp-info-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--brand-primary-soft);
+      color: var(--brand-primary-hover);
+      border-radius: 14px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: 14px;
+      margin-bottom: 16px;
     }
-    .help-info-card h3 {
-      font-family: 'Fraunces', Georgia, serif;
+    .kp-info-icon .material-symbols-outlined { font-size: 24px; }
+    .kp-info-card h3 {
+      font-family: 'Outfit', sans-serif;
       font-size: 19px;
-      font-weight: 600;
-      color: var(--hp-navy);
-      margin: 0 0 12px;
+      font-weight: 700;
+      color: var(--brand-heading);
+      margin: 0 0 14px;
       letter-spacing: -0.01em;
     }
-    .help-info-card ul {
+    .kp-info-card ul {
       list-style: none;
       padding: 0;
       margin: 0;
       display: grid;
       gap: 8px;
     }
-    .help-info-card li {
+    .kp-info-card li {
       font-size: 14px;
-      line-height: 1.5;
-      color: var(--hp-text);
-      padding-left: 16px;
+      line-height: 1.55;
+      color: var(--brand-text);
+      padding-left: 20px;
       position: relative;
     }
-    .help-info-card li::before {
-      content: "—";
+    .kp-info-card li::before {
+      content: '';
       position: absolute;
       left: 0;
-      color: var(--hp-blue);
-      font-weight: 700;
+      top: 9px;
+      width: 10px;
+      height: 2px;
+      background: var(--brand-primary);
+      border-radius: 999px;
     }
+    .kp-info-card li strong { color: var(--brand-heading); font-weight: 700; }
 
-    /* FAQ */
-    .help-faq {
+    /* ============ FAQ ============ */
+    .kp-faq-sec {
+      padding: 64px 0;
+      background: var(--brand-primary-soft);
+      border-top: 1px solid var(--brand-border);
+      border-bottom: 1px solid var(--brand-border);
+    }
+    @media (min-width: 900px) { .kp-faq-sec { padding: 88px 0; } }
+
+    .kp-faq {
       display: grid;
       gap: 10px;
-      max-width: 820px;
     }
-    .help-faq-item {
-      background: #fff;
-      border: 1px solid var(--hp-rule);
-      border-radius: 12px;
+    .kp-faq-item {
+      background: var(--brand-surface);
+      border: 1px solid var(--brand-border);
+      border-radius: 14px;
       overflow: hidden;
-      transition: border-color 200ms ease;
+      transition: border-color 200ms ease, box-shadow 200ms ease;
     }
-    .help-faq-item[open] { border-color: var(--hp-blue); }
-    .help-faq-item summary {
+    .kp-faq-item[open] {
+      border-color: var(--brand-primary);
+      box-shadow: 0 6px 18px rgba(123, 144, 117, 0.10);
+    }
+    .kp-faq-item summary {
       list-style: none;
       cursor: pointer;
       padding: 18px 22px;
@@ -417,156 +571,464 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
       gap: 18px;
       font-weight: 600;
       font-size: 15px;
-      color: var(--hp-navy);
+      color: var(--brand-heading);
+      transition: background 180ms ease;
     }
-    .help-faq-item summary::-webkit-details-marker { display: none; }
-    .help-faq-icon {
-      position: relative;
-      width: 18px;
-      height: 18px;
+    .kp-faq-item summary:hover { background: var(--brand-primary-soft); }
+    .kp-faq-item summary::-webkit-details-marker { display: none; }
+    .kp-faq-chev {
+      color: var(--brand-primary);
+      font-size: 22px;
+      transition: transform 250ms ease;
       flex-shrink: 0;
     }
-    .help-faq-icon::before,
-    .help-faq-icon::after {
-      content: "";
-      position: absolute;
-      background: var(--hp-navy);
-      border-radius: 1px;
-      transition: transform 250ms ease;
-    }
-    .help-faq-icon::before {
-      top: 8px; left: 0; right: 0; height: 2px;
-    }
-    .help-faq-icon::after {
-      left: 8px; top: 0; bottom: 0; width: 2px;
-    }
-    .help-faq-item[open] .help-faq-icon::after { transform: scaleY(0); }
-    .help-faq-body {
-      padding: 0 22px 20px;
+    .kp-faq-item[open] .kp-faq-chev { transform: rotate(180deg); }
+    .kp-faq-body {
+      padding: 4px 22px 22px;
       font-size: 14.5px;
-      line-height: 1.6;
-      color: var(--hp-text);
+      line-height: 1.65;
+      color: var(--brand-text);
     }
-    .help-faq-body a {
-      color: var(--hp-navy);
+    .kp-faq-body a {
+      color: var(--brand-primary-hover);
       font-weight: 600;
       text-decoration: underline;
       text-underline-offset: 3px;
     }
+    .kp-faq-body strong { color: var(--brand-heading); font-weight: 700; }
 
-    /* DANE FIRMY */
-    .help-company {
-      background: #FAF7F2;
-      padding: 56px 0;
-      border-top: 1px solid var(--hp-rule, #e8e3d8);
+    /* ============ FINAL CTA + COMPANY ============ */
+    .kp-final {
+      padding: 64px 0 88px;
     }
-    @media (min-width: 900px) { .help-company { padding: 72px 0; } }
-    .help-company h2 {
-      font-family: 'Fraunces', Georgia, serif;
-      font-size: clamp(24px, 3.5vw, 32px);
-      font-weight: 700;
+    @media (min-width: 900px) { .kp-final { padding: 88px 0 120px; } }
+
+    .kp-final-cta {
+      background: linear-gradient(135deg, var(--brand-heading) 0%, #3D4136 100%);
+      color: #FFFCF7;
+      padding: 36px 28px;
+      border-radius: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      margin-bottom: 56px;
+      position: relative;
+      overflow: hidden;
+    }
+    .kp-final-cta::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -10%;
+      width: 320px;
+      height: 320px;
+      background: radial-gradient(circle, rgba(123, 144, 117, 0.30) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    @media (min-width: 768px) {
+      .kp-final-cta {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        padding: 44px 44px;
+        gap: 40px;
+      }
+    }
+    .kp-final-cta-body { position: relative; flex: 1; }
+    .kp-final-cta h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: clamp(22px, 3.2vw, 30px);
+      font-weight: 800;
       letter-spacing: -0.02em;
-      margin: 0 0 28px;
-      color: var(--hp-ink, #1A1A1A);
+      margin: 0 0 6px;
+      color: #FFFCF7;
     }
-    .help-company-grid {
+    .kp-final-cta p {
+      margin: 0;
+      font-size: 15px;
+      color: rgba(255, 252, 247, 0.78);
+    }
+    .kp-final-cta-actions {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    @media (min-width: 540px) {
+      .kp-final-cta-actions { flex-direction: row; }
+    }
+    .kp-btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 22px;
+      background: var(--brand-primary);
+      color: #FFFFFF;
+      font-weight: 700;
+      font-size: 14.5px;
+      letter-spacing: 0.02em;
+      border-radius: 999px;
+      text-decoration: none;
+      transition: background 200ms ease, transform 200ms ease, box-shadow 200ms ease;
+      box-shadow: 0 6px 18px rgba(123, 144, 117, 0.35);
+      white-space: nowrap;
+    }
+    .kp-btn-primary:hover {
+      background: var(--brand-primary-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 22px rgba(123, 144, 117, 0.45);
+    }
+    .kp-btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px 22px;
+      background: transparent;
+      color: #FFFCF7;
+      font-weight: 600;
+      font-size: 14.5px;
+      border: 1.5px solid rgba(255, 252, 247, 0.32);
+      border-radius: 999px;
+      text-decoration: none;
+      transition: background 200ms ease, border-color 200ms ease;
+      white-space: nowrap;
+    }
+    .kp-btn-secondary:hover {
+      background: rgba(255, 252, 247, 0.10);
+      border-color: rgba(255, 252, 247, 0.55);
+    }
+
+    /* COMPANY */
+    .kp-company {
+      background: var(--brand-surface);
+      border: 1px solid var(--brand-border);
+      border-radius: 20px;
+      padding: 26px 26px 28px;
+    }
+    .kp-company-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 22px;
+      color: var(--brand-muted);
+    }
+    .kp-company-head .material-symbols-outlined { color: var(--brand-primary); }
+    .kp-company-head h3 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--brand-muted);
+      margin: 0;
+    }
+    .kp-company-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 16px;
+      gap: 18px 24px;
     }
     @media (min-width: 700px) {
-      .help-company-grid { grid-template-columns: repeat(4, 1fr); gap: 20px; }
+      .kp-company-grid { grid-template-columns: repeat(4, 1fr); gap: 22px; }
     }
-    .help-company-card {
-      background: #fff;
-      border: 1px solid var(--hp-rule, #e8e3d8);
-      border-radius: 8px;
-      padding: 16px 18px;
+    .kp-company-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
     }
-    .help-company-label {
-      font-size: 11px;
+    .kp-company-label {
+      font-size: 10.5px;
       font-weight: 700;
       letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: var(--hp-ink-2, #6b6b6b);
-      margin: 0 0 6px;
+      color: var(--brand-muted);
     }
-    .help-company-value {
-      font-size: 15px;
+    .kp-company-value {
+      font-size: 14.5px;
       font-weight: 600;
-      color: var(--hp-ink, #1A1A1A);
-      margin: 0;
-      line-height: 1.4;
+      color: var(--brand-heading);
+      line-height: 1.45;
     }
-    .help-company-meta {
-      margin: 24px 0 0;
-      font-size: 13px;
-      color: var(--hp-ink-2, #6b6b6b);
+    .kp-company-meta {
+      margin: 22px 0 0;
+      padding-top: 18px;
+      border-top: 1px solid var(--brand-border);
+      font-size: 12.5px;
+      color: var(--brand-muted);
       line-height: 1.6;
     }
 
-    /* FINAL CTA */
-    .help-cta-final {
-      background: var(--hp-navy);
-      color: #fff;
-      padding: 56px 0;
-      text-align: center;
+    /* ====== CONTACT FORM ====== */
+    .kp-form-sec {
+      padding: 48px 0;
+      background: var(--brand-surface);
     }
-    @media (min-width: 900px) { .help-cta-final { padding: 80px 0; } }
-    .help-cta-final h2 {
-      font-family: 'Fraunces', Georgia, serif;
-      font-size: clamp(26px, 4vw, 36px);
+    @media (min-width: 768px) {
+      .kp-form-sec { padding: 72px 0; }
+    }
+    .kp-form-head { margin-bottom: 28px; text-align: center; }
+    .kp-eyebrow {
+      display: block;
+      font-size: 11.5px;
       font-weight: 700;
-      letter-spacing: -0.02em;
-      margin: 0 0 12px;
+      letter-spacing: 0.18em;
+      color: var(--brand-muted);
+      margin-bottom: 10px;
+      text-transform: uppercase;
     }
-    .help-cta-final p {
-      color: rgba(255, 255, 255, 0.78);
-      margin: 0 auto 28px;
-      max-width: 520px;
+    .kp-form-sub {
+      font-size: 14px;
+      color: var(--brand-text);
+      margin: 6px 0 0;
     }
-    .help-cta-row {
+    .kp-form {
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      align-items: center;
-      justify-content: center;
+      gap: 16px;
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 28px 24px;
+      background: var(--brand-bg);
+      border: 1px solid var(--brand-border);
+      border-radius: 20px;
+    }
+    @media (min-width: 768px) {
+      .kp-form { padding: 36px 40px; }
+    }
+    .kp-form-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
     }
     @media (min-width: 640px) {
-      .help-cta-row { flex-direction: row; }
+      .kp-form-row { grid-template-columns: 1fr 1fr; }
     }
-    .help-btn-primary {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      padding: 14px 24px;
-      background: #fff;
-      color: var(--hp-navy);
+    .kp-form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 13px;
       font-weight: 700;
-      font-size: 15px;
+      color: var(--brand-heading);
+      letter-spacing: 0.02em;
+    }
+    .kp-form-field input,
+    .kp-form-field textarea {
+      width: 100%;
+      padding: 12px 14px;
+      background: var(--brand-surface);
+      border: 1.5px solid var(--brand-border);
       border-radius: 12px;
-      text-decoration: none;
-      transition: background 200ms ease, transform 200ms ease;
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--brand-heading);
+      transition: border-color 200ms ease;
+      -webkit-appearance: none;
+      appearance: none;
     }
-    .help-btn-primary:hover {
-      background: var(--hp-canvas);
-      transform: translateY(-1px);
+    .kp-form-field input:focus,
+    .kp-form-field textarea:focus {
+      outline: none;
+      border-color: var(--brand-primary);
+      background: #fff;
     }
-    .help-btn-secondary {
+    .kp-form-field textarea {
+      resize: vertical;
+      min-height: 120px;
+      font-family: 'Outfit', sans-serif;
+    }
+    .kp-form-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 4px 0 0;
+      font-size: 12px;
+      color: var(--brand-muted);
+      line-height: 1.5;
+    }
+    .kp-form-error {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 4px 0 0;
+      padding: 10px 14px;
+      background: var(--brand-accent-soft);
+      border: 1.5px solid var(--brand-accent);
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--brand-accent);
+      line-height: 1.4;
+    }
+    .kp-form-error[hidden] { display: none; }
+    .kp-form-error .material-symbols-outlined {
+      font-size: 18px !important;
+      color: var(--brand-accent);
+      font-variation-settings: 'FILL' 1;
+      flex-shrink: 0;
+    }
+    .kp-form-submit:disabled {
+      opacity: 0.7;
+      cursor: wait;
+      box-shadow: none;
+      transform: none;
+    }
+    .kp-form-submit {
       display: inline-flex;
       align-items: center;
-      padding: 14px 24px;
-      background: transparent;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 8px;
+      padding: 16px;
+      background: var(--brand-primary);
       color: #fff;
-      font-weight: 600;
-      font-size: 15px;
-      border: 1px solid rgba(255, 255, 255, 0.32);
-      border-radius: 12px;
-      text-decoration: none;
-      transition: background 200ms ease;
+      border: none;
+      border-radius: 9999px;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 14px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 200ms ease;
+      box-shadow: 0 6px 18px rgba(123, 144, 117, 0.25);
     }
-    .help-btn-secondary:hover {
-      background: rgba(255, 255, 255, 0.08);
+    .kp-form-submit:hover {
+      background: var(--brand-primary-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 22px rgba(123, 144, 117, 0.35);
+    }
+    .kp-form-submit .material-symbols-outlined {
+      font-size: 18px !important;
+    }
+    .kp-form-success {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 40px 28px;
+      background: var(--brand-primary-soft);
+      border: 1.5px solid var(--brand-primary);
+      border-radius: 20px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .kp-form-success[hidden] { display: none; }
+    .kp-form-success > .material-symbols-outlined {
+      font-size: 48px !important;
+      color: var(--brand-primary);
+      font-variation-settings: 'FILL' 1;
+    }
+    .kp-form-success h3 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--brand-heading);
+      margin: 4px 0 0;
+    }
+    .kp-form-success p {
+      font-size: 14px;
+      color: var(--brand-text);
+      margin: 0;
     }
   </style>
+
+  <script is:inline>
+    // Form submit DIRECT do Web3Forms (client-side fetch). Web3Forms BLOKUJE
+    // server-side requests na free tier ("This method is not allowed... Pro plan
+    // required"). Therefore client → api.web3forms.com bezpośrednio.
+    // Access key (6c6c0765-...) jest publiczny per Web3Forms docs — to form ID,
+    // nie auth secret. Spam protection via captcha + honeypot.
+    (function() {
+      const WEB3FORMS_KEY = '6c6c0765-ba6e-4bb8-8eb1-f53956cc3a45';
+      const form = document.getElementById('kp-form');
+      const submitBtn = document.getElementById('kp-form-submit');
+      const successEl = document.getElementById('kp-form-success');
+      const errorEl = document.getElementById('kp-form-error');
+      const submitLabel = submitBtn ? submitBtn.querySelector('[data-submit-label]') : null;
+      const errorMsg = errorEl ? errorEl.querySelector('[data-error-msg]') : null;
+      if (!form || !submitBtn) return;
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const fd = new FormData(form);
+        const name = String(fd.get('name') || '').trim();
+        const email = String(fd.get('email') || '').trim();
+        const topic = String(fd.get('topic') || '').trim();
+        const address = String(fd.get('address') || '').trim();
+        const message = String(fd.get('message') || '').trim();
+        const honey = String(fd.get('_honey') || '').trim();
+
+        if (honey) return; // bot
+
+        if (!name || !email || !message) {
+          if (errorEl && errorMsg) {
+            errorMsg.textContent = 'Uzupełnij imię, email i wiadomość.';
+            errorEl.hidden = false;
+          }
+          return;
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          if (errorEl && errorMsg) {
+            errorMsg.textContent = 'Nieprawidłowy format adresu email.';
+            errorEl.hidden = false;
+          }
+          return;
+        }
+
+        submitBtn.disabled = true;
+        if (submitLabel) submitLabel.textContent = 'Wysyłanie…';
+        if (errorEl) errorEl.hidden = true;
+
+        try {
+          const res = await fetch('https://api.web3forms.com/submit', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+              access_key: WEB3FORMS_KEY,
+              subject: `Nowa wiadomość z dbamyopupile.pl — ${topic || 'kontakt'}`,
+              from_name: name,
+              replyto: email,
+              name,
+              email,
+              topic: topic || '(brak tematu)',
+              address: address || '(nie podano)',
+              message,
+            }),
+          });
+          const data = await res.json().catch(() => ({}));
+
+          if (res.ok && data.success === true) {
+            form.hidden = true;
+            if (successEl) {
+              successEl.hidden = false;
+              successEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          } else {
+            if (errorEl && errorMsg) {
+              errorMsg.textContent = data.message || 'Nie udało się wysłać. Napisz na sklep@dbamyopupile.pl';
+              errorEl.hidden = false;
+            }
+            submitBtn.disabled = false;
+            if (submitLabel) submitLabel.textContent = 'Wyślij wiadomość';
+          }
+        } catch {
+          if (errorEl && errorMsg) {
+            errorMsg.textContent = 'Błąd sieci. Napisz na sklep@dbamyopupile.pl';
+            errorEl.hidden = false;
+          }
+          submitBtn.disabled = false;
+          if (submitLabel) submitLabel.textContent = 'Wyślij wiadomość';
+        }
+      });
+    })();
+  </script>
 </BaseLayout>

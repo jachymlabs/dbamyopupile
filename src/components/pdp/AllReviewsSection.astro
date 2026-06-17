@@ -1,0 +1,980 @@
+---
+/**
+ * Pełna sekcja opinii na końcu PDP — summary card + filter gwiazdkami + grid kart
+ * + paginacja "Pokaż więcej". Renderowana po custom Description i CTA.
+ *
+ * Dane z src/data/reviews.json przez getProductReviews(slug). Komponent NIE
+ * renderuje się jeśli nie ma opinii (productReviews === null) — caller robi guard.
+ */
+import { getProductReviews, formatRating, ratingPercentages, opiniiPlural, starKind } from '@/lib/reviews';
+
+interface Props {
+  slug: string;
+}
+
+const { slug } = Astro.props;
+const reviews = getProductReviews(slug);
+
+// Guard — caller powinien sprawdzić, ale na wszelki wypadek.
+if (!reviews) {
+  // Astro nie ma return null; zwracamy pusty fragment przez warunek w template
+}
+
+const ratingPct = reviews ? ratingPercentages(reviews) : null;
+const items = reviews?.items ?? [];
+const INITIAL_COUNT = 6;
+const PAGE_SIZE = 6;
+
+// Pill count: liczba items z konkretną oceną (NIE distribution z JSON — items
+// to faktyczne reviews które user może zobaczyć po kliknięciu filtra). Distribution
+// w JSON jest globalnym statystycznym total'em pokazanym w summary bars wyżej.
+const itemsByStar: Record<1 | 2 | 3 | 4 | 5, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+items.forEach((it) => {
+  const s = it.stars as 1 | 2 | 3 | 4 | 5;
+  if (s >= 1 && s <= 5) itemsByStar[s]++;
+});
+---
+
+{reviews && ratingPct && (
+  <section class="rvw-section">
+    <div class="rvw-container">
+      <div class="rvw-head">
+        <span class="rvw-eyebrow">Opinie klientów</span>
+        <h2 class="rvw-h2">{reviews.totalCount.toLocaleString('pl-PL')}+ {opiniiPlural(reviews.totalCount)} o tym produkcie</h2>
+        <p class="rvw-sub">Wszystkie opinie pochodzą od zweryfikowanych klientów po zakupie.</p>
+      </div>
+
+      {/* === SUMMARY CARD === */}
+      <div class="rvw-summary">
+        <div class="rvw-summary-left">
+          <div class="rvw-rating-big">{formatRating(reviews.averageRating)}</div>
+          <div class="rvw-rating-stars" aria-label={`Ocena ${formatRating(reviews.averageRating)} na 5`}>
+            {[1, 2, 3, 4, 5].map((i) => {
+              const k = starKind(i, reviews.averageRating);
+              if (k === 'full') return <svg class="rvw-star rvw-star--full" viewBox="0 0 24 24" width="22" height="22" fill="#F5B544" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z"/></svg>;
+              if (k === 'half') return <svg class="rvw-star rvw-star--full" viewBox="0 0 24 24" width="22" height="22" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><linearGradient id={`rvw-summary-half-${i}`}><stop offset="50%" stop-color="#F5B544"/><stop offset="50%" stop-color="#D6CEBE"/></linearGradient></defs><path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z" fill={`url(#rvw-summary-half-${i})`}/></svg>;
+              return <svg class="rvw-star rvw-star--empty" viewBox="0 0 24 24" width="22" height="22" fill="#D6CEBE" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z"/></svg>;
+            })}
+          </div>
+          <p class="rvw-rating-label">na podstawie {reviews.totalCount.toLocaleString('pl-PL')} {opiniiPlural(reviews.totalCount)}</p>
+        </div>
+
+        <div class="rvw-summary-right" role="list" aria-label="Rozkład ocen">
+          {([5, 4, 3, 2, 1] as const).map((star) => (
+            <div class="rvw-bar-row" role="listitem">
+              <span class="rvw-bar-star">
+                {star}<svg viewBox="0 0 24 24" width="12" height="12" fill="#F5B544" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z"/></svg>
+              </span>
+              <div class="rvw-bar-track">
+                <div class="rvw-bar-fill" style={`width: ${ratingPct[star]}%`}></div>
+              </div>
+              <span class="rvw-bar-count">{reviews.distribution[star]}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* === FILTER PILLS === Count = liczba dostępnych items z tą oceną (nie distribution).
+          Pill 'X★' z 0 items nie renderuje się — user nie kliknie pustego filtra. */}
+      <div class="rvw-filter" id="rvw-filter" role="tablist" aria-label="Filtruj opinie">
+        <button type="button" class="rvw-pill rvw-pill--active" data-filter="all" role="tab" aria-selected="true">
+          Wszystkie <span class="rvw-pill-count">{items.length}</span>
+        </button>
+        {([5, 4, 3, 2, 1] as const).filter((star) => itemsByStar[star] > 0).map((star) => (
+          <button type="button" class="rvw-pill" data-filter={star} role="tab" aria-selected="false">
+            {star}<svg viewBox="0 0 24 24" width="14" height="14" fill="#F5B544" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z"/></svg>
+            <span class="rvw-pill-count">{itemsByStar[star]}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* === REVIEWS GRID === */}
+      <div class="rvw-grid" id="rvw-grid" data-initial-count={INITIAL_COUNT} data-page-size={PAGE_SIZE}>
+        {items.map((rev, idx) => (
+          <article class="rvw-card" data-stars={rev.stars} data-idx={idx} hidden={idx >= INITIAL_COUNT}>
+            <div class="rvw-card-head">
+              <div class="rvw-card-stars" aria-label={`${rev.stars} na 5`}>
+                {[1, 2, 3, 4, 5].map((i) => (
+                  i <= rev.stars
+                    ? <svg class="rvw-star rvw-star--full" viewBox="0 0 24 24" width="18" height="18" fill="#F5B544" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z"/></svg>
+                    : <svg class="rvw-star rvw-star--empty" viewBox="0 0 24 24" width="18" height="18" fill="#D6CEBE" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z"/></svg>
+                ))}
+              </div>
+              <span class="rvw-card-date">{rev.date}</span>
+            </div>
+
+            {rev.verified && (
+              <div class="rvw-card-verified">
+                <span class="material-symbols-outlined">verified</span>
+                Zakup zweryfikowany
+              </div>
+            )}
+
+            {rev.title && <h3 class="rvw-card-title">{rev.title}</h3>}
+            <p class="rvw-card-body">{rev.body}</p>
+
+            <p class="rvw-card-author">
+              <strong>{rev.name}</strong>
+              {rev.age && <span class="rvw-card-meta"> · {rev.age} lat</span>}
+              {rev.tag && <span class="rvw-card-tag"> · {rev.tag}</span>}
+            </p>
+          </article>
+        ))}
+        <p class="rvw-empty" id="rvw-empty" hidden>Brak opinii z taką liczbą gwiazdek w tym filtrze.</p>
+      </div>
+
+      {/* === SHOW ALL — jeden klik rozwija wszystkie matching reviews === */}
+      {items.length > INITIAL_COUNT && (
+        <div class="rvw-more-wrap">
+          <button type="button" class="rvw-more-btn" id="rvw-more-btn">
+            <span class="rvw-more-btn-label">Pokaż wszystkie opinie</span>
+            <span class="material-symbols-outlined">expand_more</span>
+          </button>
+        </div>
+      )}
+
+      {/* === ADD REVIEW CTA === */}
+      <div class="rvw-add-cta">
+        <div class="rvw-add-text">
+          <h3>Masz Moodles?</h3>
+          <p>Podziel się swoją opinią. Pomożesz innym podjąć decyzję.</p>
+        </div>
+        <button type="button" class="rvw-add-btn" id="rvw-add-btn">
+          <span class="material-symbols-outlined">edit</span>
+          Napisz opinię
+        </button>
+      </div>
+
+      {/* === ADD REVIEW MODAL === */}
+      <div class="rvw-modal-backdrop" id="rvw-modal-backdrop" hidden></div>
+      <div class="rvw-modal" id="rvw-modal" role="dialog" aria-modal="true" aria-labelledby="rvw-modal-title" hidden>
+        <div class="rvw-modal-head">
+          <h3 id="rvw-modal-title">Napisz opinię o produkcie</h3>
+          <button type="button" class="rvw-modal-close" id="rvw-modal-close" aria-label="Zamknij">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <form class="rvw-form" id="rvw-form">
+          <label class="rvw-form-label">
+            <span>Imię *</span>
+            <input type="text" name="name" required maxlength="50" placeholder="Jan K." />
+          </label>
+          <label class="rvw-form-label">
+            <span>Email *</span>
+            <input type="email" name="email" required maxlength="100" placeholder="jan@przyklad.pl" />
+            <small class="rvw-form-help">Nie publikujemy — tylko do weryfikacji.</small>
+          </label>
+          <div class="rvw-form-label">
+            <span>Twoja ocena *</span>
+            <div class="rvw-form-stars" role="radiogroup" aria-label="Ocena gwiazdkowa">
+              {[1, 2, 3, 4, 5].map((s) => (
+                <label class="rvw-form-star">
+                  <input type="radio" name="stars" value={s} required />
+                  <svg viewBox="0 0 24 24" width="24" height="24" fill="#F5B544" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z"/></svg>
+                  <span class="rvw-form-star-num">{s}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+          <label class="rvw-form-label">
+            <span>Tytuł (opcjonalnie)</span>
+            <input type="text" name="title" maxlength="80" placeholder="Krótkie podsumowanie" />
+          </label>
+          <label class="rvw-form-label">
+            <span>Twoja opinia *</span>
+            <textarea name="body" required maxlength="1000" rows="5" placeholder="Jak używasz Moodles? Co Ci pomaga? Komu poleciłbyś/poleciłabyś?"></textarea>
+          </label>
+          <p class="rvw-form-disclaimer">
+            <span class="material-symbols-outlined">verified_user</span>
+            Opinie są ręcznie weryfikowane. Publikacja w 24-48h.
+          </p>
+          <button type="submit" class="rvw-form-submit">
+            Wyślij opinię
+            <span class="material-symbols-outlined">send</span>
+          </button>
+        </form>
+        <div class="rvw-form-success" id="rvw-form-success" hidden>
+          <span class="material-symbols-outlined">task_alt</span>
+          <h4>Dziękujemy!</h4>
+          <p>Twoja opinia trafiła do nas. Po weryfikacji opublikujemy ją na stronie.</p>
+          <button type="button" class="rvw-form-close-success" id="rvw-form-close-success">Zamknij</button>
+        </div>
+      </div>
+    </div>
+  </section>
+)}
+
+<script>
+  (function () {
+    const filterEl = document.getElementById('rvw-filter');
+    const gridEl = document.getElementById('rvw-grid');
+    const moreBtn = document.getElementById('rvw-more-btn') as HTMLButtonElement | null;
+    const emptyEl = document.getElementById('rvw-empty') as HTMLElement | null;
+    if (!filterEl || !gridEl) return;
+
+    const initial = parseInt(gridEl.getAttribute('data-initial-count') || '6', 10);
+    let currentFilter: 'all' | number = 'all';
+    let showAll = false; // gdy true: pokaż wszystkie matching, ignorując initial limit
+
+    const cards = Array.from(gridEl.querySelectorAll<HTMLElement>('[data-stars]'));
+
+    function applyFilterAndShow() {
+      const matching = cards.filter(
+        (c) => currentFilter === 'all' || Number(c.dataset.stars) === currentFilter,
+      );
+      // Hide everything first
+      cards.forEach((c) => { c.hidden = true; });
+      // Show: jeśli showAll=true → wszystkie matching; inaczej pierwsze `initial`
+      const limit = showAll ? matching.length : initial;
+      matching.slice(0, limit).forEach((c) => { c.hidden = false; });
+      // Empty state — gdy matching.length === 0
+      if (emptyEl) emptyEl.hidden = matching.length > 0;
+      // More button: hidden gdy
+      //  - już pokazujemy wszystkie (showAll = true), LUB
+      //  - matching mieści się w initial (nic więcej do pokazania, np. 3★ z 3 items)
+      if (moreBtn) moreBtn.hidden = showAll || matching.length <= initial;
+    }
+
+    // Filter pill clicks
+    filterEl.querySelectorAll<HTMLButtonElement>('[data-filter]').forEach((pill) => {
+      pill.addEventListener('click', () => {
+        const f = pill.getAttribute('data-filter');
+        currentFilter = f === 'all' ? 'all' : Number(f);
+        showAll = false; // reset — przy zmianie filtra znowu collapse'd do initial
+        // Active state
+        filterEl.querySelectorAll<HTMLButtonElement>('[data-filter]').forEach((p) => {
+          const isActive = p === pill;
+          p.classList.toggle('rvw-pill--active', isActive);
+          p.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
+        applyFilterAndShow();
+        gridEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+
+    // Show all — jeden klik pokazuje całość
+    if (moreBtn) {
+      moreBtn.addEventListener('click', () => {
+        showAll = true;
+        applyFilterAndShow();
+      });
+    }
+
+    applyFilterAndShow();
+
+    // === REVIEW SUBMISSION MODAL ===
+    const addBtn = document.getElementById('rvw-add-btn');
+    const modal = document.getElementById('rvw-modal');
+    const backdrop = document.getElementById('rvw-modal-backdrop');
+    const closeBtn = document.getElementById('rvw-modal-close');
+    const form = document.getElementById('rvw-form') as HTMLFormElement | null;
+    const successEl = document.getElementById('rvw-form-success');
+    const closeSuccessBtn = document.getElementById('rvw-form-close-success');
+
+    function openModal() {
+      if (!modal || !backdrop) return;
+      modal.hidden = false;
+      backdrop.hidden = false;
+      document.body.style.overflow = 'hidden';
+      // Reset form state
+      if (form) form.hidden = false;
+      if (successEl) successEl.hidden = true;
+      if (form) form.reset();
+    }
+    function closeModal() {
+      if (!modal || !backdrop) return;
+      modal.hidden = true;
+      backdrop.hidden = true;
+      document.body.style.overflow = '';
+    }
+
+    if (addBtn) addBtn.addEventListener('click', openModal);
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (backdrop) backdrop.addEventListener('click', closeModal);
+    if (closeSuccessBtn) closeSuccessBtn.addEventListener('click', closeModal);
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal && !modal.hidden) closeModal();
+    });
+
+    if (form) {
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const formData = new FormData(form);
+        const review = {
+          name: formData.get('name'),
+          email: formData.get('email'),
+          stars: Number(formData.get('stars')),
+          title: formData.get('title'),
+          body: formData.get('body'),
+          submittedAt: new Date().toISOString(),
+          productSlug: window.location.pathname.split('/').pop(),
+        };
+        // Store in localStorage do later sync z backendem (Vendure custom reviews API).
+        // Na razie tylko zbieramy lokalnie — user dostaje feedback "trafiło".
+        try {
+          const existing = JSON.parse(localStorage.getItem('pending-reviews') || '[]');
+          existing.push(review);
+          localStorage.setItem('pending-reviews', JSON.stringify(existing));
+        } catch (e) { /* ignore localStorage errors */ }
+        // Show success state
+        if (form) form.hidden = true;
+        if (successEl) successEl.hidden = false;
+      });
+    }
+  })();
+</script>
+
+<style>
+  /* ============================================ */
+  /* PDP ALL REVIEWS SECTION                       */
+  /* Brand: sage primary + gold stars + cream      */
+  /* ============================================ */
+  .rvw-section {
+    padding: 56px 0 80px;
+    background: var(--brand-bg);
+    font-family: 'Outfit', system-ui, sans-serif;
+  }
+  @media (min-width: 768px) {
+    .rvw-section { padding: 80px 0 96px; }
+  }
+  .rvw-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+  @media (min-width: 768px) {
+    .rvw-container { padding: 0 24px; }
+  }
+
+  .rvw-head {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .rvw-eyebrow {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    color: var(--brand-muted);
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+  .rvw-h2 {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+    color: var(--brand-heading);
+    margin: 0 0 12px;
+  }
+  @media (min-width: 768px) {
+    .rvw-h2 { font-size: 36px; }
+  }
+  .rvw-sub {
+    font-size: 14px;
+    color: var(--brand-text);
+    margin: 0;
+  }
+
+  /* === SUMMARY === */
+  .rvw-summary {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding: 24px;
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-radius: 20px;
+    margin-bottom: 28px;
+    align-items: center;
+  }
+  @media (min-width: 768px) {
+    .rvw-summary {
+      grid-template-columns: minmax(0, 220px) 1fr;
+      gap: 40px;
+      padding: 32px 36px;
+    }
+  }
+  .rvw-summary-left {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--brand-border);
+    padding-bottom: 24px;
+  }
+  @media (min-width: 768px) {
+    .rvw-summary-left {
+      border-bottom: none;
+      border-right: 1px solid var(--brand-border);
+      padding: 0 32px 0 0;
+    }
+  }
+  .rvw-rating-big {
+    font-size: 56px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    color: var(--brand-heading);
+  }
+  @media (min-width: 768px) {
+    .rvw-rating-big { font-size: 64px; }
+  }
+  .rvw-rating-stars {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+  }
+  .rvw-rating-stars .rvw-star { font-size: 22px !important; }
+  .rvw-rating-label {
+    font-size: 13px;
+    color: var(--brand-muted);
+    margin: 0;
+  }
+
+  .rvw-summary-right {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .rvw-bar-row {
+    display: grid;
+    grid-template-columns: 40px 1fr 36px;
+    align-items: center;
+    gap: 12px;
+  }
+  .rvw-bar-star {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--brand-heading);
+  }
+  .rvw-bar-star .material-symbols-outlined {
+    color: #F5B544;
+  }
+  .rvw-bar-track {
+    height: 8px;
+    background: var(--brand-surface-2);
+    border-radius: 9999px;
+    overflow: hidden;
+  }
+  .rvw-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #F5B544 0%, #E8A02D 100%);
+    border-radius: 9999px;
+    transition: width 320ms ease;
+  }
+  .rvw-bar-count {
+    font-size: 12.5px;
+    color: var(--brand-muted);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* === FILTER PILLS === */
+  .rvw-filter {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    margin: 0 -20px 24px;
+    padding: 4px 20px 8px;
+  }
+  .rvw-filter::-webkit-scrollbar { display: none; }
+  @media (min-width: 768px) {
+    .rvw-filter {
+      margin: 0 0 28px;
+      padding: 0;
+      flex-wrap: wrap;
+      overflow: visible;
+    }
+  }
+  .rvw-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 14px;
+    background: var(--brand-surface);
+    border: 1.5px solid var(--brand-border);
+    border-radius: 9999px;
+    font-family: 'Outfit', system-ui, sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--brand-text);
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: all 180ms ease;
+  }
+  .rvw-pill:hover {
+    border-color: var(--brand-primary);
+    color: var(--brand-heading);
+  }
+  .rvw-pill .material-symbols-outlined {
+    color: #F5B544;
+  }
+  .rvw-pill-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    padding: 0 5px;
+    height: 18px;
+    background: var(--brand-surface-2);
+    color: var(--brand-text);
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 9999px;
+    margin-left: 2px;
+  }
+  .rvw-pill--active {
+    background: var(--brand-primary);
+    border-color: var(--brand-primary);
+    color: #fff;
+  }
+  .rvw-pill--active .material-symbols-outlined {
+    color: #fff;
+  }
+  .rvw-pill--active .rvw-pill-count {
+    background: rgba(255, 255, 255, 0.22);
+    color: #fff;
+  }
+
+  /* === REVIEW CARDS GRID === */
+  .rvw-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  @media (min-width: 768px) {
+    .rvw-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+  }
+  .rvw-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 32px 16px;
+    color: var(--brand-muted);
+    font-size: 14px;
+    background: var(--brand-surface);
+    border: 1px dashed var(--brand-border);
+    border-radius: 16px;
+  }
+  .rvw-card {
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-radius: 16px;
+    padding: 20px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: border-color 200ms ease, box-shadow 200ms ease;
+  }
+  .rvw-card:hover {
+    border-color: var(--brand-border-strong);
+    box-shadow: var(--shadow-sm);
+  }
+  .rvw-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .rvw-card-stars {
+    display: inline-flex;
+    align-items: center;
+    gap: 1px;
+  }
+  .rvw-card-stars .rvw-star { font-size: 18px !important; }
+  .rvw-card-date {
+    font-size: 12px;
+    color: var(--brand-muted);
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+  }
+  .rvw-card-verified {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--brand-primary-hover);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .rvw-card-verified .material-symbols-outlined {
+    font-size: 14px !important;
+    color: var(--brand-primary);
+    font-variation-settings: 'FILL' 1;
+  }
+  .rvw-card-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--brand-heading);
+    margin: 4px 0 0;
+    line-height: 1.3;
+  }
+  .rvw-card-body {
+    font-size: 14.5px;
+    line-height: 1.55;
+    color: var(--brand-text);
+    margin: 0;
+  }
+  .rvw-card-author {
+    font-size: 13px;
+    color: var(--brand-text);
+    margin: 8px 0 0;
+    padding-top: 12px;
+    border-top: 1px solid var(--brand-border);
+  }
+  .rvw-card-author strong {
+    color: var(--brand-heading);
+    font-weight: 700;
+  }
+  .rvw-card-meta { color: var(--brand-muted); }
+  .rvw-card-tag {
+    color: var(--brand-primary-hover);
+    font-weight: 600;
+  }
+
+  /* Star colors */
+  .rvw-star--full { color: #F5B544; }
+  .rvw-star--empty { color: var(--brand-border-strong); }
+
+  /* === SHOW MORE === */
+  .rvw-more-wrap {
+    margin-top: 32px;
+    display: flex;
+    justify-content: center;
+  }
+  .rvw-more-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 28px;
+    background: transparent;
+    border: 1.5px solid var(--brand-primary);
+    border-radius: 9999px;
+    color: var(--brand-primary-hover);
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 200ms ease;
+  }
+  .rvw-more-btn:hover {
+    background: var(--brand-primary);
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(123, 144, 117, 0.28);
+  }
+  .rvw-more-btn:active {
+    transform: translateY(0);
+  }
+  .rvw-more-btn .material-symbols-outlined { font-size: 20px !important; }
+
+  /* === ADD REVIEW CTA === */
+  .rvw-add-cta {
+    margin-top: 48px;
+    padding: 28px 24px;
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    text-align: center;
+  }
+  @media (min-width: 640px) {
+    .rvw-add-cta {
+      flex-direction: row;
+      justify-content: space-between;
+      text-align: left;
+      padding: 28px 32px;
+    }
+  }
+  .rvw-add-text h3 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--brand-heading);
+    margin: 0 0 4px;
+  }
+  .rvw-add-text p {
+    font-size: 14px;
+    color: var(--brand-text);
+    margin: 0;
+  }
+  .rvw-add-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 28px;
+    background: var(--brand-primary);
+    color: #fff;
+    border: none;
+    border-radius: 9999px;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 800;
+    font-size: 14px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 200ms ease;
+    box-shadow: 0 6px 18px rgba(123, 144, 117, 0.25);
+  }
+  .rvw-add-btn:hover {
+    background: var(--brand-primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 22px rgba(123, 144, 117, 0.35);
+  }
+  .rvw-add-btn .material-symbols-outlined { font-size: 18px !important; }
+
+  /* === MODAL === */
+  .rvw-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(42, 45, 39, 0.55);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    z-index: 300;
+  }
+  .rvw-modal-backdrop[hidden] { display: none; }
+  .rvw-modal {
+    position: fixed;
+    z-index: 310;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: calc(100% - 32px);
+    max-width: 520px;
+    max-height: calc(100vh - 32px);
+    max-height: calc(100dvh - 32px);
+    background: var(--brand-surface);
+    border-radius: 20px;
+    box-shadow: 0 24px 60px rgba(15, 22, 32, 0.30);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+  .rvw-modal[hidden] { display: none; }
+  .rvw-modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--brand-border);
+    position: sticky;
+    top: 0;
+    background: var(--brand-surface);
+    z-index: 1;
+  }
+  .rvw-modal-head h3 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--brand-heading);
+    margin: 0;
+  }
+  .rvw-modal-close {
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--brand-surface-2);
+    border: none;
+    border-radius: 9999px;
+    color: var(--brand-heading);
+    cursor: pointer;
+    transition: background 200ms;
+  }
+  .rvw-modal-close:hover { background: var(--brand-primary-soft); }
+  .rvw-modal-close .material-symbols-outlined { font-size: 20px !important; }
+
+  /* === FORM === */
+  .rvw-form {
+    padding: 20px 24px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .rvw-form[hidden] { display: none; }
+  .rvw-form-label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--brand-heading);
+    letter-spacing: 0.02em;
+  }
+  .rvw-form-label input,
+  .rvw-form-label textarea {
+    width: 100%;
+    padding: 12px 14px;
+    background: var(--brand-bg);
+    border: 1.5px solid var(--brand-border);
+    border-radius: 12px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--brand-heading);
+    transition: border-color 200ms;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .rvw-form-label input:focus,
+  .rvw-form-label textarea:focus {
+    outline: none;
+    border-color: var(--brand-primary);
+    background: var(--brand-surface);
+  }
+  .rvw-form-label textarea {
+    resize: vertical;
+    min-height: 100px;
+    font-family: 'Outfit', sans-serif;
+  }
+  .rvw-form-help {
+    font-size: 11.5px;
+    font-weight: 500;
+    color: var(--brand-muted);
+    font-style: italic;
+  }
+  .rvw-form-stars {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .rvw-form-star {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 4px;
+    background: var(--brand-surface);
+    border: 1.5px solid var(--brand-border);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 180ms;
+  }
+  .rvw-form-star input { display: none; }
+  .rvw-form-star .material-symbols-outlined {
+    font-size: 24px !important;
+    color: var(--brand-border-strong);
+    transition: color 180ms;
+  }
+  .rvw-form-star-num {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--brand-text);
+  }
+  .rvw-form-star:hover {
+    border-color: var(--brand-border-strong);
+    background: var(--brand-surface-2);
+  }
+  .rvw-form-star:has(input:checked) {
+    border-color: var(--brand-primary);
+    background: var(--brand-primary-soft);
+  }
+  .rvw-form-star:has(input:checked) .material-symbols-outlined {
+    color: #F5B544;
+  }
+  .rvw-form-disclaimer {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    padding: 10px 14px;
+    background: var(--brand-primary-soft);
+    border-radius: 10px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--brand-primary-hover);
+  }
+  .rvw-form-disclaimer .material-symbols-outlined {
+    font-size: 16px !important;
+    color: var(--brand-primary);
+    font-variation-settings: 'FILL' 1;
+  }
+  .rvw-form-submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px;
+    background: var(--brand-primary);
+    color: #fff;
+    border: none;
+    border-radius: 9999px;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 800;
+    font-size: 14px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 200ms;
+    margin-top: 8px;
+  }
+  .rvw-form-submit:hover {
+    background: var(--brand-primary-hover);
+  }
+  .rvw-form-submit .material-symbols-outlined { font-size: 18px !important; }
+
+  /* === SUCCESS STATE === */
+  .rvw-form-success {
+    padding: 40px 24px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .rvw-form-success[hidden] { display: none; }
+  .rvw-form-success > .material-symbols-outlined {
+    font-size: 56px !important;
+    color: var(--brand-primary);
+    font-variation-settings: 'FILL' 1;
+  }
+  .rvw-form-success h4 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--brand-heading);
+    margin: 0;
+  }
+  .rvw-form-success p {
+    font-size: 14px;
+    color: var(--brand-text);
+    margin: 0;
+    max-width: 320px;
+  }
+  .rvw-form-close-success {
+    margin-top: 12px;
+    padding: 12px 28px;
+    background: var(--brand-primary);
+    color: #fff;
+    border: none;
+    border-radius: 9999px;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+</style>

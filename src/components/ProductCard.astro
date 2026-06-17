@@ -1,6 +1,7 @@
 ---
 import Price from './Price.astro';
 import { buildAssetUrl } from '@/lib/utils';
+import { getProductReviews, formatRating, starKind } from '@/lib/reviews';
 
 interface Props {
   name: string;
@@ -8,16 +9,30 @@ interface Props {
   imageUrl?: string;
   priceWithTax: { __typename: string; min?: number; max?: number; value?: number };
   currencyCode?: string;
+  badge?: string; // np. "PROMOCJA", "NOWOŚĆ", "BESTSELLER"
+  /** Cena regularna (grosze) — jeśli > current price renderuje strikethrough + sale badge */
+  regularPrice?: number;
 }
 
-const { name, slug, imageUrl, priceWithTax, currencyCode = 'PLN' } = Astro.props;
+const { name, slug, imageUrl, priceWithTax, currencyCode = 'PLN', badge, regularPrice } = Astro.props;
+
+// Sale logic — gdy regularPrice > current price
+const currentPrice = priceWithTax.value ?? priceWithTax.min ?? 0;
+const showSale = !!regularPrice && regularPrice > currentPrice;
+const salePercent = showSale && regularPrice ? Math.round(((regularPrice - currentPrice) / regularPrice) * 100) : 0;
+const regularFormatted = showSale && regularPrice
+  ? new Intl.NumberFormat('pl-PL', { style: 'currency', currency: currencyCode }).format(regularPrice / 100)
+  : '';
+
+// Reviews — gwiazdki + średnia + liczba opinii pod nazwą produktu.
+const reviews = getProductReviews(slug);
+const ratingNum = reviews ? formatRating(reviews.averageRating) : '';
+const totalCount = reviews?.totalCount ?? 0;
 ---
 
-<a
-  href={`/produkty/${slug}`}
-  class="group block no-underline"
->
-  <div class="aspect-square overflow-hidden rounded-lg bg-gray-100">
+<a href={`/produkty/${slug}`} class="dd-card group">
+  <div class="dd-card-img">
+    {badge && <span class="dd-card-badge">{badge}</span>}
     {imageUrl ? (
       <img
         src={buildAssetUrl(imageUrl, 'medium')}
@@ -25,20 +40,224 @@ const { name, slug, imageUrl, priceWithTax, currencyCode = 'PLN' } = Astro.props
         width="400"
         height="400"
         loading="lazy"
-        class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
       />
     ) : (
-      <div class="flex h-full w-full items-center justify-center text-gray-400">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <div class="dd-card-img-empty" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
       </div>
     )}
   </div>
-  <div class="mt-3 space-y-1">
-    <h3 class="text-sm font-medium text-gray-900 group-hover:text-gray-600 transition-colors line-clamp-2">
-      {name}
-    </h3>
-    <Price priceRange={priceWithTax} currencyCode={currencyCode} class="text-sm" />
+  <div class="dd-card-body">
+    <h3 class="dd-card-name">{name}</h3>
+    {reviews && totalCount > 0 && (
+      <div class="dd-card-rating">
+        <div class="dd-card-stars" aria-label={`Ocena ${ratingNum} na 5`}>
+          {[1, 2, 3, 4, 5].map((i) => {
+            const k = starKind(i, reviews.averageRating);
+            // SVG zamiast Material Symbols — gwarantowany render, brak font-variation
+            // axis issues które blokowały FILL na produkcji.
+            if (k === 'full') return (
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="#F5B544" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z"/>
+              </svg>
+            );
+            if (k === 'half') return (
+              <svg viewBox="0 0 24 24" width="14" height="14" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <defs>
+                  <linearGradient id={`card-half-${i}-${slug}`}>
+                    <stop offset="50%" stop-color="#F5B544"/>
+                    <stop offset="50%" stop-color="#D6CEBE"/>
+                  </linearGradient>
+                </defs>
+                <path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z" fill={`url(#card-half-${i}-${slug})`}/>
+              </svg>
+            );
+            return (
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="#D6CEBE" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z"/>
+              </svg>
+            );
+          })}
+        </div>
+        <span class="dd-card-rating-num">{ratingNum}</span>
+        <span class="dd-card-rating-count">({totalCount})</span>
+      </div>
+    )}
+    <div class="dd-card-price-row">
+      {showSale && regularFormatted && (
+        <span class="dd-card-price-regular">
+          {regularFormatted}
+        </span>
+      )}
+      <Price priceRange={priceWithTax} currencyCode={currencyCode} class={`dd-card-price${showSale ? ' dd-card-price--sale' : ''}`} />
+    </div>
   </div>
 </a>
+
+<style>
+  .dd-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-radius: var(--r-md);
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+  }
+  .dd-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--brand-border-strong);
+    box-shadow: var(--shadow-md);
+  }
+
+  .dd-card-img {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    background: var(--brand-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .dd-card-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 400ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .dd-card:hover .dd-card-img img {
+    transform: scale(1.04);
+  }
+
+  .dd-card-img-empty {
+    color: var(--brand-muted);
+    opacity: 0.5;
+  }
+
+  .dd-card-badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 2;
+    padding: 4px 10px;
+    background: var(--brand-accent);
+    color: var(--brand-inverse);
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border-radius: var(--r-xs);
+    box-shadow: 0 2px 6px rgba(230, 57, 70, 0.25);
+  }
+
+  .dd-card-body {
+    padding: 14px 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+  }
+
+  .dd-card-name {
+    font-family: 'Outfit', system-ui, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--brand-heading);
+    margin: 0;
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    transition: color 200ms ease;
+  }
+  .dd-card:hover .dd-card-name { color: var(--brand-primary-hover); }
+
+  .dd-card :global(.dd-card-price),
+  .dd-card :global(.dd-card-price *) {
+    font-family: 'Outfit', system-ui, sans-serif;
+  }
+  .dd-card :global(.dd-card-price) {
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--brand-heading);
+    letter-spacing: -0.01em;
+  }
+
+  /* Sale price row — strikethrough + accent */
+  .dd-card-price-row {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: auto;
+  }
+  .dd-card-price-regular {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--brand-muted);
+    text-decoration: line-through;
+    text-decoration-color: currentColor;
+    text-decoration-thickness: 1.5px;
+  }
+  .dd-card :global(.dd-card-price--sale) {
+    color: var(--brand-accent);
+  }
+
+  /* Rating row — gwiazdki + średnia + liczba opinii */
+  .dd-card-rating {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--brand-muted);
+    margin-top: -2px;
+  }
+  .dd-card-stars {
+    display: inline-flex;
+    align-items: center;
+    gap: 1px;
+  }
+  .dd-card-star {
+    font-size: 15px !important;
+    line-height: 1;
+  }
+  .dd-card-star--full,
+  .dd-card-star--half {
+    color: #F5B544 !important;
+    font-variation-settings: 'FILL' 1 !important;
+  }
+  .dd-card-star--empty {
+    color: var(--brand-border-strong) !important;
+    font-variation-settings: 'FILL' 0 !important;
+  }
+  .dd-card-rating-num {
+    font-weight: 700;
+    color: var(--brand-heading);
+    font-size: 13px;
+  }
+  .dd-card-rating-count {
+    color: var(--brand-muted);
+    font-size: 12.5px;
+  }
+
+  /* Sale badge — top-right corner over image */
+  .dd-card-sale-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 2;
+    padding: 5px 11px;
+    background: var(--brand-accent);
+    color: #FFFFFF;
+    font-size: 11.5px;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    border-radius: 9999px;
+    box-shadow: 0 4px 12px rgba(230, 57, 70, 0.35);
+  }
+</style>

@@ -50,7 +50,9 @@ export function buildResponse(body: unknown, newToken?: string, status = 200): R
     'Cache-Control': 'no-store, private',
   });
   if (newToken) {
-    const isProduction = !(process.env.VENDURE_API_URL || '').trim().includes('localhost');
+    // LOW-1: import.meta.env.PROD zamiast localhost-substring check.
+    // localhost moze tez byc ustawione przez env (testowe srodowisko) gdy chcemy Secure.
+    const isProduction = import.meta.env.PROD;
     const cookieDomain = (process.env.PUBLIC_COOKIE_DOMAIN || '').trim();
     headers.append(
       'Set-Cookie',

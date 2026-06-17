@@ -1,10 +1,8 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
-import Breadcrumbs from '@/components/Breadcrumbs.astro';
 import OrderSummary from '@/components/OrderSummary.astro';
-import Button from '@/components/Button.astro';
 import { shopApi, shopApiRaw, saveAuthToken, redirectWithToken } from '@/lib/vendure';
-import { formatPrice } from '@/lib/utils';
+import { formatPrice, buildAssetUrl } from '@/lib/utils';
 import { GET_ACTIVE_ORDER, GET_ELIGIBLE_SHIPPING_METHODS } from '@/lib/queries';
 import {
   SET_CUSTOMER_FOR_ORDER,
@@ -16,7 +14,7 @@ import {
 } from '@/lib/mutations';
 import { sendCAPIEvent, buildUserData, generateEventId } from '@/lib/meta-capi';
 import { getStoreConfig } from '@/lib/store-config';
-import { sanitizePaymentsArray } from '@/lib/security';
+import { sanitizePaymentsArray, assertSameOrigin } from '@/lib/security';
 const storeConfig = await getStoreConfig(Astro.request);
 
 // --- Types ---
@@ -32,18 +30,8 @@ let globalError = '';
 // CSRF protection: SameSite=Lax cookie is primary defense.
 // Origin check as secondary layer — compare against PUBLIC_SITE_URL (not Astro.url which is localhost behind proxy).
 if (Astro.request.method === 'POST') {
-  const origin = Astro.request.headers.get('origin');
-  const allowedOrigin = (import.meta.env.PUBLIC_SITE_URL || process.env.PUBLIC_SITE_URL || '').trim();
-  if (origin) {
-    // If we have allowedOrigin configured — validate. If not — reject in production.
-    if (allowedOrigin && !origin.startsWith(allowedOrigin)) {
-      return new Response('Forbidden', { status: 403 });
-    }
-    if (!allowedOrigin && import.meta.env.PROD) {
-      console.error('CSRF check: PUBLIC_SITE_URL not set in production — rejecting POST');
-      return new Response('Forbidden', { status: 403 });
-    }
-  }
+  const blocked = assertSameOrigin(Astro.request);
+  if (blocked) return blocked;
   try {
     const formData = await Astro.request.formData();
 
@@ -66,6 +54,9 @@ if (Astro.request.method === 'POST') {
       needsInvoice: formData.get('needsInvoice') ? 'on' : '',
       acceptTerms: formData.get('acceptTerms') ? 'on' : '',
       inpostLockerId: (formData.get('inpostLockerId') as string || '').trim(),
+      inpostLockerStreet: (formData.get('inpostLockerStreet') as string || '').trim(),
+      inpostLockerCity: (formData.get('inpostLockerCity') as string || '').trim(),
+      inpostLockerPostcode: (formData.get('inpostLockerPostcode') as string || '').trim(),
     };
 
     // --- Validation ---
@@ -92,7 +83,12 @@ if (Astro.request.method === 'POST') {
       } else if (code.includes('paczkomat') || name.includes('paczkomat')) {
         shippingType = 'paczkomat';
       }
-    } catch { /* fallback: kurier */ }
+    } catch (err) {
+      // CRITICAL-5 follow-up: log silent fallback. Bez tego brak observability gdy
+      // GET_ELIGIBLE_SHIPPING_METHODS pada — zamowienia paczkomatowe routuja sie
+      // jako kurier przez default i nie wiemy czemu.
+      console.error('[checkout:84] eligible shipping methods fetch failed (fallback to kurier):', err);
+    }
 
     // Paczkomat: require locker selection + format validation.
     // H7 (Sprint 1): InPost locker ID = 3-5 liter miasta + 2-4 cyfry + opcjonalna
@@ -157,7 +153,11 @@ if (Astro.request.method === 'POST') {
         if (currentState && currentState !== 'AddingItems') {
           await shopApiRaw<any>(TRANSITION_ORDER_TO_STATE, { state: 'AddingItems' }, Astro.request);
         }
-      } catch { /* ignore */ }
+      } catch (err) {
+        // CRITICAL-5 follow-up: log silent state-reset failure. Bez tego order utyka
+        // w stanie != AddingItems, kazdy submit zwraca OrderModificationError, brak diagnostyki.
+        console.error('[checkout:149] pre-submit order state reset failed:', err);
+      }
 
       // 1. Set customer
       //
@@ -196,9 +196,17 @@ if (Astro.request.method === 'POST') {
         const addressInput = shippingType === 'paczkomat'
           ? {
               fullName: `${formValues.firstName} ${formValues.lastName}`,
-              streetLine1: `Paczkomat ${formValues.inpostLockerId || ''}`,
-              city: 'InPost',
-              postalCode: '00-000',
+              // streetLine1 = "Paczkomat TAR21M, Tarnowskich 69" (locker id + faktyczna ulica z geowidget)
+              streetLine1: [
+                `Paczkomat ${formValues.inpostLockerId || ''}`,
+                formValues.inpostLockerStreet,
+              ]
+                .filter(Boolean)
+                .join(', '),
+              // Fallback do placeholderów jeśli geowidget nie zwrócił adresu
+              // (nie powinno się zdarzyć, bo onpointselect zawsze ma address_details).
+              city: formValues.inpostLockerCity || 'InPost',
+              postalCode: formValues.inpostLockerPostcode || '00-000',
               countryCode: 'PL',
               phoneNumber: formValues.phone,
             }
@@ -281,6 +289,19 @@ if (Astro.request.method === 'POST') {
       }
 
       if (!globalError) {
+        // HARDBLOCK PayU na dev/preview environments (audit H3 short-term).
+        // Vendure channel doodie ma teraz PROD PayU credentials (payuSandbox=false),
+        // wiec kazdy online payment z dev.dbamyopupile.pl / *-vercel.app = realny charge.
+        // Proper fix: PayU sandbox env-driven payment method (backlog P2 — wymaga
+        // sandbox credentials w Vendure channel custom fields). Do tego czasu
+        // pozwalamy online payment WYLACZNIE z hostow produkcyjnych.
+        const hostname = Astro.url.hostname;
+        const isProductionHost = hostname === 'dbamyopupile.pl' || hostname === 'www.dbamyopupile.pl';
+        const isOnlinePayment = shippingType !== 'pobranie';
+
+        if (!isProductionHost && isOnlinePayment) {
+          globalError = 'Płatności online są wyłączone na środowisku testowym. Wybierz „Pobranie" (COD) aby przetestować checkout, albo zamów na https://dbamyopupile.pl';
+        } else {
         // 5. Add payment
         const paymentMethod = shippingType === 'pobranie' ? 'cod' : 'payu';
         const paymentMetadata: Record<string, string> = {};
@@ -317,10 +338,19 @@ if (Astro.request.method === 'POST') {
         if (paymentResponse.__typename !== 'Order') {
           globalError = 'Nie udało się przetworzyć płatności. Spróbuj ponownie lub wybierz inną metodę.';
         } else {
-          // CAPI: Purchase event — only send if user consented to tracking (RODO)
-          const purchaseCookies = Astro.request.headers.get('cookie') || '';
-          const purchaseHasConsent = purchaseCookies.includes('cookie_consent=accepted');
-          if (purchaseHasConsent) {
+          // CAPI: Purchase event — TYLKO dla COD (pobranie), bo:
+          //   - COD: order powstaje od razu w stanie Settled (brak online payment flow) → bezpieczne fire
+          //   - PayU: order = Authorized/Created, user MOZE anulować w PayU → Purchase fire w
+          //     potwierdzenie.astro PO osiągnięciu payment.state === 'Settled'
+          // Bez tego rozróżnienia Meta dostawała fake Purchase za każde otwarcie checkout PayU
+          // (test Patryka 2026-05-26 PayU "Anuluj" → fake conversion w learning algo).
+          //
+          // Deterministic event_id = `purchase-{orderCode}` — IDENTYCZNY z tym używanym w
+          // potwierdzenie.astro (CAPI + browser fbq). Meta deduplikuje po event_id w 7-dniowym
+          // oknie, więc nawet jeśli COD user dotrze do /potwierdzenie i Purchase odpali się tam
+          // ponownie — Meta liczy jako 1 event.
+          if (paymentMethod === 'cod') {
+            // await — Vercel serverless aborts pending fetches po redirect, bez await event ginie
             const purchaseUserData = await buildUserData(Astro.request, {
               email: formValues.email,
               phone: formValues.phone,
@@ -330,10 +360,10 @@ if (Astro.request.method === 'POST') {
               postalCode: formValues.postalCode,
             });
 
-            sendCAPIEvent({
+            await sendCAPIEvent({
               event_name: 'Purchase',
               event_time: Math.floor(Date.now() / 1000),
-              event_id: generateEventId(),
+              event_id: `purchase-${paymentResponse.code}`,
               event_source_url: Astro.url.href,
               action_source: 'website',
               user_data: purchaseUserData,
@@ -396,22 +426,33 @@ if (Astro.request.method === 'POST') {
 
           // BLIK → wait for bank confirmation before proceeding
           if (formValues.flowType === 'BLIK') {
-            return redirectWithToken(`/checkout/blik-waiting?code=${paymentResponse.code}`, customerRaw.authToken);
+            return redirectWithToken(`/checkout/blik-waiting?code=${paymentResponse.code}`, paymentRaw.authToken ?? customerRaw.authToken);
           }
 
-          // COD or fallback — direct to confirmation (upsell interstitial disabled)
-          return redirectWithToken(`/potwierdzenie?code=${paymentResponse.code}`, customerRaw.authToken);
+          // COD or fallback — direct to confirmation
+          return redirectWithToken(`/potwierdzenie?code=${paymentResponse.code}`, paymentRaw.authToken ?? customerRaw.authToken);
         }
+        } // end else (production host OR COD — HARDBLOCK PayU dev)
       }
     }
   } catch (err: any) {
     globalError = 'Wystąpił nieoczekiwany błąd. Spróbuj ponownie.';
-    console.error('Checkout error:', err instanceof Error ? err.message : 'Unknown error');
+    // MEDIUM-4: redact BLIK code (6 cyfr) z error logow zanim trafia do
+    // Vercel Logs / Sentry. Vendure error msg moze zawierac fragment
+    // requestu/payloadu, w skrajnym przypadku metadata.blikCode.
+    const rawMsg = err instanceof Error ? err.message : String(err ?? 'Unknown error');
+    // LOW-1: zawezony regex — redact tylko 6-cyfrowych liczb przy kluczu blikCode
+    // (JSON / form encoding). Stary pattern \b\d{6}\b ukrywal tez Vendure order
+    // increment IDs, PayU transaction IDs itp. — psuc debug.
+    const safeMsg = rawMsg.replace(/(["']?blikCode["']?\s*[:=]\s*["']?)\d{6}(["']?)/gi, '$1[REDACTED-BLIK]$2');
+    console.error('Checkout error:', safeMsg);
     // Try to reset order state on failure
     try {
       await shopApi<any>(`mutation { transitionOrderToState(state: "AddingItems") { __typename ... on Order { id state } ... on OrderStateTransitionError { errorCode } } }`, {}, Astro.request);
-    } catch {
-      // Best effort — ignore if reset fails
+    } catch (resetErr) {
+      // CRITICAL-5: log silent reset failure — bez tego user uknal w stanie
+      // ArrangingPayment / non-AddingItems, kolejny submit failuje, nie wiemy czemu.
+      console.error('[checkout] Order reset to AddingItems failed:', resetErr instanceof Error ? resetErr.message : resetErr);
     }
   }
 }
@@ -431,8 +472,10 @@ try {
   order = orderData.activeOrder;
   shippingMethods = shippingData.eligibleShippingMethods ?? [];
   inpostToken = channelData?.activeChannel?.customFields?.inpostGeowidgetToken || '';
-} catch {
-  // Silently fail — will show empty cart
+} catch (err) {
+  // CRITICAL-5 follow-up: log GET handler fetch failure. Bez tego user widzi
+  // redirect do /koszyk (przez `if (!order)` ponizej) bez sygnalu od ops.
+  console.error('[checkout:430] GET active order / shipping methods / channel failed:', err);
 }
 
 if (!inpostToken) {
@@ -444,38 +487,129 @@ if (!order || !order.lines?.length) {
   return Astro.redirect('/koszyk');
 }
 
+// Fetch upsell products (brelok-fasola + gniotek-pingwinek) — pokazywane pod
+// "Złóż zamówienie" jako last-minute add-on. Filter slugs which już są w koszyku.
+const UPSELL_QUERY = `query Upsell($slug: String!) {
+  product(slug: $slug) {
+    id slug name
+    featuredAsset { preview }
+    variants { id priceWithTax }
+  }
+}`;
+const cartSlugs = new Set((order.lines || []).map((l: any) => l.productVariant?.product?.slug));
+let upsellProducts: any[] = [];
+try {
+  const slugs = ['brelok-fasola', 'gniotek-pingwinek'].filter((s) => !cartSlugs.has(s));
+  if (slugs.length > 0) {
+    const results = await Promise.all(
+      slugs.map((slug) => shopApi<any>(UPSELL_QUERY, { slug }, Astro.request).catch(() => null)),
+    );
+    upsellProducts = results.map((r: any) => r?.product).filter(Boolean);
+  }
+} catch (err) {
+  console.error('[checkout] upsells fetch failed:', err);
+}
+
+// Default shipping method: Paczkomat (jeśli user nic jeszcze nie wybrał).
+// Fallback: pierwsza dostępna metoda.
+const isPaczkomat = (m: any) => {
+  const c = (m.code || '').toLowerCase();
+  const n = (m.name || '').toLowerCase();
+  return c.includes('paczkomat') || c.includes('inpost') || n.includes('paczkomat');
+};
+
+// MEDIUM-5: walidacja defaultShippingMethodId — formValues.shippingMethodId może być
+// stale po zmianie eligible methods (qty change → free-shipping promo nie matchuje już
+// pobrania, etc.). Tylko zaakceptuj wartość która jest w aktualnej liście.
+const validShippingIds = new Set(shippingMethods.map((m: any) => m.id));
+const requestedShippingId = formValues.shippingMethodId && validShippingIds.has(formValues.shippingMethodId)
+  ? formValues.shippingMethodId
+  : '';
+const defaultShippingMethodId =
+  requestedShippingId ||
+  shippingMethods.find(isPaczkomat)?.id ||
+  shippingMethods[0]?.id ||
+  '';
+
+// CRITICAL-3: server-side push domyślnej metody dostawy do Vendure jeśli order
+// nie ma jeszcze shippingLines. Dzięki temu SSR ma już prawdziwy total + free-shipping
+// promo zaaplikowane, eliminuje race między user submit a initial client-side sync,
+// i nie pokazuje stale "0,00 zł" w Dostawie podczas pierwszego render.
+if (
+  Astro.request.method !== 'POST'
+  && order
+  && order.lines?.length > 0
+  && (order.shippingLines?.length ?? 0) === 0
+  && defaultShippingMethodId
+) {
+  try {
+    const setShipResult = await shopApi<any>(
+      SET_ORDER_SHIPPING_METHOD,
+      { shippingMethodId: [defaultShippingMethodId] },
+      Astro.request,
+    );
+    const r = setShipResult?.setOrderShippingMethod;
+    if (r?.__typename === 'Order') {
+      // Re-fetch GET_ACTIVE_ORDER → uzyskać pełen order shape (discounts, lines z linePriceWithTax)
+      // bo setOrderShippingMethod zwraca tylko podzbiór pól.
+      const refreshed = await shopApi<any>(GET_ACTIVE_ORDER, {}, Astro.request);
+      if (refreshed?.activeOrder) order = refreshed.activeOrder;
+    }
+  } catch (err) {
+    // CRITICAL-3 follow-up: log silent failure. Brak fallbacku po stronie klienta
+    // (initial sync usuniety w tym samym commicie), wiec to jedyne miejsce gdzie
+    // mozemy zauwazyc ze Vendure padl podczas SET_ORDER_SHIPPING_METHOD na page render.
+    console.error('[checkout:488] server-side default shipping setup failed:', err);
+  }
+}
+
 // H11 (Sprint 2): InitiateCheckout — server CAPI + browser Pixel share the SAME
 // event_id so Meta deduplicates the pair. Without this, both events count
 // independently and inflate the InitiateCheckout metric ~2x.
-const initiateCheckoutEventId = generateEventId();
-const icCookies = Astro.request.headers.get('cookie') || '';
-if (icCookies.includes('cookie_consent=accepted')) {
-  const icUserData = await buildUserData(Astro.request);
-  sendCAPIEvent({
-    event_name: 'InitiateCheckout',
-    event_time: Math.floor(Date.now() / 1000),
-    event_id: initiateCheckoutEventId,
-    event_source_url: Astro.url.href,
-    action_source: 'website',
-    user_data: icUserData,
-    custom_data: {
-      value: order ? order.totalWithTax / 100 : 0,
-      currency: 'PLN',
-      num_items: order ? order.totalQuantity : 0,
-      content_type: 'product',
-      content_ids: order?.lines?.map((l: any) => l.productVariant?.sku).filter(Boolean) || [],
-    },
-  }, storeConfig.metaDatasetId);
-}
+// 2026-06-02: event_id deterministyczny per order.code (jak Purchase: `purchase-${code}`).
+// Checkout SSR-renderuje sie na kazdy load — upsell ATC nizej robi reload() —
+// wiec losowy id per render liczyl IC ~2-3x/sesje. Staly id per koszyk → Meta
+// dedup w oknie 48h. CAPI + fbq dalej czytaja te sama zmienna (H11 bez zmian).
+const initiateCheckoutEventId = order?.code ? `ic-${order.code}` : generateEventId();
+const icUserData = await buildUserData(Astro.request);
+sendCAPIEvent({
+  event_name: 'InitiateCheckout',
+  event_time: Math.floor(Date.now() / 1000),
+  event_id: initiateCheckoutEventId,
+  event_source_url: Astro.url.href,
+  action_source: 'website',
+  user_data: icUserData,
+  custom_data: {
+    value: order ? order.totalWithTax / 100 : 0,
+    currency: 'PLN',
+    num_items: order ? order.totalQuantity : 0,
+    content_type: 'product',
+    content_ids: order?.lines?.map((l: any) => l.productVariant?.sku).filter(Boolean) || [],
+  },
+}, storeConfig.metaDatasetId);
 
 // InitiateCheckout pixel data
 const checkoutValue = order ? order.totalWithTax / 100 : 0;
+// SP pixel (lejek behawioralny): wartość = produkty z VAT BEZ dostawy — spójna
+// definicja ATC/IC/Purchase (wartość koszyka, nie skok z dostawy). M-5.
+const checkoutSubtotal = order ? (order.subTotalWithTax ?? order.totalWithTax) / 100 : 0;
 const checkoutNumItems = order ? order.totalQuantity : 0;
 
-// Detect free shipping: check order discounts (after shipping set) OR channel threshold (before)
-const hasFreeShippingFromDiscounts = (order?.discounts ?? []).some((d: any) =>
-  d.description?.toLowerCase().includes('darmowa dostawa') || d.description?.toLowerCase().includes('free shipping')
-);
+// CRITICAL-4: precyzyjna detekcja "darmowej dostawy" z amount sanity check.
+// Strict regex po poczatku description + sprawdzenie ze amount = pelna cena
+// metody (lub Vendure wyzerowal shippingWithTax).
+const isFreeShippingDiscountSSR = (d: any, ord: any): boolean => {
+  if (!d) return false;
+  const desc = (d.description || '').toLowerCase().trim();
+  const matchesName = /^darmowa dostawa\b/.test(desc) || /^free shipping\b/.test(desc);
+  if (!matchesName) return false;
+  if (ord?.shippingLines?.length > 0) {
+    const methodPrice = ord.shippingLines[0]?.priceWithTax ?? 0;
+    return methodPrice === 0 || Math.abs(d.amountWithTax || 0) === methodPrice;
+  }
+  return true;
+};
+const hasFreeShippingFromDiscounts = (order?.discounts ?? []).some((d: any) => isFreeShippingDiscountSSR(d, order));
 const channelThreshold = storeConfig?.freeShippingThreshold ?? 0;
 const hasFreeShippingPromo = hasFreeShippingFromDiscounts
   || (channelThreshold > 0 && (order?.subTotalWithTax ?? 0) >= channelThreshold);
@@ -484,30 +618,63 @@ const hasFreeShippingPromo = hasFreeShippingFromDiscounts
 const hasErrors = Object.keys(errors).length > 0 || !!globalError;
 ---
 
-<BaseLayout title="Zamówienie" noindex hideCart hideFooter>
-  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-    <h1 class="text-xl sm:text-3xl font-bold text-gray-900 mb-5 sm:mb-8">Zamówienie</h1>
-
-    {globalError && (
-      <div class="mb-6 rounded-lg bg-red-50 border border-red-200 p-4">
-        <p class="text-sm text-red-700">{globalError}</p>
+<BaseLayout title="Zamówienie" noindex hideCart hideFooter hideHeader>
+  <div class="co-page">
+    {/* ==================================================
+       SLIM CHECKOUT HEADER — Stitch trust-focused
+       ================================================== */}
+    <header class="co-header">
+      <div class="co-header-inner">
+        <a href="/" id="checkout-back" class="co-logo-link" data-fallback="/">
+          <img src="/logo/dbamyopupileprostokatbezta.png" alt="dbamyopupile" class="co-logo-img" width="100" height="40" />
+        </a>
+        <div class="co-trust-icons">
+          <span class="material-symbols-outlined co-trust-ico" style="font-variation-settings: 'FILL' 1;">lock</span>
+          <span class="co-trust-text">Bezpieczna kasa</span>
+          <span class="material-symbols-outlined co-trust-ico">verified_user</span>
+        </div>
       </div>
-    )}
+    </header>
 
-    <form method="POST" id="checkout-form" novalidate>
-      <div class="flex flex-col md:grid md:grid-cols-5 md:gap-8">
+    {/* ==================================================
+       MAIN — 2-col Stitch grid (7/5 split)
+       ================================================== */}
+    <main class="co-main">
+      {globalError && (
+        <div class="co-error-banner">
+          <span class="material-symbols-outlined">error</span>
+          <p>{globalError}</p>
+        </div>
+      )}
 
-        {/* LEFT: Form (3fr) */}
-        <div class="order-2 md:order-1 md:col-span-3 space-y-6 sm:space-y-8">
+      <form method="POST" id="checkout-form" novalidate class="co-grid">
+
+        {/* LEFT COLUMN — Forms (col-span-7) */}
+        <div class="co-col-left">
+          <h1 class="co-h1">Kasa</h1>
 
           {/* SECTION 1: Kontakt */}
-          <section id="section-contact">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">Dane kontaktowe</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label for="email" class="block text-sm font-medium text-gray-700 mb-1">
-                  Email <span class="text-gray-400 font-normal">(opcjonalne)</span>
-                </label>
+          <section id="section-contact" class="co-card">
+            <h2 class="co-card-title">Dane kontaktowe</h2>
+            <div class="co-field-grid">
+              <div class="co-field">
+                <label for="phone">Telefon *</label>
+                <input
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  value={formValues.phone || ''}
+                  placeholder="600 100 200"
+                  required
+                  inputmode="tel"
+                  autocomplete="tel"
+                  class:list={['co-input', errors.phone && 'co-input--error']}
+                />
+                {errors.phone && <p class="co-field-error">{errors.phone}</p>}
+              </div>
+
+              <div class="co-field">
+                <label for="email">Email <span class="co-label-opt">(opcjonalne)</span></label>
                 <input
                   type="email"
                   id="email"
@@ -515,329 +682,356 @@ const hasErrors = Object.keys(errors).length > 0 || !!globalError;
                   value={formValues.email || ''}
                   autocomplete="email"
                   inputmode="email"
-                  placeholder="Twój e-mail (do wysłania potwierdzenia)"
-                  class:list={[
-                    'w-full rounded-lg border px-3 py-2.5 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent',
-                    errors.email ? 'border-red-400 bg-red-50' : 'border-gray-300',
-                  ]}
+                  placeholder="twój@email.pl"
+                  class:list={['co-input', errors.email && 'co-input--error']}
                 />
-                {errors.email && <p class="mt-1 text-xs text-red-600">{errors.email}</p>}
+                {errors.email && <p class="co-field-error">{errors.email}</p>}
               </div>
+            </div>
+          </section>
 
-              <div>
-                <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Telefon *</label>
+          {/* SECTION 2: Dane osobowe — imię, ulica, kod/miasto 50/50 */}
+          <section id="section-personal" class="co-card">
+            <h2 class="co-card-title">Dane osobowe</h2>
+            <div class="co-field-grid">
+              <div class="co-field co-field--full">
+                <label for="fullName">Imię i nazwisko *</label>
                 <input
-                  type="tel"
-                  id="phone"
-                  name="phone"
-                  value={formValues.phone || ''}
-                  placeholder="Numer telefonu"
+                  type="text"
+                  id="fullName"
+                  name="fullName"
+                  value={formValues.fullName || ''}
                   required
-                  inputmode="tel"
-                  autocomplete="tel"
-                  class:list={[
-                    'w-full rounded-lg border px-3 py-2.5 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent',
-                    errors.phone ? 'border-red-400 bg-red-50' : 'border-gray-300',
-                  ]}
+                  autocomplete="name"
+                  placeholder="Jan Kowalski"
+                  class:list={['co-input', errors.fullName && 'co-input--error']}
                 />
-                {errors.phone && <p class="mt-1 text-xs text-red-600">{errors.phone}</p>}
+                {errors.fullName && <p class="co-field-error">{errors.fullName}</p>}
               </div>
-            </div>
-          </section>
 
-          {/* SECTION 2: Dostawa */}
-          <section id="section-shipping">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">Metoda dostawy</h2>
-            {errors.shippingMethodId && <p class="mb-2 text-xs text-red-600">{errors.shippingMethodId}</p>}
-
-            {shippingMethods.length > 0 ? (
-              <div class="space-y-2">
-                {shippingMethods.map((method: any) => {
-                  const isPobranie = method.code?.toLowerCase().includes('pobranie') || method.name?.toLowerCase().includes('pobranie');
-                  const showFreeShipping = hasFreeShippingPromo && method.priceWithTax > 0;
-                  return (
-                    <label class="flex items-center gap-3 rounded-lg border border-gray-200 p-4 cursor-pointer hover:bg-gray-50 transition-colors has-[:checked]:border-gray-900 has-[:checked]:bg-gray-50 min-h-[44px]">
-                      <input
-                        type="radio"
-                        name="shippingMethodId"
-                        value={method.id}
-                        data-code={method.code}
-                        checked={formValues.shippingMethodId === method.id || (shippingMethods.length === 1)}
-                        class="text-gray-900 focus:ring-gray-900"
-                      />
-                      <div class="flex-1">
-                        <span class="text-sm font-medium text-gray-900">{method.name}</span>
-                        {method.description && (
-                          <p class="text-xs text-gray-500 mt-0.5">{method.description}</p>
-                        )}
-                      </div>
-                      <span class="text-sm font-semibold text-gray-900">
-                        {showFreeShipping
-                          ? <><s class="text-gray-400 text-xs mr-1">{formatPrice(method.priceWithTax)}</s><span class="text-green-600 font-semibold">Gratis</span></>
-                          : method.priceWithTax === 0
-                            ? 'Gratis'
-                            : formatPrice(method.priceWithTax)}
-                      </span>
-                    </label>
-                  );
-                })}
-              </div>
-            ) : (
-              <p class="text-sm text-gray-500">Brak dostępnych metod dostawy.</p>
-            )}
-          </section>
-
-          {/* InPost Paczkomat selection */}
-          <div id="section-inpost" class="hidden">
-            {errors.inpostLockerId && <p class="mb-2 text-xs text-red-600">{errors.inpostLockerId}</p>}
-
-            <button
-              type="button"
-              id="open-geowidget"
-              class="w-full rounded-xl bg-[#1E3A5F] hover:bg-[#152C48] text-white font-semibold py-4 px-6 flex items-center justify-center gap-3 min-h-[56px] cursor-pointer transition-colors shadow-md"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              Wybierz Paczkomat na mapie
-            </button>
-
-            <div id="selected-locker" class="hidden mt-3 rounded-lg border border-green-200 bg-green-50 p-3 flex items-center justify-between gap-3">
-              <div class="flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600 shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                </svg>
-                <div>
-                  <p id="locker-name" class="text-sm font-semibold text-gray-900"></p>
-                  <p id="locker-address" class="text-xs text-gray-500 mt-0.5"></p>
-                </div>
-              </div>
-              <button
-                type="button"
-                id="change-locker"
-                class="text-sm text-gray-600 underline hover:text-gray-900 whitespace-nowrap min-h-[44px] flex items-center"
-              >
-                Zmien
-              </button>
-            </div>
-
-            <input type="hidden" name="inpostLockerId" id="inpostLockerId" value={formValues.inpostLockerId || ''} />
-          </div>
-
-          {/* SECTION 3: Adres dostawy (kurier + pobranie only) */}
-          <section id="section-address">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">Adres dostawy</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div class="sm:col-span-2">
-                <label for="street" class="block text-sm font-medium text-gray-700 mb-1">Ulica i numer *</label>
+              <div class="co-field co-field--full" id="section-address">
+                <label for="street">Ulica i numer *</label>
                 <input
                   type="text"
                   id="street"
                   name="street"
                   value={formValues.street || ''}
-                  required
                   autocomplete="street-address"
-                  class:list={[
-                    'w-full rounded-lg border px-3 py-2.5 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent',
-                    errors.street ? 'border-red-400 bg-red-50' : 'border-gray-300',
-                  ]}
+                  placeholder="ul. Spokojna 15/4"
+                  class:list={['co-input', errors.street && 'co-input--error']}
                 />
-                {errors.street && <p class="mt-1 text-xs text-red-600">{errors.street}</p>}
+                {errors.street && <p class="co-field-error">{errors.street}</p>}
               </div>
 
-              <div>
-                <label for="postalCode" class="block text-sm font-medium text-gray-700 mb-1">Kod pocztowy *</label>
+              <div class="co-field">
+                <label for="postalCode">Kod pocztowy *</label>
                 <input
                   type="text"
                   id="postalCode"
                   name="postalCode"
                   value={formValues.postalCode || ''}
                   placeholder="XX-XXX"
-                  required
                   inputmode="numeric"
                   autocomplete="postal-code"
-                  class:list={[
-                    'w-full rounded-lg border px-3 py-2.5 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent',
-                    errors.postalCode ? 'border-red-400 bg-red-50' : 'border-gray-300',
-                  ]}
+                  class:list={['co-input', errors.postalCode && 'co-input--error']}
                 />
-                {errors.postalCode && <p class="mt-1 text-xs text-red-600">{errors.postalCode}</p>}
+                {errors.postalCode && <p class="co-field-error">{errors.postalCode}</p>}
               </div>
 
-              <div>
-                <label for="city" class="block text-sm font-medium text-gray-700 mb-1">Miasto *</label>
+              <div class="co-field">
+                <label for="city">Miasto *</label>
                 <input
                   type="text"
                   id="city"
                   name="city"
                   value={formValues.city || ''}
-                  required
                   autocomplete="address-level2"
-                  class:list={[
-                    'w-full rounded-lg border px-3 py-2.5 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent',
-                    errors.city ? 'border-red-400 bg-red-50' : 'border-gray-300',
-                  ]}
+                  placeholder="Warszawa"
+                  class:list={['co-input', errors.city && 'co-input--error']}
                 />
-                {errors.city && <p class="mt-1 text-xs text-red-600">{errors.city}</p>}
+                {errors.city && <p class="co-field-error">{errors.city}</p>}
               </div>
             </div>
           </section>
 
-          {/* SECTION 4: Dane osobowe */}
-          <section id="section-personal">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">Dane osobowe</h2>
-            <div>
-              <label for="fullName" class="block text-sm font-medium text-gray-700 mb-1">Imię i nazwisko *</label>
-              <input
-                type="text"
-                id="fullName"
-                name="fullName"
-                value={formValues.fullName || ''}
-                required
-                autocomplete="name"
-                class:list={[
-                  'w-full rounded-lg border px-3 py-2.5 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent',
-                  errors.fullName ? 'border-red-400 bg-red-50' : 'border-gray-300',
-                ]}
-              />
-              {errors.fullName && <p class="mt-1 text-xs text-red-600">{errors.fullName}</p>}
-            </div>
+          {/* SECTION 3: Dostawa — radios; Paczkomat ma inline button do wyboru */}
+          <section id="section-shipping" class="co-card" data-free-shipping-threshold={channelThreshold}>
+            <h2 class="co-card-title">Metoda dostawy</h2>
+            {errors.shippingMethodId && <p class="co-field-error">{errors.shippingMethodId}</p>}
+
+            {shippingMethods.length > 0 ? (
+              <div class="co-radios">
+                {shippingMethods.map((method: any) => {
+                  const isPobranie = method.code?.toLowerCase().includes('pobranie') || method.name?.toLowerCase().includes('pobranie');
+                  const showFreeShipping = hasFreeShippingPromo && method.priceWithTax > 0;
+                  const isPaczkomat = method.code?.toLowerCase().includes('paczkomat') || method.name?.toLowerCase().includes('paczkomat');
+                  const iconName = isPobranie ? 'payments' : isPaczkomat ? 'package_2' : 'local_shipping';
+                  return (
+                    <label class="co-radio-card" data-shipping-method-row data-method-price={method.priceWithTax}>
+                      <div class="co-radio-card-head">
+                        <input
+                          type="radio"
+                          name="shippingMethodId"
+                          value={method.id}
+                          data-code={method.code}
+                          checked={defaultShippingMethodId === method.id}
+                        />
+                        <span class="material-symbols-outlined co-radio-ico">{iconName}</span>
+                        <div class="co-radio-body">
+                          <span class="co-radio-label">{method.name}</span>
+                          {method.description && (
+                            <p class="co-radio-desc">{method.description}</p>
+                          )}
+                        </div>
+                        <span class="co-radio-price" data-method-price-cell>
+                          {showFreeShipping
+                            ? <><s class="co-price-strike">{formatPrice(method.priceWithTax)}</s><span class="co-price-free">Gratis</span></>
+                            : method.priceWithTax === 0
+                              ? <span class="co-price-free">Gratis</span>
+                              : formatPrice(method.priceWithTax)}
+                        </span>
+                      </div>
+
+                      {/* Paczkomat inline expand — pokazywane tylko gdy ten radio checked (CSS :has) */}
+                      {isPaczkomat && (
+                        <div id="section-inpost" class="co-paczkomat-expand">
+                          {errors.inpostLockerId && <p class="co-field-error">{errors.inpostLockerId}</p>}
+
+                          <button type="button" id="open-geowidget" class="co-geowidget-btn">
+                            <span class="material-symbols-outlined">location_on</span>
+                            Wybierz paczkomat na mapie
+                          </button>
+
+                          <div id="selected-locker" class="hidden co-locker-selected">
+                            <div class="co-locker-info">
+                              <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                              <div>
+                                <p id="locker-name"></p>
+                                <p id="locker-address"></p>
+                              </div>
+                            </div>
+                            <button type="button" id="change-locker" class="co-locker-change">Zmień</button>
+                          </div>
+
+                          <input type="hidden" name="inpostLockerId" id="inpostLockerId" value={formValues.inpostLockerId || ''} />
+                          <input type="hidden" name="inpostLockerStreet" id="inpostLockerStreet" value={formValues.inpostLockerStreet || ''} />
+                          <input type="hidden" name="inpostLockerCity" id="inpostLockerCity" value={formValues.inpostLockerCity || ''} />
+                          <input type="hidden" name="inpostLockerPostcode" id="inpostLockerPostcode" value={formValues.inpostLockerPostcode || ''} />
+                        </div>
+                      )}
+                    </label>
+                  );
+                })}
+              </div>
+            ) : (
+              <p class="co-empty">Brak dostępnych metod dostawy.</p>
+            )}
           </section>
 
-          {/* SECTION 5: Platnosc (NOT for pobranie) */}
-          <section id="section-payment">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">Metoda płatności</h2>
-            {errors.paymentMethodCode && <p class="mb-2 text-xs text-red-600">{errors.paymentMethodCode}</p>}
+          {/* SECTION 4: Płatność — domyślnie BLIK */}
+          <section id="section-payment" class="co-card">
+            <h2 class="co-card-title">Płatność</h2>
+            {errors.paymentMethodCode && <p class="co-field-error">{errors.paymentMethodCode}</p>}
 
-            <input type="hidden" name="paymentMethodCode" value="payu" />
-            <input type="hidden" name="flowType" id="flowType" value={formValues.flowType || ''} />
+            <input type="hidden" name="flowType" id="flowType" value={formValues.flowType || 'BLIK'} />
 
-            <div class="space-y-2">
-              {/* BLIK */}
-              <label class="flex items-center gap-3 rounded-lg border border-gray-200 p-4 cursor-pointer hover:bg-gray-50 transition-colors has-[:checked]:border-gray-900 has-[:checked]:bg-gray-50 min-h-[44px]">
-                <input
-                  type="radio"
-                  name="paymentFlow"
-                  value="BLIK"
-                  checked={formValues.flowType === 'BLIK'}
-                  class="text-gray-900 focus:ring-gray-900"
-                />
-                <div class="flex-1">
-                  <span class="text-sm font-medium text-gray-900">BLIK</span>
-                  <p class="text-xs text-gray-500 mt-0.5">Wpisz kod z aplikacji bankowej</p>
+            <div class="co-radios">
+              {/* BLIK — domyślnie */}
+              <label class="co-radio-card">
+                <div class="co-radio-card-head">
+                  <input
+                    type="radio"
+                    name="paymentFlow"
+                    value="BLIK"
+                    checked={(formValues.flowType || 'BLIK') === 'BLIK'}
+                  />
+                  <span class="material-symbols-outlined co-radio-ico">smartphone</span>
+                  <div class="co-radio-body">
+                    <span class="co-radio-label">BLIK</span>
+                    <p class="co-radio-desc">Wpisz kod z aplikacji bankowej</p>
+                  </div>
+                </div>
+
+                {/* BLIK code input — inline expand */}
+                <div id="blik-code-section" class={((formValues.flowType || 'BLIK') === 'BLIK') ? 'co-blik-input' : 'co-blik-input hidden'}>
+                  <label for="blikCode">Kod BLIK</label>
+                  <input
+                    type="text"
+                    id="blikCode"
+                    name="blikCode"
+                    value={formValues.blikCode || ''}
+                    placeholder="••••••"
+                    inputmode="numeric"
+                    maxlength="6"
+                    autocomplete="one-time-code"
+                    class:list={['co-input', 'co-input--blik', errors.blikCode && 'co-input--error']}
+                  />
+                  {errors.blikCode && <p class="co-field-error">{errors.blikCode}</p>}
                 </div>
               </label>
 
-              {/* BLIK code input */}
-              <div id="blik-code-section" class={formValues.flowType === 'BLIK' ? 'pl-9' : 'pl-9 hidden'}>
-                <label for="blikCode" class="block text-sm font-medium text-gray-700 mb-1">Kod BLIK</label>
-                <input
-                  type="text"
-                  id="blikCode"
-                  name="blikCode"
-                  value={formValues.blikCode || ''}
-                  placeholder="______"
-                  inputmode="numeric"
-                  maxlength="6"
-                  autocomplete="one-time-code"
-                  class:list={[
-                    'w-32 rounded-lg border px-3 py-2.5 text-sm min-h-[44px] font-mono tracking-widest text-center focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent',
-                    errors.blikCode ? 'border-red-400 bg-red-50' : 'border-gray-300',
-                  ]}
-                />
-                {errors.blikCode && <p class="mt-1 text-xs text-red-600">{errors.blikCode}</p>}
-              </div>
-
               {/* Płatność online (redirect) */}
-              <label class="flex items-center gap-3 rounded-lg border border-gray-200 p-4 cursor-pointer hover:bg-gray-50 transition-colors has-[:checked]:border-gray-900 has-[:checked]:bg-gray-50 min-h-[44px]">
-                <input
-                  type="radio"
-                  name="paymentFlow"
-                  value="REDIRECT"
-                  checked={formValues.flowType === 'REDIRECT'}
-                  class="text-gray-900 focus:ring-gray-900"
-                />
-                <div class="flex-1">
-                  <span class="text-sm font-medium text-gray-900">Płatność online</span>
-                  <p class="text-xs text-gray-500 mt-0.5">Karta, przelew — przekierowanie do PayU</p>
+              <label class="co-radio-card">
+                <div class="co-radio-card-head">
+                  <input
+                    type="radio"
+                    name="paymentFlow"
+                    value="REDIRECT"
+                    checked={formValues.flowType === 'REDIRECT'}
+                  />
+                  <span class="material-symbols-outlined co-radio-ico">credit_card</span>
+                  <div class="co-radio-body">
+                    <span class="co-radio-label">Karta / przelew online</span>
+                    <p class="co-radio-desc">Płatność przez PayU, Visa, Mastercard, przelewy</p>
+                  </div>
                 </div>
               </label>
 
               {/* PayPo */}
-              <label class="flex items-center gap-3 rounded-lg border border-gray-200 p-4 cursor-pointer hover:bg-gray-50 transition-colors has-[:checked]:border-gray-900 has-[:checked]:bg-gray-50 min-h-[44px]">
-                <input
-                  type="radio"
-                  name="paymentFlow"
-                  value="PAYPO"
-                  checked={formValues.flowType === 'PAYPO'}
-                  class="text-gray-900 focus:ring-gray-900"
-                />
-                <div class="flex-1">
-                  <span class="text-sm font-medium text-gray-900">PayPo</span>
-                  <p class="text-xs text-gray-500 mt-0.5">Kup teraz, zaplac za 30 dni</p>
+              <label class="co-radio-card">
+                <div class="co-radio-card-head">
+                  <input
+                    type="radio"
+                    name="paymentFlow"
+                    value="PAYPO"
+                    checked={formValues.flowType === 'PAYPO'}
+                  />
+                  <span class="material-symbols-outlined co-radio-ico">schedule</span>
+                  <div class="co-radio-body">
+                    <span class="co-radio-label">PayPo</span>
+                    <p class="co-radio-desc">Kup teraz, zapłać za 30 dni</p>
+                  </div>
                 </div>
               </label>
             </div>
           </section>
 
-          {/* COD Notice (only for pobranie, replaces section 5) */}
-          <div id="cod-notice" class="hidden rounded-lg bg-amber-50 border border-amber-200 p-4">
-            <p class="text-sm font-medium text-amber-800">Płatność przy odbiorze</p>
-            <p class="text-xs text-amber-700 mt-1">Zaplacisz kurierowi przy odbiorze przesylki.</p>
+          {/* COD Notice (only for pobranie) */}
+          <div id="cod-notice" class="hidden co-cod-notice">
+            <span class="material-symbols-outlined">payments</span>
+            <div>
+              <p class="co-cod-title">Płatność przy odbiorze</p>
+              <p class="co-cod-desc">Zapłacisz kurierowi przy odbiorze przesyłki.</p>
+            </div>
           </div>
 
-          {/* SECTION 6: Finalizacja */}
-          <section id="section-finalize">
-            {/* Notes */}
-            <div class="mb-6">
-              <label for="notes" class="block text-sm font-medium text-gray-700 mb-1">Uwagi do zamówienia (opcjonalne)</label>
-              <textarea
-                id="notes"
-                name="notes"
-                rows="2"
-                class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none"
-              >{formValues.notes || ''}</textarea>
+          {/* PayU redirect notice — pokazywany gdy flowType = REDIRECT lub PAYPO */}
+          <div id="payu-notice" class="hidden co-payu-notice">
+            <span class="material-symbols-outlined">open_in_new</span>
+            <div>
+              <p class="co-payu-title">Przekierowanie do bramki płatności</p>
+              <p class="co-payu-desc">Po kliknięciu „Złóż zamówienie" zostaniesz przekierowany do bramki PayU, gdzie dokończysz płatność. Po jej zatwierdzeniu wrócisz na stronę zamówienia.</p>
             </div>
+          </div>
 
-            {/* Submit + legal notice — MOBILE only (pod formularzem) */}
-            <div class="md:hidden space-y-3">
-              <Button type="submit" id="submit-btn-mobile" variant="primary" size="lg" class="w-full min-h-[52px]">
-                Zamawiam z obowiązkiem zapłaty
-              </Button>
-              <p class="text-xs text-gray-500">
-                Klikając przycisk zamówienia, potwierdzasz, że akceptujesz <a href="/regulamin" target="_blank" class="underline hover:text-gray-700">Regulamin sklepu</a> oraz zapoznałeś/aś się z <a href="/polityka-prywatnosci" target="_blank" class="underline hover:text-gray-700">Polityka prywatności</a>.
-              </p>
-            </div>
-          </section>
-        </div>
+          {/* JS placeholder — section-finalize zachowane (no-op show/hide w JS) */}
+          <section id="section-finalize" class="hidden"></section>
 
-        {/* RIGHT: Order summary (2fr) — na mobile na gorze */}
-        <div class="order-1 md:order-2 md:col-span-2 mb-6 md:mb-0 md:mt-0">
-          <div class="rounded-lg bg-gray-50 p-6 md:sticky md:top-20">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">Twoje zamówienie</h2>
-            <OrderSummary order={order} />
-
-            {/* Submit + legal — DESKTOP only (w prawej kolumnie pod summary) */}
-            <div class="hidden md:block mt-5 pt-5 border-t border-gray-200 space-y-3">
-              <Button type="submit" id="submit-btn" variant="primary" size="lg" class="w-full min-h-[52px]">
-                Zamawiam z obowiązkiem zapłaty
-              </Button>
-              <p class="text-xs text-gray-500 leading-snug">
-                Klikając przycisk, akceptujesz <a href="/regulamin" target="_blank" class="underline hover:text-gray-700">Regulamin</a> i <a href="/polityka-prywatnosci" target="_blank" class="underline hover:text-gray-700">Politykę prywatności</a>.
-              </p>
-            </div>
-
-            <div class="mt-4">
-              <Button href="/koszyk" variant="outline" size="sm" class="w-full">
-                Wroc do koszyka
-              </Button>
-            </div>
+          {/* Submit + legal — pokazywany na <1024px (poniżej breakpointu grida) */}
+          <div class="co-submit-mobile">
+            <button type="submit" id="submit-btn-mobile" class="co-place-order">
+              Złóż zamówienie
+              <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">arrow_forward</span>
+            </button>
+            <p class="co-legal">
+              Klikając, akceptujesz <a href="/regulamin" target="_blank">regulamin</a> i <a href="/polityka-prywatnosci" target="_blank">politykę prywatności</a>.
+            </p>
           </div>
         </div>
 
+        {/* RIGHT COLUMN — Sticky Order summary (col-span-5) */}
+        <aside class="co-col-right">
+          <div class="co-summary">
+            <h2 class="co-summary-title">Podsumowanie</h2>
+
+            <div class="co-summary-lines">
+              <OrderSummary order={order} hasFreeShippingPromo={hasFreeShippingPromo} />
+            </div>
+
+
+            {/* Free Shipping Banner — Stitch sage */}
+            {hasFreeShippingPromo && (
+              <div class="co-free-banner">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                <p>Gratulacje! Masz <strong>darmową dostawę</strong> 🎉</p>
+              </div>
+            )}
+
+            {/* Submit + legal — pokazywany na >=1024px (desktop, prawa kolumna sticky) */}
+            <div class="co-submit-desktop">
+              <button type="submit" id="submit-btn" class="co-place-order">
+                Złóż zamówienie
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">arrow_forward</span>
+              </button>
+              <p class="co-legal">
+                Klikając, akceptujesz <a href="/regulamin" target="_blank">regulamin</a> i <a href="/polityka-prywatnosci" target="_blank">politykę prywatności</a>.
+              </p>
+            </div>
+
+            {/* === UPSELLS — compact cards pod CTA (desktop) / pod summary (mobile) === */}
+            {upsellProducts.length > 0 && (
+              <div class="co-upsells">
+                <p class="co-upsells-title">
+                  <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add_shopping_cart</span>
+                  Dodaj do zamówienia
+                </p>
+                <div class="co-upsells-list">
+                  {upsellProducts.map((p: any) => {
+                    const variant = p.variants?.[0];
+                    if (!variant) return null;
+                    return (
+                      <div class="co-upsell-card" data-upsell-variant={variant.id}>
+                        <div class="co-upsell-img">
+                          {p.featuredAsset?.preview ? (
+                            <img src={buildAssetUrl(p.featuredAsset.preview, 'thumb')} alt={p.name} loading="lazy" />
+                          ) : (
+                            <span class="material-symbols-outlined">image</span>
+                          )}
+                        </div>
+                        <div class="co-upsell-info">
+                          <p class="co-upsell-name">{p.name.split(/\s+[-–]\s+/)[0].trim()}</p>
+                          <p class="co-upsell-price">{formatPrice(variant.priceWithTax)}</p>
+                        </div>
+                        <button type="button" class="co-upsell-btn" data-upsell-add aria-label={`Dodaj ${p.name} do koszyka`}>
+                          <span data-btn-label>Dodaj</span>
+                          <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">add</span>
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* SSL Trust Row */}
+            <div class="co-ssl">
+              <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">lock</span>
+              <span>SSL · PayU certyfikowany · 30 dni na zwrot</span>
+            </div>
+
+            <a href="/sklep" class="co-back-cart">
+              <span class="material-symbols-outlined">arrow_back</span>
+              Kontynuuj zakupy
+            </a>
+          </div>
+        </aside>
+      </form>
+    </main>
+
+    {/* ==================================================
+       SLIM FOOTER
+       ================================================== */}
+    <footer class="co-footer">
+      <div class="co-footer-inner">
+        <span class="co-footer-brand">dbamyopupile</span>
+        <div class="co-footer-links">
+          <a href="/regulamin">Regulamin</a>
+          <a href="/polityka-prywatnosci">Polityka prywatności</a>
+          <a href="/kontakt">Kontakt</a>
+        </div>
+        <span class="co-footer-copy">© 2026 dbamyopupile. Dbamy o Twojego pupila.</span>
       </div>
-    </form>
+    </footer>
   </div>
 
   {/* InPost Geowidget Modal */}
@@ -869,6 +1063,1178 @@ const hasErrors = Object.keys(errors).length > 0 || !!globalError;
       </div>
     </div>
   </div>
+
+  <style is:global>
+    /* ============================================================
+       DOODIE CHECKOUT — Stitch port
+       2-col grid (7/5 split) · Outfit · sage + strawberry · pill inputs
+       ============================================================ */
+
+    .co-page {
+      background: var(--brand-bg);
+      min-height: 100vh;
+      font-family: 'Outfit', system-ui, sans-serif;
+      color: var(--brand-heading);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---------- Slim Header (hides on scroll down, shows on scroll up) ---------- */
+    .co-header {
+      background: var(--brand-bg);
+      border-bottom: 1px solid var(--brand-border);
+      width: 100%;
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      transform: translateY(0);
+      transition: transform 280ms cubic-bezier(0.4, 0, 0.2, 1);
+      will-change: transform;
+    }
+    .co-header--hidden {
+      transform: translateY(-100%);
+    }
+    .co-header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 14px 20px;
+    }
+    @media (min-width: 768px) {
+      .co-header-inner { padding: 16px 24px; }
+    }
+    .co-logo-link {
+      display: inline-flex;
+      align-items: center;
+      text-decoration: none;
+    }
+    .co-logo-img {
+      height: 36px;
+      width: auto;
+      object-fit: contain;
+    }
+    @media (min-width: 768px) {
+      .co-logo-img { height: 44px; }
+    }
+    .co-trust-icons {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--brand-primary);
+    }
+    .co-trust-ico {
+      font-size: 22px !important;
+    }
+    .co-trust-text {
+      display: none;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+    @media (min-width: 640px) {
+      .co-trust-text { display: inline; }
+    }
+
+    /* ---------- Main grid ---------- */
+    .co-main {
+      flex: 1;
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 20px 80px;
+    }
+    @media (min-width: 1024px) {
+      .co-main { padding: 64px 24px 96px; }
+    }
+
+    .co-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 32px;
+    }
+    @media (min-width: 1024px) {
+      .co-grid {
+        grid-template-columns: 7fr 5fr;
+        gap: 48px;
+        align-items: start;
+      }
+    }
+
+    /* min-width: 0 — bez tego grid items rosną do content size i robią horizontal overflow na mobile */
+    .co-col-left {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      order: 2;
+      min-width: 0;
+    }
+    @media (min-width: 1024px) {
+      .co-col-left { order: 1; gap: 24px; }
+    }
+
+    .co-col-right {
+      order: 1;
+      min-width: 0;
+    }
+    @media (min-width: 1024px) {
+      .co-col-right {
+        order: 2;
+        position: sticky;
+        top: 100px;
+      }
+    }
+
+    /* ---------- H1 ---------- */
+    .co-h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      color: var(--brand-heading);
+      margin: 0 0 4px;
+      line-height: 1.1;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .co-h1::before {
+      content: '';
+      display: inline-block;
+      width: 6px;
+      height: 28px;
+      background: var(--brand-primary);
+      border-radius: 999px;
+    }
+    @media (min-width: 768px) {
+      .co-h1 { font-size: 42px; }
+      .co-h1::before { width: 8px; height: 36px; }
+    }
+
+    /* ---------- Error banner ---------- */
+    .co-error-banner {
+      background: var(--brand-accent-soft);
+      border: 1px solid var(--brand-accent);
+      border-radius: 16px;
+      padding: 14px 18px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--brand-accent);
+    }
+    .co-error-banner p {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    /* ---------- Card sections ---------- */
+    .co-card {
+      background: var(--brand-surface);
+      border: 1px solid var(--brand-border);
+      border-radius: 20px;
+      padding: 22px 22px 24px;
+      box-shadow: 0 1px 2px rgba(42, 45, 39, 0.04), 0 8px 24px rgba(42, 45, 39, 0.05);
+      transition: box-shadow 220ms ease, border-color 220ms ease;
+    }
+    .co-card:focus-within {
+      border-color: var(--brand-primary);
+      box-shadow: 0 2px 4px rgba(42, 45, 39, 0.05), 0 12px 32px rgba(123, 144, 117, 0.10);
+    }
+    @media (min-width: 768px) {
+      .co-card { padding: 28px 28px 30px; border-radius: 22px; }
+    }
+    .co-card-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--brand-heading);
+      margin: 0 0 18px;
+      letter-spacing: -0.005em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .co-card-title::before {
+      content: '';
+      width: 4px;
+      height: 16px;
+      background: var(--brand-primary);
+      border-radius: 999px;
+      flex-shrink: 0;
+    }
+    @media (min-width: 768px) {
+      .co-card-title { font-size: 19px; }
+    }
+    .co-label-opt {
+      font-weight: 400;
+      color: var(--brand-muted);
+      font-size: 13px;
+    }
+
+    /* ---------- Fields ---------- */
+    .co-field-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 640px) {
+      .co-field-grid { grid-template-columns: 1fr; }
+    }
+    .co-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .co-field--full { grid-column: 1 / -1; }
+    .co-field label {
+      font-family: 'Outfit', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--brand-text);
+    }
+    .co-field-error {
+      color: var(--brand-accent);
+      font-size: 12px;
+      font-weight: 500;
+      margin: 4px 0 0;
+    }
+
+    .co-input {
+      background: var(--brand-surface-2);
+      border: 1.5px solid var(--brand-border);
+      border-radius: 14px;
+      padding: 14px 18px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 15px;
+      color: var(--brand-heading);
+      width: 100%;
+      box-sizing: border-box;
+      transition: border-color 200ms, box-shadow 200ms, background 200ms;
+      min-height: 50px;
+    }
+    .co-input::placeholder {
+      color: var(--brand-muted);
+    }
+    .co-input:hover:not(:focus) {
+      border-color: var(--brand-border-strong);
+    }
+    .co-input:focus {
+      outline: none;
+      border-color: var(--brand-primary);
+      background: var(--brand-surface);
+      box-shadow: 0 0 0 4px rgba(123, 144, 117, 0.18);
+    }
+    .co-input--error {
+      border-color: var(--brand-accent);
+      background: var(--brand-accent-soft);
+    }
+    .co-textarea {
+      border-radius: 14px;
+      resize: vertical;
+      min-height: 70px;
+      padding: 14px 18px;
+    }
+    .co-input--blik {
+      width: 180px;
+      text-align: center;
+      letter-spacing: 0.5em;
+      font-family: 'Outfit', monospace;
+      font-weight: 700;
+      font-size: 18px;
+    }
+
+    /* ---------- Radio cards (shipping + payment) ---------- */
+    .co-radios {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .co-radio-card {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      padding: 14px 18px;
+      background: var(--brand-surface);
+      border: 1.5px solid var(--brand-border);
+      border-radius: 16px;
+      cursor: pointer;
+      transition: border-color 200ms, background 200ms, box-shadow 220ms, transform 120ms;
+      position: relative;
+    }
+    .co-radio-card-head {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-height: 36px;
+    }
+    .co-radio-card:hover {
+      background: var(--brand-surface);
+      border-color: var(--brand-primary);
+      box-shadow: 0 4px 14px rgba(123, 144, 117, 0.12);
+      transform: translateY(-1px);
+    }
+    .co-radio-card:has(input:checked) {
+      border-color: var(--brand-primary);
+      background: var(--brand-primary-soft);
+      box-shadow: 0 0 0 3px rgba(123, 144, 117, 0.18), 0 6px 18px rgba(123, 144, 117, 0.15);
+      transform: translateY(0);
+    }
+    .co-radio-card input[type="radio"] {
+      accent-color: var(--brand-primary);
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    /* ---------- Paczkomat inline expand (inside radio) ---------- */
+    .co-paczkomat-expand {
+      display: none;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--brand-border);
+      flex-direction: column;
+      gap: 10px;
+    }
+    .co-radio-card:has(input[type="radio"]:checked) .co-paczkomat-expand {
+      display: flex;
+    }
+    /* Allow JS .hidden to still hide it if needed */
+    .co-paczkomat-expand.hidden { display: none !important; }
+
+    /* BLIK code inline expand — visible only when BLIK radio checked */
+    .co-radio-card:not(:has(input[type="radio"]:checked)) .co-blik-input {
+      display: none;
+    }
+    .co-radio-ico {
+      color: var(--brand-primary);
+      font-size: 24px !important;
+      flex-shrink: 0;
+    }
+    .co-radio-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .co-radio-label {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--brand-heading);
+    }
+    .co-radio-desc {
+      font-size: 13px;
+      color: var(--brand-text);
+      margin: 0;
+    }
+    .co-radio-price {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--brand-heading);
+      white-space: nowrap;
+    }
+    .co-price-strike {
+      color: var(--brand-muted);
+      font-size: 13px;
+      margin-right: 6px;
+      font-weight: 500;
+    }
+    .co-price-free {
+      color: var(--brand-primary);
+      font-weight: 700;
+    }
+    .co-pay-badge {
+      background: var(--brand-heading);
+      color: #FFFCF7;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 6px;
+      letter-spacing: 0.05em;
+    }
+    .co-pay-badge--blik {
+      background: linear-gradient(135deg, #DB1F3B 0%, #FF3B5C 100%);
+    }
+
+    /* ---------- BLIK code input (inline w radio) ---------- */
+    .co-blik-input {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--brand-border);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .co-blik-input label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--brand-text);
+    }
+
+    /* ---------- InPost geowidget button ---------- */
+    .co-geowidget-btn {
+      width: 100%;
+      background: var(--brand-heading);
+      color: var(--brand-inverse);
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      padding: 16px 20px;
+      border: none;
+      border-radius: 9999px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 200ms;
+      letter-spacing: 0.02em;
+    }
+    .co-geowidget-btn:hover { background: #3A3F35; }
+    .co-locker-selected {
+      background: var(--brand-primary-soft);
+      border: 1px solid var(--brand-primary);
+      border-radius: 16px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .co-locker-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .co-locker-info .material-symbols-outlined {
+      color: var(--brand-primary);
+      font-size: 24px !important;
+    }
+    .co-locker-info p:first-of-type {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--brand-heading);
+      margin: 0;
+    }
+    .co-locker-info p:last-of-type {
+      font-size: 12px;
+      color: var(--brand-text);
+      margin: 2px 0 0;
+    }
+    .co-locker-change {
+      background: transparent;
+      border: none;
+      color: var(--brand-primary);
+      font-weight: 700;
+      font-size: 13px;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    /* ---------- COD notice ---------- */
+    .co-cod-notice {
+      background: #FDF6E4;
+      border: 1px solid #E8C97A;
+      border-radius: 18px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .co-cod-notice .material-symbols-outlined {
+      color: #B8861F;
+      font-size: 24px !important;
+    }
+    .co-cod-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--brand-heading);
+      margin: 0;
+    }
+    .co-cod-desc {
+      font-size: 13px;
+      color: var(--brand-text);
+      margin: 4px 0 0;
+    }
+
+    /* ---------- PayU redirect notice ---------- */
+    .co-payu-notice {
+      background: var(--brand-primary-soft);
+      border: 1px solid var(--brand-primary);
+      border-radius: 18px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .co-payu-notice .material-symbols-outlined {
+      color: var(--brand-primary-hover);
+      font-size: 24px !important;
+      font-variation-settings: 'FILL' 1;
+    }
+    .co-payu-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--brand-heading);
+      margin: 0;
+    }
+    .co-payu-desc {
+      font-size: 13px;
+      color: var(--brand-text);
+      margin: 4px 0 0;
+      line-height: 1.5;
+    }
+
+    /* ---------- Empty state ---------- */
+    .co-empty {
+      color: var(--brand-muted);
+      font-size: 14px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    /* ---------- Summary right column ---------- */
+    .co-summary {
+      background: var(--brand-surface);
+      border: 1px solid var(--brand-border);
+      border-radius: 24px;
+      padding: 24px;
+      box-shadow: 0px 4px 20px rgba(42, 45, 39, 0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    @media (min-width: 768px) {
+      .co-summary { padding: 28px; }
+    }
+    .co-summary-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--brand-heading);
+      margin: 0;
+    }
+    .co-summary-lines {
+      border-bottom: 1px solid var(--brand-border);
+      padding-bottom: 16px;
+    }
+
+    /* Kod rabatowy */
+    .co-coupon {
+      margin-top: 14px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--brand-border);
+    }
+    .co-coupon-summary {
+      cursor: pointer;
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--brand-primary-hover);
+      list-style: none;
+      user-select: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .co-coupon-summary::-webkit-details-marker { display: none; }
+    .co-coupon-summary:hover { color: var(--brand-primary); }
+    .co-coupon-body { margin-top: 12px; }
+    .co-coupon-row { display: flex; gap: 8px; }
+    .co-coupon-input {
+      flex: 1;
+      min-width: 0;
+      padding: 11px 14px;
+      background: var(--brand-bg);
+      border: 1.5px solid var(--brand-border);
+      border-radius: 10px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+      color: var(--brand-heading);
+      text-transform: uppercase;
+      transition: border-color 200ms;
+    }
+    .co-coupon-input:focus { outline: none; border-color: var(--brand-primary); }
+    .co-coupon-input::placeholder { text-transform: none; color: var(--brand-muted); }
+    .co-coupon-btn {
+      flex-shrink: 0;
+      padding: 11px 20px;
+      background: var(--brand-primary);
+      color: #FFFFFF;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 200ms;
+    }
+    .co-coupon-btn:hover { background: var(--brand-primary-hover); }
+    .co-coupon-msg {
+      margin: 10px 0 0;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .co-coupon-msg--ok { color: var(--brand-success); }
+    .co-coupon-msg--err { color: var(--brand-error); }
+
+    /* OrderSummary inheritance — strip gray colors */
+    .co-summary-lines #order-lines {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    /* Border tylko między liniami zamówienia — NIE między atrybutami wewnątrz linii */
+    .co-summary-lines #order-lines > li {
+      padding: 12px 0 !important;
+      border-bottom: 1px solid var(--brand-border) !important;
+    }
+    .co-summary-lines #order-lines > li:last-child {
+      border-bottom: none !important;
+    }
+    .co-summary-lines #order-lines ul li {
+      border: none !important;
+      padding: 0 !important;
+    }
+    .co-summary-lines [data-line] .text-gray-900,
+    .co-summary-lines [data-line] .text-gray-500,
+    .co-summary-lines [data-line] .text-gray-700,
+    .co-summary-lines [data-line] .text-gray-300 {
+      color: var(--brand-heading) !important;
+    }
+    .co-summary-lines [data-line] .text-gray-500,
+    .co-summary-lines [data-line] p.text-gray-500 {
+      color: var(--brand-text) !important;
+    }
+    /* Qty selector — pill group (- count +) bez spacji między elementami */
+    .co-summary-lines button[data-adjust-qty] {
+      border-color: var(--brand-border) !important;
+      background: var(--brand-surface-2) !important;
+      color: var(--brand-heading) !important;
+      width: 26px !important;
+      height: 26px !important;
+      transition: background 180ms ease, color 180ms ease;
+    }
+    .co-summary-lines button[data-adjust-qty]:hover {
+      background: var(--brand-primary-soft) !important;
+      color: var(--brand-primary-hover) !important;
+    }
+    .co-summary-lines button[data-adjust-qty].rounded-l {
+      border-radius: 999px 0 0 999px !important;
+      border-right: none !important;
+    }
+    .co-summary-lines button[data-adjust-qty].rounded-r {
+      border-radius: 0 999px 999px 0 !important;
+      border-left: none !important;
+    }
+    .co-summary-lines [data-qty] {
+      background: var(--brand-surface-2) !important;
+      border-color: var(--brand-border) !important;
+      color: var(--brand-heading) !important;
+      height: 26px !important;
+      font-weight: 600;
+    }
+    .co-summary-lines .rounded-md {
+      border-radius: 12px !important;
+      background: var(--brand-surface-2) !important;
+    }
+
+    /* ---------- Free shipping banner ---------- */
+    .co-free-banner {
+      background: var(--brand-primary-soft);
+      border: 1px solid var(--brand-primary);
+      border-radius: 14px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--brand-primary-hover);
+    }
+    .co-free-banner .material-symbols-outlined {
+      color: var(--brand-primary);
+      font-size: 22px !important;
+    }
+    .co-free-banner p {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .co-free-banner strong {
+      font-weight: 800;
+    }
+
+    /* ---------- Place order button (sage gradient) ---------- */
+    .co-place-order,
+    .co-submit {
+      width: 100%;
+      background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-hover) 100%);
+      color: #FFFFFF;
+      font-family: 'Outfit', sans-serif;
+      font-size: 14.5px;
+      font-weight: 800;
+      letter-spacing: 0.045em;
+      text-transform: uppercase;
+      padding: 18px 24px;
+      border: none;
+      border-radius: 9999px;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(123, 144, 117, 0.32), 0 2px 6px rgba(123, 144, 117, 0.18);
+      transition: background 200ms, transform 100ms, box-shadow 200ms, filter 200ms;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      min-height: 58px;
+    }
+    .co-place-order:hover,
+    .co-submit:hover {
+      filter: brightness(0.96);
+      box-shadow: 0 10px 28px rgba(123, 144, 117, 0.40), 0 3px 8px rgba(123, 144, 117, 0.22);
+      transform: translateY(-1px);
+    }
+    .co-place-order:active,
+    .co-submit:active {
+      transform: scale(0.98);
+    }
+
+    /* === UPSELLS (compact cards) — pod CTA na desktop, pod summary na mobile === */
+    .co-upsells {
+      margin-top: 20px;
+      padding: 16px 18px;
+      background: var(--brand-surface);
+      border: 1px solid var(--brand-border);
+      border-radius: 14px;
+    }
+    .co-upsells-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 0 0 12px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--brand-muted);
+    }
+    .co-upsells-title .material-symbols-outlined {
+      font-size: 16px !important;
+      color: var(--brand-primary);
+    }
+    .co-upsells-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .co-upsell-card {
+      display: grid;
+      grid-template-columns: 48px 1fr auto;
+      align-items: center;
+      gap: 12px;
+      padding: 8px;
+      background: var(--brand-bg);
+      border: 1px solid var(--brand-border);
+      border-radius: 10px;
+      transition: border-color 200ms ease, background 200ms ease;
+    }
+    .co-upsell-card:hover {
+      border-color: var(--brand-primary);
+      background: var(--brand-surface);
+    }
+    .co-upsell-img {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      background: var(--brand-surface-2);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .co-upsell-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .co-upsell-img .material-symbols-outlined {
+      font-size: 22px !important;
+      color: var(--brand-muted);
+    }
+    .co-upsell-info {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+    .co-upsell-name {
+      margin: 0;
+      font-family: 'Outfit', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--brand-heading);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .co-upsell-price {
+      margin: 0;
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--brand-primary-hover);
+      letter-spacing: -0.01em;
+    }
+    .co-upsell-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 14px;
+      background: var(--brand-primary);
+      color: #fff;
+      border: none;
+      border-radius: 9999px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 200ms ease, transform 100ms;
+      flex-shrink: 0;
+    }
+    .co-upsell-btn:hover {
+      background: var(--brand-primary-hover);
+    }
+    .co-upsell-btn:active {
+      transform: scale(0.96);
+    }
+    .co-upsell-btn .material-symbols-outlined {
+      font-size: 14px !important;
+    }
+    .co-upsell-btn[data-loading="1"] {
+      opacity: 0.7;
+      cursor: wait;
+    }
+    .co-upsell-btn[data-added="1"] {
+      background: var(--brand-primary-hover);
+    }
+    .co-place-order:disabled,
+    .co-submit:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      filter: grayscale(0.2);
+    }
+    .co-place-order .material-symbols-outlined {
+      font-size: 20px !important;
+    }
+
+    /* ---------- Legal under submit ---------- */
+    .co-legal {
+      font-size: 11px;
+      color: var(--brand-muted);
+      margin: 10px 0 0;
+      text-align: center;
+      line-height: 1.5;
+    }
+    .co-legal a {
+      color: var(--brand-text);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .co-legal a:hover { color: var(--brand-primary); }
+
+    /* ---------- SSL trust row ---------- */
+    .co-ssl {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding-top: 12px;
+      border-top: 1px solid var(--brand-border);
+      font-size: 12px;
+      color: var(--brand-muted);
+    }
+    .co-ssl .material-symbols-outlined {
+      font-size: 16px !important;
+      color: var(--brand-primary);
+    }
+
+    /* ---------- Back to cart ---------- */
+    .co-back-cart {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--brand-text);
+      text-decoration: none;
+      border-radius: 9999px;
+      transition: background 200ms, color 200ms;
+    }
+    .co-back-cart:hover {
+      background: var(--brand-surface-2);
+      color: var(--brand-heading);
+    }
+    .co-back-cart .material-symbols-outlined {
+      font-size: 18px !important;
+    }
+
+    /* ---------- Footer ---------- */
+    .co-footer {
+      background: var(--brand-surface);
+      border-top: 1px solid var(--brand-border);
+      margin-top: auto;
+    }
+    .co-footer-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+    @media (min-width: 768px) {
+      .co-footer-inner {
+        flex-direction: row;
+        justify-content: space-between;
+        padding: 32px 24px;
+      }
+    }
+    .co-footer-brand {
+      font-family: 'Outfit', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--brand-primary);
+      letter-spacing: -0.01em;
+    }
+    .co-footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 18px;
+    }
+    .co-footer-links a {
+      font-size: 13px;
+      color: var(--brand-muted);
+      text-decoration: none;
+      transition: color 200ms;
+    }
+    .co-footer-links a:hover { color: var(--brand-accent); }
+    .co-footer-copy {
+      font-size: 12px;
+      color: var(--brand-muted);
+      text-align: center;
+    }
+
+    /* ---------- Submit visibility — matched to grid breakpoint (1024px) ---------- */
+    .co-submit-mobile {
+      display: block;
+      margin-top: 8px;
+    }
+    .co-submit-desktop {
+      display: none;
+    }
+    @media (min-width: 1024px) {
+      .co-submit-mobile { display: none; }
+      .co-submit-desktop { display: block; }
+    }
+
+    /* ---------- Hidden helper (preserve JS hide/show) ---------- */
+    .hidden { display: none !important; }
+
+    /* ---------- Modal (InPost geowidget) ---------- */
+    #geowidget-modal { font-family: 'Outfit', sans-serif; }
+    #geowidget-modal h3 {
+      font-weight: 700;
+      color: var(--brand-heading);
+    }
+
+    /* ============================================================
+       MOBILE OPTIMIZATIONS (≤640px)
+       ============================================================ */
+    @media (max-width: 640px) {
+      /* Główny grid — mniejsze gap'y i padding */
+      .co-main {
+        padding: 24px 14px 56px;
+      }
+      .co-grid {
+        gap: 18px;
+      }
+      .co-col-left {
+        gap: 16px;
+      }
+
+      /* H1 "kasa" — mniejsze na mobile */
+      .co-h1 {
+        font-size: 26px;
+        gap: 10px;
+      }
+      .co-h1::before {
+        width: 5px;
+        height: 22px;
+      }
+
+      /* Karty sekcji — tighter padding */
+      .co-card {
+        padding: 18px 16px 20px;
+        border-radius: 18px;
+      }
+      .co-card-title {
+        font-size: 15.5px;
+        margin: 0 0 14px;
+      }
+      .co-card-title::before {
+        width: 3px;
+        height: 14px;
+      }
+
+      /* Inputy — font 16px żeby iOS Safari nie zoomował przy focusie */
+      .co-input {
+        font-size: 16px;
+        padding: 12px 16px;
+        min-height: 48px;
+        border-radius: 12px;
+      }
+      .co-textarea {
+        font-size: 16px;
+        padding: 12px 16px;
+      }
+      .co-field-grid {
+        gap: 12px;
+      }
+
+      /* Radio cards — kompaktowe */
+      .co-radio-card {
+        padding: 12px 14px;
+        border-radius: 14px;
+      }
+      .co-radio-card-head { gap: 10px; min-height: 32px; }
+      .co-radio-label { font-size: 14px; }
+      .co-radio-desc { font-size: 12px; line-height: 1.35; }
+      .co-radio-price { font-size: 14px; }
+      .co-radio-ico { font-size: 22px !important; }
+
+      /* Paczkomat picker button — full-width na mobile */
+      .co-paczkomat-expand .co-pickup-btn,
+      #pickup-locker-btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      /* Submit button — sticky-friendly */
+      .co-place-order,
+      .co-submit {
+        padding: 16px 20px;
+        font-size: 13.5px;
+        min-height: 56px;
+      }
+
+      /* Order summary card — tighter padding */
+      .co-summary {
+        padding: 18px 16px;
+        border-radius: 18px;
+        gap: 12px;
+      }
+      .co-summary-title {
+        font-size: 17px;
+      }
+      .co-summary-lines #order-lines > li {
+        padding: 10px 0 !important;
+      }
+
+      /* OrderSummary line item — smaller image, tighter gaps */
+      .co-summary-lines [data-line] .h-16 {
+        width: 56px !important;
+        height: 56px !important;
+      }
+      .co-summary-lines [data-line] {
+        gap: 10px !important;
+      }
+      .co-summary-lines [data-line] .text-sm {
+        font-size: 13.5px;
+      }
+      .co-summary-lines [data-line] .text-xs {
+        font-size: 11.5px;
+      }
+      .co-summary-lines button[data-adjust-qty] {
+        width: 24px !important;
+        height: 24px !important;
+        font-size: 12px;
+      }
+      .co-summary-lines [data-qty] {
+        height: 24px !important;
+        font-size: 11px;
+      }
+
+      /* Totals row — tight */
+      .co-summary dl {
+        font-size: 13px;
+      }
+      .co-summary dl > div:last-child {
+        font-size: 16px;
+      }
+
+      /* Free shipping banner — slimmer */
+      .co-free-banner {
+        padding: 10px 12px;
+        border-radius: 12px;
+      }
+      .co-free-banner p {
+        font-size: 12.5px;
+      }
+
+      /* BLIK code input — pełna szerokość */
+      .co-input--blik {
+        width: 100%;
+        letter-spacing: 0.3em;
+      }
+
+      /* SSL trust row + legal — mniejsze */
+      .co-ssl {
+        font-size: 11.5px;
+      }
+      .co-legal {
+        font-size: 10.5px;
+      }
+
+      /* Header logo + trust icons — kompaktowy */
+      .co-header-inner {
+        padding: 12px 14px;
+      }
+      .co-logo-img {
+        height: 32px;
+      }
+      .co-trust-icons {
+        gap: 6px;
+      }
+      .co-trust-ico {
+        font-size: 20px !important;
+      }
+
+      /* Back to cart link */
+      .co-back-cart {
+        font-size: 13px;
+        padding: 10px;
+      }
+    }
+
+    /* ============================================================
+       TABLET / SMALL DESKTOP (641px-1023px) — keep 1-col but breath
+       ============================================================ */
+    @media (min-width: 641px) and (max-width: 1023px) {
+      .co-main {
+        padding: 32px 20px 72px;
+      }
+      .co-card { padding: 22px; }
+    }
+  </style>
 </BaseLayout>
 
 {/* InPost Geowidget SDK */}
@@ -892,10 +2258,159 @@ const hasErrors = Object.keys(errors).length > 0 || !!globalError;
   }
 </script>
 
+{/* Behawioralny pixel — initiate_checkout (Warstwa 1, ZERO Meta).
+    value = subtotal z VAT bez dostawy (checkoutSubtotal) — spójne z ATC/Purchase. M-5. */}
+<script is:inline define:vars={{ spValue: checkoutSubtotal, spOrderCode: order?.code ?? null }}>
+  window.addEventListener('load', function () {
+    if (!window.sp || !window.sp.track || !spOrderCode) return;
+    // Dedup per order.code (sessionStorage) — wzor jak Purchase. Checkout strzela
+    // na kazdy load; upsell ATC robi reload() → bez tego IC liczony 2-3x/sesje.
+    var key = 'sp:ic:fired:' + spOrderCode;
+    try {
+      if (sessionStorage.getItem(key)) return;
+      sessionStorage.setItem(key, '1');
+    } catch {}
+    window.sp.track('initiate_checkout', { value: spValue, currency: 'PLN' });
+  });
+</script>
+
 <script>
+  import { getCouponDisplayName, isHiddenCoupon } from '@/lib/coupon-labels';
+
   // ============================================================
   // CHECKOUT — Progressive Disclosure + Interactions
   // ============================================================
+
+  // --- Upsell ATC click handler — fetch /api/cart POST → reload checkout
+  // (najprostszy sposób żeby OrderSummary się odświeżył z nowym item'em + recalc shipping)
+  (function setupUpsellATC() {
+    const buttons = document.querySelectorAll<HTMLButtonElement>('[data-upsell-add]');
+    buttons.forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const card = btn.closest<HTMLElement>('[data-upsell-variant]');
+        const variantId = card?.dataset.upsellVariant;
+        if (!variantId || btn.dataset.loading === '1') return;
+        btn.dataset.loading = '1';
+        const label = btn.querySelector<HTMLElement>('[data-btn-label]');
+        const originalText = label?.textContent;
+        if (label) label.textContent = 'Dodaję…';
+        try {
+          const res = await fetch('/api/cart', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ variantId, quantity: 1 }),
+          });
+          if (res.ok) {
+            btn.dataset.added = '1';
+            if (label) label.textContent = 'Dodano';
+
+            // Behawioralny pixel — add_to_cart z upsellu przy kasie (ZERO Meta,
+            // fail-safe). product_id = Vendure productId (spójny klucz z view_content
+            // /purchase) + value = cena produktu. send() keepalive → przeżyje reload. H-3 + M-5.
+            try {
+              const data = await res.json();
+              const line = data?.order?.lines?.find(
+                (l: { productVariant?: { id?: string | number } }) =>
+                  String(l.productVariant?.id) === String(variantId),
+              );
+              const pid = (line?.productVariant as { product?: { id?: string } } | undefined)?.product?.id;
+              const unit = Number(line?.unitPriceWithTax) || 0;
+              const sp = (window as { sp?: { track?: (t: string, d: unknown) => void } }).sp;
+              sp?.track?.('add_to_cart', {
+                product_id: pid ?? variantId,
+                value: unit / 100, // upsell dodaje 1 szt
+                currency: 'PLN',
+              });
+            } catch {
+              const sp = (window as { sp?: { track?: (t: string, d: unknown) => void } }).sp;
+              sp?.track?.('add_to_cart', { product_id: variantId, currency: 'PLN' });
+            }
+
+            // Reload żeby OrderSummary się odświeżył (i potencjalnie nowe upselle pojawiły)
+            setTimeout(() => { window.location.reload(); }, 500);
+          } else {
+            if (label) label.textContent = originalText || 'Dodaj';
+            btn.dataset.loading = '0';
+          }
+        } catch {
+          if (label) label.textContent = originalText || 'Dodaj';
+          btn.dataset.loading = '0';
+        }
+      });
+    });
+  })();
+
+  // --- Slim header — hide on scroll down, show on scroll up (smartphone-like).
+  // Threshold: only kick in past 80px so micro-scrolls at top don't trigger.
+  (function setupHeaderHideOnScroll() {
+    const header = document.querySelector<HTMLElement>('.co-header');
+    if (!header) return;
+    let lastY = window.scrollY;
+    let ticking = false;
+    const THRESHOLD = 80;
+    const DELTA = 6;
+
+    const update = () => {
+      const y = window.scrollY;
+      const dy = y - lastY;
+      if (y < THRESHOLD) {
+        header.classList.remove('co-header--hidden');
+      } else if (dy > DELTA) {
+        header.classList.add('co-header--hidden');
+      } else if (dy < -DELTA) {
+        header.classList.remove('co-header--hidden');
+      }
+      lastY = y;
+      ticking = false;
+    };
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        requestAnimationFrame(update);
+        ticking = true;
+      }
+    }, { passive: true });
+  })();
+
+  // --- Geowidget button: stop click propagation żeby nie togglować radio paczkomatu.
+  // Button siedzi WEWNĄTRZ `<label>` Paczkomat radio (HTML semantics), więc click bubbluje
+  // do `<label>` i przełącza radio przy ponownym kliknięciu. stopPropagation rozwiązuje.
+  (function setupGeowidgetClickGuard() {
+    const ids = ['open-geowidget', 'change-locker'];
+    ids.forEach((id) => {
+      const btn = document.getElementById(id) as HTMLButtonElement | null;
+      if (!btn) return;
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+      });
+    });
+  })();
+
+  // --- Back button: czytamy document.referrer i wracamy do strony z ktorej user
+  // przyszedl (np. PDP /produkty/bezsmugi-zestaw). Wykluczamy /koszyk i /checkout
+  // (user nigdy nie chce wracac do koszyka — to nie jest "wczesniejsza strona"
+  // w sensie shoppingowym). Fallback: home `/` (single-product = landing produktu).
+  // Bez JS link i tak prowadzi do `/`.
+  (function setupBackLink() {
+    const backLink = document.getElementById('checkout-back') as HTMLAnchorElement | null;
+    if (!backLink) return;
+    const fallback = backLink.dataset.fallback || '/';
+    let target = fallback;
+    const ref = document.referrer;
+    if (ref) {
+      try {
+        const u = new URL(ref);
+        if (u.origin === location.origin) {
+          const p = u.pathname;
+          if (!p.startsWith('/koszyk') && !p.startsWith('/checkout')) {
+            target = u.pathname + u.search + u.hash;
+          }
+        }
+      } catch { /* invalid URL — keep fallback */ }
+    }
+    backLink.setAttribute('href', target);
+  })();
 
   // --- DOM References ---
   const phoneInput = document.getElementById('phone') as HTMLInputElement | null;
@@ -914,6 +2429,7 @@ const hasErrors = Object.keys(errors).length > 0 || !!globalError;
   const sectionPayment = document.getElementById('section-payment') as HTMLElement | null;
   const sectionFinalize = document.getElementById('section-finalize') as HTMLElement | null;
   const codNotice = document.getElementById('cod-notice') as HTMLElement | null;
+  const payuNotice = document.getElementById('payu-notice') as HTMLElement | null;
   const blikCodeSection = document.getElementById('blik-code-section') as HTMLElement | null;
 
   // Geowidget
@@ -938,6 +2454,206 @@ const hasErrors = Object.keys(errors).length > 0 || !!globalError;
   // --- Helpers ---
   function show(el: HTMLElement | null) { el?.classList.remove('hidden'); }
   function hide(el: HTMLElement | null) { el?.classList.add('hidden'); }
+
+  const fmtShipping = (g: number) => (g / 100).toLocaleString('pl-PL', { style: 'currency', currency: 'PLN', minimumFractionDigits: 2 });
+
+  // Refresh shipping method labels based on cart total — show "Gratis" gdy >= threshold
+  function refreshShippingMethods(order: any) {
+    const section = document.getElementById('section-shipping');
+    if (!section || !order) return;
+    const threshold = parseInt(section.getAttribute('data-free-shipping-threshold') || '0', 10);
+    const subTotal = order.subTotalWithTax ?? 0;
+    const isFree = threshold > 0 && subTotal >= threshold;
+
+    section.querySelectorAll('[data-shipping-method-row]').forEach((row) => {
+      const price = parseInt(row.getAttribute('data-method-price') || '0', 10);
+      const cell = row.querySelector('[data-method-price-cell]');
+      if (!cell) return;
+      if (price === 0) {
+        cell.innerHTML = 'Gratis';
+      } else if (isFree) {
+        cell.innerHTML = `<s class="text-gray-400 text-xs mr-1">${fmtShipping(price)}</s><span class="text-green-600 font-semibold">Gratis</span>`;
+      } else {
+        cell.textContent = fmtShipping(price);
+      }
+    });
+  }
+
+  // Update OrderSummary "Dostawa" line from the currently checked shipping radio.
+  // Vendure does not know about the selection until form submit, so we sync the UI client-side.
+  function refreshSummaryShipping() {
+    const shipEl = document.getElementById('summary-shipping');
+    if (!shipEl) return;
+    const selected = document.querySelector<HTMLInputElement>('input[name="shippingMethodId"]:checked');
+    if (!selected) {
+      shipEl.innerHTML = '<span class="text-gray-400">—</span>';
+      return;
+    }
+    const row = selected.closest('[data-shipping-method-row]') as HTMLElement | null;
+    const price = parseInt(row?.getAttribute('data-method-price') || '0', 10);
+
+    const section = document.getElementById('section-shipping');
+    const threshold = parseInt(section?.getAttribute('data-free-shipping-threshold') || '0', 10);
+    const subEl = document.getElementById('summary-subtotal') as HTMLElement | null;
+    // HIGH-1: data-grosze (single source of truth) zamiast parseFloat na locale-formatted
+    // tekscie. Polski "129,99 zl" + parseFloat = lamliwy (separator, NBSP, Zł).
+    const subTotalGr = parseInt(subEl?.dataset.grosze || '0', 10);
+    // MEDIUM-1 follow-up: czytaj `data-has-free-shipping` z <dl> w summary — applyOrderToSummary
+    // ustawia ten flag na bazie order.discounts (promotion-based free shipping). Bez tego
+    // refreshSummaryShipping widzi tylko threshold-based i flashuje pelna cene 1-2s przy promo.
+    const totalsEl = document.querySelector('[data-has-free-shipping]') as HTMLElement | null;
+    const hasPromoFreeShipping = totalsEl?.dataset.hasFreeShipping === 'true';
+    const isFree = hasPromoFreeShipping || (threshold > 0 && subTotalGr >= threshold);
+
+    if (price === 0) {
+      shipEl.innerHTML = '<span class="text-green-600 font-medium">Gratis</span>';
+    } else if (isFree) {
+      shipEl.innerHTML = `<s class="text-gray-400 text-xs mr-1">${fmtShipping(price)}</s><span class="text-green-600 font-medium">Gratis</span>`;
+    } else {
+      shipEl.textContent = fmtShipping(price);
+    }
+  }
+
+  // CRITICAL-4: precyzyjny helper detekcji "darmowej dostawy" — strict regex po
+  // poczatku description + sanity check ze amount matchuje shippingLine price.
+  // Stara wersja matchujaca substring "darmowa dostaw" mogla false-positive na
+  // promocji typu "Bonus przy darmowej dostawie".
+  const isFreeShippingDiscount = (d: any, order?: any): boolean => {
+    if (!d) return false;
+    const desc = (d.description || '').toLowerCase().trim();
+    const matchesName = /^darmowa dostawa\b/.test(desc) || /^free shipping\b/.test(desc);
+    if (!matchesName) return false;
+    if (order?.shippingLines?.length > 0) {
+      const methodPrice = order.shippingLines[0]?.priceWithTax ?? 0;
+      // Akceptuj jesli shippingWithTax = 0 (Vendure wyzerowal po promo) albo amount
+      // discountu rowny pelnej cenie metody (rabat = pelny shipping cost).
+      return methodPrice === 0 || Math.abs(d.amountWithTax || 0) === methodPrice;
+    }
+    return true;
+  };
+
+  // Update OrderSummary DOM from a Vendure order — shipping, total, discounts.
+  // Reuses #summary-* elementy zrenderowane przez OrderSummary.astro.
+  // Note: NIE dispatchujemy 'cart:updated' tutaj — listener w checkout.astro
+  // juz reaguje na 'cart:updated' dispatchowane przez updateSummaryFromOrder
+  // (qty change), a applyOrderToSummary jest wywolywany Z TEGO listenera po
+  // set-shipping. Dispatch tutaj = nieskonczona petla.
+  function applyOrderToSummary(order: any) {
+    if (!order) return;
+    const shipEl = document.getElementById('summary-shipping');
+    const totalEl = document.getElementById('summary-total');
+    const subEl = document.getElementById('summary-subtotal');
+
+    // CRITICAL-2: aktualizuj line-totals (Vendure rozdystrybuowuje rabaty per
+    // linie po set-shipping → linePriceWithTax mogl sie zmienic, summary tego
+    // nie odzwierciedlalo).
+    const lines = order.lines || [];
+    for (const line of lines) {
+      const li = document.querySelector(`[data-line="${line.id}"]`);
+      if (!li) continue;
+      const qtyEl = li.querySelector('[data-qty]');
+      const totalElLine = li.querySelector('[data-line-total]');
+      if (qtyEl) qtyEl.textContent = String(line.quantity);
+      if (totalElLine) totalElLine.textContent = fmtShipping(line.linePriceWithTax ?? 0);
+    }
+
+    const rawSub = lines.reduce((s: number, l: any) => s + (l.linePriceWithTax ?? 0), 0);
+    if (subEl) {
+      subEl.textContent = fmtShipping(rawSub);
+      // HIGH-1: data-grosze jako single source of truth do refreshSummaryShipping
+      subEl.setAttribute('data-grosze', String(rawSub));
+    }
+
+    const hasShipMethod = (order.shippingLines || []).length > 0;
+    const hasFreeShippingPromo = (order.discounts || []).some((d: any) => isFreeShippingDiscount(d, order));
+    // MEDIUM-1 follow-up: sync data-has-free-shipping na <dl> zeby refreshSummaryShipping
+    // (optymistyczny pre-update) widzial promotion-based free shipping, nie tylko threshold.
+    const dlEl = document.querySelector('[data-has-free-shipping]') as HTMLElement | null;
+    if (dlEl) dlEl.dataset.hasFreeShipping = hasFreeShippingPromo ? 'true' : 'false';
+    const shippingPrice = order.shippingWithTax ?? 0;
+    // UI tweak: strikethrough uses pelna cena z shippingLines[0].priceWithTax
+    // (Vendure zeruje shippingWithTax przy free-shipping promo, ale zachowuje
+    // pelna wartosc w shippingLines).
+    const fullShippingPrice = order.shippingLines?.[0]?.priceWithTax ?? 0;
+
+    if (shipEl) {
+      if (!hasShipMethod) {
+        shipEl.innerHTML = '<span class="text-gray-400">—</span>';
+      } else if (hasFreeShippingPromo && fullShippingPrice > 0) {
+        shipEl.innerHTML = `<s class="text-gray-400 text-xs mr-1">${fmtShipping(fullShippingPrice)}</s><span class="text-green-600 font-medium">Gratis</span>`;
+      } else if (shippingPrice > 0) {
+        shipEl.textContent = fmtShipping(shippingPrice);
+      } else {
+        shipEl.innerHTML = '<span class="text-green-600 font-medium">Gratis</span>';
+      }
+    }
+    if (totalEl) totalEl.textContent = fmtShipping(order.totalWithTax);
+
+    // Re-render discounts list — pomijamy promo darmowej dostawy (juz pokazane jako "Gratis" w Dostawie),
+    // dyskonty zerowe (MEDIUM-6) i internal coupony oznaczone jako ukryte w coupon-labels.ts.
+    const discountsEl = document.getElementById('summary-discounts');
+    if (discountsEl) {
+      const discounts = (order.discounts || [])
+        .filter((d: any) => Math.abs(d.amountWithTax || 0) > 0)
+        .filter((d: any) => !isFreeShippingDiscount(d, order))
+        .filter((d: any) => !isHiddenCoupon(d.description));
+      discountsEl.innerHTML = discounts.map((d: any) => {
+        const displayName = getCouponDisplayName(d.description).replace(/[<>]/g, '');
+        const amount = fmtShipping(Math.abs(d.amountWithTax || 0));
+        return `<div class="flex items-center justify-between gap-3 py-1" data-discount-row>
+          <dt class="flex items-center gap-2 text-gray-700 min-w-0">
+            <svg class="w-4 h-4 shrink-0 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+            <span class="truncate">${displayName}</span>
+          </dt>
+          <dd class="shrink-0 font-semibold text-emerald-700 tabular-nums">-${amount}</dd>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // Push selected shipping method to Vendure → recalc totals.
+  // CRITICAL-1: request-generation counter zamiast shippingInFlight flag.
+  // Stary flag blokowal nowe requesty i pozwalal staremu response nadpisac
+  // swiezszy stan (user szybko klika Paczkomat → Kurier → response Paczkomat
+  // wraca po response Kurier, nadpisuje UI).
+  let shippingGen = 0;
+  async function syncShippingToVendure(methodId: string) {
+    if (!methodId) return;
+    const myGen = ++shippingGen;
+    try {
+      const res = await fetch('/api/cart/set-shipping', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ shippingMethodId: methodId }),
+      });
+      const data = await res.json();
+      // Stale response — nowszy request juz wystartowal, ignoruj nas.
+      if (myGen !== shippingGen) return;
+      if (data?.order) {
+        applyOrderToSummary(data.order);
+        refreshShippingMethods(data.order);
+      }
+    } catch {
+      /* offline — UI juz zaktualizowane optymistycznie przez refreshSummaryShipping */
+    }
+  }
+
+  // Listen for cart updates dispatched by OrderSummary (qty change).
+  // HIGH-7: cart:updated jest dispatchowane TYLKO przez updateSummaryFromOrder
+  // (OrderSummary.astro) na qty change. applyOrderToSummary (set-shipping path)
+  // celowo NIE dispatchuje cart:updated zeby uniknac petli. Jesli sciezka qty
+  // zresetowala shippingMethod (Vendure), pushujemy ponownie domyslna metode.
+  document.addEventListener('cart:updated', (e: any) => {
+    const order = e.detail?.order;
+    if (order) refreshShippingMethods(order);
+    refreshSummaryShipping();
+    // Po zmianie qty Vendure mogl zresetowac shippingMethod → zsyncuj ponownie
+    const checked = document.querySelector<HTMLInputElement>('input[name="shippingMethodId"]:checked');
+    if (checked && order && (order.shippingLines || []).length === 0) {
+      syncShippingToVendure(checked.value);
+    }
+  });
 
   function getShippingType(): 'paczkomat' | 'kurier' | 'pobranie' {
     const selected = document.querySelector<HTMLInputElement>('input[name="shippingMethodId"]:checked');
@@ -964,58 +2680,103 @@ const hasErrors = Object.keys(errors).length > 0 || !!globalError;
   function applyShippingType(type: 'paczkomat' | 'kurier' | 'pobranie') {
     currentShippingType = type;
 
+    // Toggle `required` on address fields — paczkomat nie wymaga adresu po stronie klienta.
+    const addressInputs = ['street', 'city', 'postalCode']
+      .map((id) => document.getElementById(id) as HTMLInputElement | null)
+      .filter(Boolean) as HTMLInputElement[];
     if (type === 'paczkomat') {
-      show(sectionInpost);
-      hide(sectionAddress);
+      addressInputs.forEach((i) => i.removeAttribute('required'));
+    } else {
+      addressInputs.forEach((i) => i.setAttribute('required', ''));
+    }
+
+    if (type === 'paczkomat') {
+      // sectionInpost visibility — CSS :has() handles it (inline w radio Paczkomat).
+      // Wystarczy nie ukrywać JS-em, bo .hidden override'uje CSS.
+      sectionInpost?.classList.remove('hidden');
       show(sectionPersonal);
       show(sectionPayment);
       hide(codNotice);
       show(sectionFinalize);
     } else if (type === 'pobranie') {
-      hide(sectionInpost);
-      show(sectionAddress);
+      sectionInpost?.classList.remove('hidden');
       show(sectionPersonal);
       hide(sectionPayment);  // NO payment for COD
       show(codNotice);
+      hide(payuNotice); // COD → no PayU redirect
       show(sectionFinalize);
+      if (flowTypeInput) flowTypeInput.value = '';
+      document.querySelectorAll<HTMLInputElement>('input[name="paymentFlow"]').forEach((r) => {
+        r.checked = false;
+      });
+      hide(blikCodeSection);
     } else {
       // kurier
-      hide(sectionInpost);
-      show(sectionAddress);
+      sectionInpost?.classList.remove('hidden');
       show(sectionPersonal);
       show(sectionPayment);
       hide(codNotice);
+      // PayU notice — show jeśli current flow to REDIRECT/PAYPO
+      const currentFlow = flowTypeInput?.value;
+      if (currentFlow === 'REDIRECT' || currentFlow === 'PAYPO') {
+        show(payuNotice);
+      } else {
+        hide(payuNotice);
+      }
       show(sectionFinalize);
     }
   }
 
   // --- Show all sections on load (no progressive disclosure) ---
   applyShippingType(getShippingType());
+  refreshSummaryShipping();
 
-  // --- Shipping radio change → toggle sections ---
+  // CRITICAL-3 / HIGH-5 / HIGH-8: initial sync USUNIĘTY — server-side handler
+  // (checkout.astro frontmatter) pushuje domyślną metodę do Vendure przed render,
+  // więc SSR ma już prawdziwy total. Brak race z form submit, brak amplifikacji
+  // requestów per page load.
+
+  // --- Shipping radio change → toggle sections + sync z Vendure (recalc totalu/promo) ---
   document.querySelectorAll<HTMLInputElement>('input[name="shippingMethodId"]').forEach((radio) => {
     radio.addEventListener('change', () => {
       applyShippingType(getShippingType());
+      refreshSummaryShipping(); // optymistyczny update Dostawy
+      syncShippingToVendure(radio.value); // realne przeliczenie totalu/promo
     });
   });
 
   // --- Payment flow radio → toggle BLIK ---
+  // Visibility blikCodeSection obsługuje CSS (.co-radio-card:not(:has(input:checked)) .co-blik-input).
+  // JS tylko: sync hidden flowType + autofocus BLIK input + cleanup .hidden klasy gdy CSS przejmuje.
   document.querySelectorAll<HTMLInputElement>('input[name="paymentFlow"]').forEach((radio) => {
     radio.addEventListener('change', () => {
-      // Update hidden flowType
       if (flowTypeInput) flowTypeInput.value = radio.value;
 
-      // Toggle BLIK code section
+      // Pozbądź się .hidden żeby CSS:has() mógł kontrolować widoczność.
+      blikCodeSection?.classList.remove('hidden');
+
       if (radio.value === 'BLIK') {
-        show(blikCodeSection);
-        blikCodeInput?.focus();
+        setTimeout(() => blikCodeInput?.focus(), 50);
+      }
+
+      // PayU notice — pokazuj tylko dla REDIRECT/PAYPO (user zostaje przekierowany).
+      if (radio.value === 'REDIRECT' || radio.value === 'PAYPO') {
+        show(payuNotice);
       } else {
-        hide(blikCodeSection);
+        hide(payuNotice);
       }
 
       show(sectionFinalize);
     });
   });
+
+  // Initial PayU notice state — gdy formValues miało persisted flowType REDIRECT/PAYPO
+  (function initPayuNotice() {
+    const initialFlow = flowTypeInput?.value;
+    if (initialFlow === 'REDIRECT' || initialFlow === 'PAYPO') {
+      show(payuNotice);
+    }
+  })();
 
   // --- BLIK input: digits only, max 6 ---
   if (blikCodeInput) {
@@ -1182,12 +2943,28 @@ const hasErrors = Object.keys(errors).length > 0 || !!globalError;
 
     if (lockerIdInput) lockerIdInput.value = point.name || '';
     if (lockerNameEl) lockerNameEl.textContent = point.name || '';
+
+    const addr = point.address;
+    const details = point.address_details;
+    // Tylko ulica + numer — bez postcode/city (te idą do osobnych pól w shippingAddress).
+    // address_details.street czasem ma sam ulicę bez numeru, addr.line1 ma "Tarnowskich 69"
+    // (pelne street + building number). Preferujemy line1 jako pełen adres ulicy.
+    const streetOnly = (addr?.line1 || '').trim()
+      || [details?.street, details?.building_number].filter(Boolean).join(' ');
+
+    // Display text dla user — pełen adres "Tarnowskich 69, 33-100 Tarnów"
     if (lockerAddressEl) {
-      const addr = point.address;
-      lockerAddressEl.textContent = addr
-        ? [addr.line1, addr.line2].filter(Boolean).join(', ')
-        : (point.address_details?.city || '');
+      const displayParts = [streetOnly, details?.post_code && details?.city ? `${details.post_code} ${details.city}` : details?.city].filter(Boolean);
+      lockerAddressEl.textContent = displayParts.join(', ');
     }
+
+    // Zapisz structured address do hidden inputs — server używa ich w shippingAddress.
+    const streetInput = document.getElementById('inpostLockerStreet') as HTMLInputElement | null;
+    const cityInput = document.getElementById('inpostLockerCity') as HTMLInputElement | null;
+    const postcodeInput = document.getElementById('inpostLockerPostcode') as HTMLInputElement | null;
+    if (streetInput) streetInput.value = streetOnly;
+    if (cityInput) cityInput.value = details?.city || '';
+    if (postcodeInput) postcodeInput.value = details?.post_code || '';
 
     show(selectedLockerDiv);
     hide(openGeowidgetBtn);
@@ -1258,10 +3035,16 @@ const hasErrors = Object.keys(errors).length > 0 || !!globalError;
     // Save selected shipping method
     const selectedShipping = document.querySelector<HTMLInputElement>('input[name="shippingMethodId"]:checked');
     if (selectedShipping) data._shippingMethodId = selectedShipping.value;
-    // Save locker
+    // Save locker — id + display + structured address (street/city/postcode)
     if (lockerIdInput?.value) data._lockerId = lockerIdInput.value;
     if (lockerNameEl?.textContent) data._lockerName = lockerNameEl.textContent;
     if (lockerAddressEl?.textContent) data._lockerAddress = lockerAddressEl.textContent;
+    const streetEl = document.getElementById('inpostLockerStreet') as HTMLInputElement | null;
+    const cityEl = document.getElementById('inpostLockerCity') as HTMLInputElement | null;
+    const postcodeEl = document.getElementById('inpostLockerPostcode') as HTMLInputElement | null;
+    if (streetEl?.value) data._lockerStreet = streetEl.value;
+    if (cityEl?.value) data._lockerCity = cityEl.value;
+    if (postcodeEl?.value) data._lockerPostcode = postcodeEl.value;
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   }
@@ -1271,6 +3054,17 @@ const hasErrors = Object.keys(errors).length > 0 || !!globalError;
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return;
       const data = JSON.parse(raw) as Record<string, string>;
+
+      // Migration: poprzednie wersje storefronta zapisywały tylko _lockerId
+      // bez structured address (street/city/postcode). Po fixu (29-04-2026)
+      // wymagamy pełnego adresu — czyścimy stare dane żeby user wybrał paczkomat
+      // ponownie i dostał poprawne dane shippingAddress.
+      if (data._lockerId && !data._lockerStreet) {
+        delete data._lockerId;
+        delete data._lockerName;
+        delete data._lockerAddress;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      }
 
       fieldsToSave.forEach(id => {
         const el = document.getElementById(id) as HTMLInputElement | null;
@@ -1283,11 +3077,17 @@ const hasErrors = Object.keys(errors).length > 0 || !!globalError;
         if (radio) { radio.checked = true; applyShippingType(getShippingType()); }
       }
 
-      // Restore locker
+      // Restore locker — id + display + structured address
       if (data._lockerId && lockerIdInput && !lockerIdInput.value) {
         lockerIdInput.value = data._lockerId;
         if (lockerNameEl) lockerNameEl.textContent = data._lockerName || '';
         if (lockerAddressEl) lockerAddressEl.textContent = data._lockerAddress || '';
+        const streetEl = document.getElementById('inpostLockerStreet') as HTMLInputElement | null;
+        const cityEl = document.getElementById('inpostLockerCity') as HTMLInputElement | null;
+        const postcodeEl = document.getElementById('inpostLockerPostcode') as HTMLInputElement | null;
+        if (streetEl) streetEl.value = data._lockerStreet || '';
+        if (cityEl) cityEl.value = data._lockerCity || '';
+        if (postcodeEl) postcodeEl.value = data._lockerPostcode || '';
         show(selectedLockerDiv);
         hide(openGeowidgetBtn);
       }
@@ -1304,14 +3104,70 @@ const hasErrors = Object.keys(errors).length > 0 || !!globalError;
     el.addEventListener('input', () => { clearTimeout(saveTimer); saveTimer = setTimeout(saveFormData, 500); });
   });
 
-  // Clear saved data on successful submit (form action = POST, page reloads/redirects)
-  checkoutForm?.addEventListener('submit', () => {
-    localStorage.removeItem(STORAGE_KEY);
-  });
+  // MEDIUM-3: NIE kasujemy localStorage na submit. Powod: jesli POST failuje
+  // (network error, walidacja serwera), user zostaje na stronie z czystymi
+  // polami i traci wpisane dane. Locker fields i tak sa nadpisywane przy
+  // nastepnym wyborze paczkomatu, kontaktowe pola przy edycji. Cleanup mial sens
+  // tylko po successful redirect — ale wtedy juz na innej stronie.
 
   // --- Scroll to first error on page load ---
   const firstError = document.querySelector('.text-red-600, .text-red-700');
   if (firstError) {
     firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
+
+  // --- Save progress on blur (abandoned cart capture) ---
+  // Wysyla setCustomerForOrder do Vendure jak tylko mamy: imie+nazwisko + (email lub telefon).
+  // Fire-and-forget z keepalive — wysle nawet gdy user zamknie karte.
+  // Idempotentne: kazda zmiana pola = update tych samych danych w Vendure.
+  let saveProgressTimer: ReturnType<typeof setTimeout> | null = null;
+  let lastSavedPayload = '';
+
+  function readProgressFields(): { fullName: string; email: string; phone: string } {
+    const form = document.getElementById('checkout-form') as HTMLFormElement | null;
+    if (!form) return { fullName: '', email: '', phone: '' };
+    const fd = new FormData(form);
+    return {
+      fullName: ((fd.get('fullName') as string) || '').trim(),
+      email: ((fd.get('email') as string) || '').trim(),
+      phone: ((fd.get('phone') as string) || '').trim(),
+    };
+  }
+
+  async function saveProgress(): Promise<void> {
+    const payload = readProgressFields();
+    if (!payload.fullName && !payload.email && !payload.phone) return;
+
+    const serialized = JSON.stringify(payload);
+    if (serialized === lastSavedPayload) return;
+    lastSavedPayload = serialized;
+
+    try {
+      await fetch('/api/checkout/save-progress', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: serialized,
+        keepalive: true,
+        credentials: 'same-origin',
+      });
+    } catch {
+      lastSavedPayload = '';
+    }
+  }
+
+  function scheduleSaveProgress(): void {
+    if (saveProgressTimer) clearTimeout(saveProgressTimer);
+    saveProgressTimer = setTimeout(saveProgress, 600);
+  }
+
+  ['fullName', 'email', 'phone'].forEach((name) => {
+    const el = document.querySelector<HTMLInputElement>(`#checkout-form [name="${name}"]`);
+    if (!el) return;
+    el.addEventListener('blur', scheduleSaveProgress);
+    el.addEventListener('change', scheduleSaveProgress);
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') saveProgress();
+  });
 </script>

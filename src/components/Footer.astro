@@ -4,59 +4,324 @@ interface Props {
   storeTagline?: string;
   contactEmail?: string;
 }
-const { storeName = 'DbamyOPupile.pl', storeTagline = 'Sklep dla świadomych opiekunów' } = Astro.props;
-const contactEmail = 'sklep@dbamyopupile.pl';
+const {
+  storeName = 'dbamyopupile',
+  storeTagline = 'Dla tych, co chcą dać pupilowi spokojniejsze posiłki i lepsze spacery.',
+} = Astro.props;
+const contactEmail = Astro.props.contactEmail || 'sklep@dbamyopupile.pl';
 const year = new Date().getFullYear();
 ---
 
-<footer class="border-t border-gray-200 bg-gray-50 mt-auto">
-  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
-    <div class="grid grid-cols-1 sm:grid-cols-4 gap-8">
-      <!-- Brand -->
-      <div>
-        <p class="text-lg font-bold text-gray-900">{storeName}</p>
-        <p class="mt-2 text-sm text-gray-500">{storeTagline}</p>
-      </div>
+<footer class="dd-footer">
+  <div class="dd-footer-inner">
 
-      <!-- Sklep -->
-      <div>
-        <p class="text-sm font-medium text-gray-900 mb-3">Sklep</p>
-        <ul class="space-y-2">
-          <li><a href="/" class="text-sm text-gray-500 hover:text-gray-900 transition-colors no-underline">Strona główna</a></li>
-          <li><a href="/produkty/bryza" class="text-sm text-gray-500 hover:text-gray-900 transition-colors no-underline">Bryza</a></li>
-          <li><a href="/koszyk" class="text-sm text-gray-500 hover:text-gray-900 transition-colors no-underline">Koszyk</a></li>
-          <li><a href="/kontakt" class="text-sm text-gray-500 hover:text-gray-900 transition-colors no-underline">Kontakt</a></li>
-        </ul>
-      </div>
+    {/* COL 1: Brand */}
+    <div class="dd-footer-brand">
+      <a href="/" class="dd-footer-wordmark" aria-label={storeName}>
+        dbamyopupile<span class="dd-footer-wordmark-tld">.pl</span>
+      </a>
+      <p class="dd-footer-tagline">
+        {storeTagline}
+      </p>
+    </div>
 
-      <!-- Informacje prawne -->
-      <div>
-        <p class="text-sm font-medium text-gray-900 mb-3">Informacje</p>
-        <ul class="space-y-2">
-          <li><a href="/regulamin" class="text-sm text-gray-500 hover:text-gray-900 transition-colors no-underline">Regulamin</a></li>
-          <li><a href="/polityka-prywatnosci" class="text-sm text-gray-500 hover:text-gray-900 transition-colors no-underline">Polityka prywatności</a></li>
-          <li><a href="/dostawa-i-zwroty" class="text-sm text-gray-500 hover:text-gray-900 transition-colors no-underline">Dostawa i zwroty</a></li>
-        </ul>
-      </div>
+    {/* COL 2: Kontakt */}
+    <div class="dd-footer-col">
+      <h4 class="dd-footer-col-title">Kontakt</h4>
+      <ul class="dd-footer-list">
+        <li><a href={`mailto:${contactEmail}`}>{contactEmail}</a></li>
+        <li><a href="tel:577723506">577 723 506</a></li>
+        <li><a href="/kontakt">Formularz kontaktowy</a></li>
+      </ul>
+    </div>
 
-      <!-- Dane firmy -->
-      <div>
-        <p class="text-sm font-medium text-gray-900 mb-3">Dane firmy</p>
-        <address class="not-italic text-sm text-gray-500 space-y-1">
-          <p>PATRYK JACHYM LABS</p>
-          <p>ul. Tarnowskich 71p/1<br/>33-100 Tarnów</p>
-          <p>NIP: 9930710781</p>
-          <p>REGON: 542607372</p>
-          <p class="pt-2"><a href={`mailto:${contactEmail}`} class="text-gray-500 hover:text-gray-900 transition-colors no-underline">{contactEmail}</a></p>
-          <p><a href="tel:+48577723506" class="text-gray-500 hover:text-gray-900 transition-colors no-underline">+48 577 723 506</a></p>
-        </address>
+    {/* COL 3: Sklep (dane firmy) */}
+    <div class="dd-footer-col">
+      <h4 class="dd-footer-col-title">Sklep</h4>
+      <div class="dd-footer-company">
+        <p class="dd-footer-company-name">Patryk Jachym LABS</p>
+        <p class="dd-footer-company-addr">
+          ul. Tarnowskich 71p/1<br/>
+          33-100 Tarnów
+        </p>
+        <p class="dd-footer-company-nip">NIP: 9930710781</p>
       </div>
     </div>
 
-    <div class="mt-8 pt-6 border-t border-gray-200">
-      <p class="text-xs text-gray-400 text-center">
-        &copy; {year} PATRYK JACHYM LABS · NIP 9930710781 · Wszystkie prawa zastrzeżone.
-      </p>
+    {/* COL 4: Pomoc */}
+    <div class="dd-footer-col">
+      <h4 class="dd-footer-col-title">Pomoc</h4>
+      <ul class="dd-footer-list">
+        <li><a href="/regulamin">Regulamin</a></li>
+        <li><a href="/polityka-prywatnosci">Polityka prywatności</a></li>
+        <li><a href="/dostawa-i-zwroty">Dostawa i zwroty</a></li>
+        <li><a href="/kontakt">FAQ</a></li>
+        <li><a href="/kontakt">Bezpieczeństwo</a></li>
+      </ul>
+    </div>
+
+  </div>
+
+  {/* Bottom bar */}
+  <div class="dd-footer-bottom">
+    <div class="dd-footer-bottom-inner">
+      <p class="dd-footer-copy">© {year} {storeName}. Wszystkie prawa zastrzeżone.</p>
+      <div class="dd-footer-payments" aria-label="Akceptowane płatności">
+        <span class="dd-footer-pay">BLIK</span>
+        <span class="dd-footer-pay">VISA</span>
+        <span class="dd-footer-pay">Mastercard</span>
+        <span class="dd-footer-pay">PayU</span>
+        <span class="dd-footer-pay">PayPo</span>
+      </div>
     </div>
   </div>
 </footer>
+
+<style is:global>
+  /* ============================================ */
+  /* FOOTER — Dark sophisticated theme            */
+  /* ============================================ */
+  .dd-footer {
+    /* Czystszy charcoal background bez radial accent decorations (zielone +
+       fioletowe kółka usunięte). */
+    background: #1F2220;
+    color: rgba(255, 252, 247, 0.82);
+    font-family: 'Outfit', system-ui, sans-serif;
+    width: 100%;
+    box-sizing: border-box;
+    position: relative;
+    overflow: hidden;
+  }
+  .dd-footer * { box-sizing: border-box; }
+
+  .dd-footer-inner {
+    position: relative;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 56px 20px 40px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 36px;
+    /* Mobile only: center align all sections */
+    text-align: center;
+  }
+  @media (min-width: 640px) {
+    .dd-footer-inner {
+      grid-template-columns: 1fr 1fr;
+      gap: 40px 32px;
+      padding: 64px 28px 48px;
+      text-align: left;
+    }
+  }
+  @media (min-width: 1024px) {
+    .dd-footer-inner {
+      grid-template-columns: 1.4fr 1fr 1fr 1fr;
+      gap: 56px 48px;
+      padding: 72px 40px 56px;
+    }
+  }
+
+  /* ============ Brand column ============ */
+  .dd-footer-brand {
+    grid-column: 1 / -1;
+    /* Mobile: center wszystko w kolumnie brand */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  @media (min-width: 640px) {
+    .dd-footer-brand { align-items: flex-start; }
+  }
+  @media (min-width: 1024px) {
+    .dd-footer-brand { grid-column: auto; max-width: 320px; }
+  }
+  /* Tagline max-width — usuwamy ograniczenie na mobile żeby tekst dobrze się wyśrodkował */
+  @media (max-width: 639px) {
+    .dd-footer-tagline { max-width: 100%; text-align: center; }
+  }
+
+  .dd-footer-wordmark {
+    display: inline-block;
+    font-family: 'Outfit', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    color: #FFFCF7;
+    text-decoration: none;
+    margin-bottom: 14px;
+    transition: opacity 200ms ease;
+  }
+  .dd-footer-wordmark:hover { opacity: 0.85; }
+  .dd-footer-wordmark-tld {
+    color: #FFFCF7; /* białe ".pl" zamiast sage — user pref */
+    font-weight: 700;
+  }
+
+  .dd-footer-tagline {
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: rgba(255, 252, 247, 0.68);
+    margin: 0 0 22px;
+    max-width: 280px;
+  }
+  .dd-footer-tagline-emoji {
+    display: inline-block;
+    margin-left: 4px;
+    font-size: 14px;
+    vertical-align: middle;
+  }
+
+  /* Socials */
+  .dd-footer-socials {
+    display: flex;
+    gap: 8px;
+  }
+  .dd-footer-socials a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 9999px;
+    background: rgba(255, 252, 247, 0.06);
+    border: 1px solid rgba(255, 252, 247, 0.12);
+    color: rgba(255, 252, 247, 0.85);
+    text-decoration: none;
+    transition: all 200ms;
+  }
+  .dd-footer-socials a:hover {
+    background: var(--brand-primary);
+    border-color: var(--brand-primary);
+    color: #FFFFFF;
+    transform: translateY(-2px);
+  }
+  .dd-footer-socials .material-symbols-outlined {
+    font-size: 18px;
+  }
+
+  /* ============ Column ============ */
+  .dd-footer-col {}
+  .dd-footer-col-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: #FFFCF7;
+    margin: 0 0 18px;
+    letter-spacing: -0.01em;
+  }
+
+  /* Bulleted link list */
+  .dd-footer-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .dd-footer-list li {
+    position: relative;
+    padding-left: 14px;
+  }
+  .dd-footer-list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 9px;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--brand-primary);
+  }
+  /* Mobile: bullets center align ze tekstem */
+  @media (max-width: 639px) {
+    .dd-footer-list li { padding-left: 0; }
+    .dd-footer-list li::before { display: none; }
+    .dd-footer-company { align-items: center; }
+  }
+  .dd-footer-list a {
+    font-size: 14px;
+    color: rgba(255, 252, 247, 0.72);
+    text-decoration: none;
+    transition: color 200ms ease, transform 180ms ease;
+    line-height: 1.45;
+    display: inline-block;
+  }
+  .dd-footer-list a:hover {
+    color: #FFFCF7;
+    transform: translateX(2px);
+  }
+
+  /* Company info (Sklep column) */
+  .dd-footer-company {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 14px;
+    line-height: 1.55;
+    color: rgba(255, 252, 247, 0.72);
+  }
+  .dd-footer-company-name {
+    margin: 0;
+    font-weight: 700;
+    color: #FFFCF7;
+  }
+  .dd-footer-company-addr,
+  .dd-footer-company-nip {
+    margin: 0;
+  }
+
+  /* ============ Bottom bar ============ */
+  .dd-footer-bottom {
+    position: relative;
+    border-top: 1px solid rgba(255, 252, 247, 0.08);
+  }
+  .dd-footer-bottom-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    align-items: center;
+    text-align: center;
+  }
+  @media (min-width: 640px) {
+    .dd-footer-bottom-inner {
+      flex-direction: row;
+      justify-content: space-between;
+      text-align: left;
+      padding: 22px 28px;
+    }
+  }
+  @media (min-width: 1024px) {
+    .dd-footer-bottom-inner { padding: 24px 40px; }
+  }
+
+  .dd-footer-copy {
+    font-size: 12.5px;
+    color: rgba(255, 252, 247, 0.45);
+    margin: 0;
+  }
+
+  .dd-footer-payments {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+  }
+  .dd-footer-pay {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: rgba(255, 252, 247, 0.55);
+    padding: 5px 9px;
+    background: rgba(255, 252, 247, 0.05);
+    border: 1px solid rgba(255, 252, 247, 0.10);
+    border-radius: 5px;
+  }
+
+  /* Legacy aliases — niektóre miejsca mogą wciąż używać starych nazw */
+  .dd-footer-light { display: none; }
+  .dd-footer-stitch { display: none; }
+</style>

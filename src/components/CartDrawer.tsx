@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import { useCartStore, closeCart, setCartState } from "../lib/cart-store";
 import { fetchCart, adjustCartItem, removeFromCart } from "../lib/cart-api";
 import { formatPrice, buildAssetUrl } from "../lib/utils";
@@ -6,13 +6,28 @@ import type { CartLine } from "../lib/cart-store";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { lockScroll, unlockScroll } from "../lib/scroll-lock";
 import { useFocusTrap } from "../lib/use-focus-trap";
-
 import { getFreeShippingThreshold } from "../lib/constants";
+import { getCouponDisplayName, isHiddenCoupon } from "../lib/coupon-labels";
 
+// BONUS product slugs — ebook (2+ Moodles) + brelok (Tier 3, 5+ Moodles).
+// Oba to gifty: GRATIS pill, bez X (usuwanie), bez qty toggle. Match po slug,
+// nie variant ID, bo Vendure może rotować ID przy reimport produktu.
+const BONUS_PRODUCT_SLUGS = ["miniprzewodnik", "brelok-fasola"];
+// Friendly names + ukrywanie internal kuponów (FREE_SHIP_99 duplikuje
+// "Dostawa Gratis") → coupon-labels.ts.
+
+/* ============================================ */
+/* CartLineItem — pojedynczy produkt w drawer    */
+/* ============================================ */
 function CartLineItem({ line }: { line: CartLine }) {
   const { productVariant } = line;
   const product = productVariant.product;
-  const image = product.featuredAsset?.preview;
+  // Prefer variant's own featuredAsset (per-variant zdjęcie z Vendure), fallback do product.
+  const image =
+    productVariant.featuredAsset?.preview ?? product.featuredAsset?.preview;
+  const isBonus = BONUS_PRODUCT_SLUGS.includes(product.slug);
+  // Atrybuty wariantu — "Kolor: Niebieski", "Rozmiar: M" itd.
+  const options = productVariant.options ?? [];
 
   const handleQuantityChange = (newQty: number) => {
     if (newQty < 1) return;
@@ -20,146 +35,168 @@ function CartLineItem({ line }: { line: CartLine }) {
   };
 
   return (
-    <div className="flex gap-3 py-4 border-b border-gray-100 last:border-0">
+    <div className="dd-cart-item">
       {/* Image */}
       <a
-        href={`/produkty/${product.slug}`}
-        className="shrink-0 w-16 h-16 rounded-md overflow-hidden bg-gray-100"
+        href={isBonus ? "/" : `/produkty/${product.slug}`}
+        className="dd-cart-item-img"
       >
         {image ? (
           <img
             src={buildAssetUrl(image, "thumb")}
             alt={product.name}
-            width={64}
-            height={64}
-            className="w-full h-full object-cover"
+            width={96}
+            height={96}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-300">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={1.5}
+          <div className="dd-cart-item-img-empty">
+            <span
+              className="material-symbols-outlined"
+              style={{ fontSize: 28 }}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
+              image
+            </span>
           </div>
         )}
       </a>
 
       {/* Details */}
-      <div className="flex-1 min-w-0">
-        <a
-          href={`/produkty/${product.slug}`}
-          className="text-sm font-medium text-gray-900 hover:text-gray-700 no-underline line-clamp-1"
-        >
-          {product.name}
-        </a>
-        {productVariant.name !== product.name && (
-          <p className="text-xs text-gray-500 mt-0.5">{productVariant.name}</p>
-        )}
-        <p className="text-sm font-medium text-gray-900 mt-1">
-          {formatPrice(line.linePriceWithTax)}
-        </p>
-
-        {/* Quantity + remove */}
-        <div className="flex items-center gap-2 mt-2">
-          <div className="flex items-center border border-gray-200 rounded-md">
-            <button
-              type="button"
-              onClick={() => handleQuantityChange(line.quantity - 1)}
-              disabled={line.quantity <= 1}
-              className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-gray-900 disabled:opacity-30 disabled:cursor-not-allowed"
-              aria-label="Zmniejsz ilosc"
-            >
-              -
-            </button>
-            <span className="w-7 text-center text-xs font-medium text-gray-900">
-              {line.quantity}
-            </span>
-            <button
-              type="button"
-              onClick={() => handleQuantityChange(line.quantity + 1)}
-              disabled={line.quantity >= 99}
-              className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-gray-900 disabled:opacity-30 disabled:cursor-not-allowed"
-              aria-label="Zwieksz ilosc"
-            >
-              +
-            </button>
-          </div>
-          <button
-            type="button"
-            onClick={() => removeFromCart(line.id)}
-            className="ml-auto text-xs text-gray-400 hover:text-red-500 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
-            aria-label="Usun z koszyka"
+      <div className="dd-cart-item-info">
+        <div className="dd-cart-item-header">
+          <a
+            href={isBonus ? "/" : `/produkty/${product.slug}`}
+            className="dd-cart-item-name"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={1.5}
+            {product.name}
+          </a>
+          {!isBonus && (
+            <button
+              type="button"
+              onClick={() => removeFromCart(line.id)}
+              className="dd-cart-item-remove"
+              aria-label="Usuń z koszyka"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-              />
-            </svg>
-          </button>
+              <span
+                className="material-symbols-outlined"
+                style={{ fontSize: 20 }}
+              >
+                delete
+              </span>
+            </button>
+          )}
         </div>
+
+        {/* Atrybuty wariantu — Kolor: Niebieski, Rozmiar: M itd. */}
+        {!isBonus && options.length > 0 && (
+          <ul className="dd-cart-item-options">
+            {options.map((o) => (
+              <li
+                key={o.id ?? `${o.group.code}-${o.code}`}
+                className="dd-cart-item-option"
+              >
+                <span className="dd-cart-item-option-label">
+                  {o.group.name}:
+                </span>
+                <span className="dd-cart-item-option-value">{o.name}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {isBonus ? (
+          <div className="dd-cart-item-bonus">
+            <span className="dd-cart-item-bonus-pill">GRATIS</span>
+          </div>
+        ) : (
+          <div className="dd-cart-item-row">
+            {/* Quantity toggle pill */}
+            <div className="dd-cart-qty-pill">
+              <button
+                type="button"
+                onClick={() => handleQuantityChange(line.quantity - 1)}
+                disabled={line.quantity <= 1}
+                aria-label="Zmniejsz ilość"
+              >
+                <span
+                  className="material-symbols-outlined"
+                  style={{ fontSize: 16 }}
+                >
+                  remove
+                </span>
+              </button>
+              <span className="dd-cart-qty-value">{line.quantity}</span>
+              <button
+                type="button"
+                onClick={() => handleQuantityChange(line.quantity + 1)}
+                disabled={line.quantity >= 99}
+                aria-label="Zwiększ ilość"
+              >
+                <span
+                  className="material-symbols-outlined"
+                  style={{ fontSize: 16 }}
+                >
+                  add
+                </span>
+              </button>
+            </div>
+
+            <p className="dd-cart-item-price">
+              {formatPrice(line.linePriceWithTax)}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
+/* ============================================ */
+/* ShippingProgress — pasek darmowej dostawy      */
+/* ============================================ */
 function ShippingProgress({ subtotal }: { subtotal: number }) {
-  const remaining = getFreeShippingThreshold() - subtotal;
-  const progress = Math.min(100, (subtotal / getFreeShippingThreshold()) * 100);
-  const isFree = remaining <= 0;
+  const threshold = getFreeShippingThreshold();
+  const remaining = Math.max(0, threshold - subtotal);
+  const progress = Math.min(100, (subtotal / threshold) * 100);
+  const isFree = remaining <= 0 && subtotal > 0;
 
   return (
-    <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-      {isFree ? (
-        <div className="flex items-center gap-1.5 text-sm text-green-700 font-medium">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-4 w-4"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              fillRule="evenodd"
-              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-              clipRule="evenodd"
-            />
-          </svg>
-          Darmowa dostawa!
-        </div>
-      ) : (
-        <p className="text-xs text-gray-600">
-          Brakuje Ci <strong>{formatPrice(remaining)}</strong> do darmowej
-          dostawy!
-        </p>
-      )}
-      <div className="mt-1.5 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+    <div
+      className={`dd-cart-shipping ${isFree ? "dd-cart-shipping--free" : ""}`}
+    >
+      <div className="dd-cart-shipping-text">
+        {isFree ? (
+          <p>
+            <span
+              className="material-symbols-outlined"
+              style={{ fontSize: 16, verticalAlign: "middle", marginRight: 4 }}
+            >
+              check_circle
+            </span>
+            Masz <strong>darmową dostawę</strong>!
+          </p>
+        ) : (
+          <p>
+            Brakuje <strong>{formatPrice(remaining)}</strong> do darmowej
+            dostawy
+          </p>
+        )}
+      </div>
+      <div className="dd-cart-shipping-track">
         <div
-          className={`h-full rounded-full transition-all duration-500 ${isFree ? "bg-green-500" : "bg-gray-900"}`}
+          className="dd-cart-shipping-fill"
           style={{ width: `${progress}%` }}
         />
       </div>
+      <p className="dd-cart-shipping-threshold">
+        Darmowa dostawa od {formatPrice(threshold)}
+      </p>
     </div>
   );
 }
 
+/* ============================================ */
+/* CartDrawerInner — główna logika                */
+/* ============================================ */
 function CartDrawerInner() {
   const { isOpen, order, loading, error } = useCartStore();
 
@@ -178,29 +215,61 @@ function CartDrawerInner() {
     return () => window.removeEventListener("cart-updated", handler);
   }, []);
 
-  // Body scroll lock
+  // Lock scroll. Unlock DEFERRED do końca close animation (320ms transition) —
+  // bez tego body styles wracają natychmiast i background "skacze" do scrollY
+  // gdy drawer jeszcze slide'uje w dół.
+  //
+  // CRITICAL BUG FIX: gdy user re-open'uje drawer podczas pending unlock (przed
+  // upływem 320ms), trzeba TYLKO anulować timer — NIE wołać lockScroll() ponownie,
+  // bo body jest jeszcze fizycznie zablokowane (count > 0). Bez tego count
+  // akumulował się przy każdym re-open, body zostawało permanentnie position:fixed
+  // → "panel u góry nie działa" + "strona scrolluje się w dół" przy close.
+  const unlockTimerRef = useRef<number | null>(null);
+  const isLockedRef = useRef(false);
   useEffect(() => {
     if (isOpen) {
-      lockScroll();
-    } else {
-      unlockScroll();
+      if (unlockTimerRef.current !== null) {
+        // Body jeszcze zablokowane z poprzedniego open — tylko cancel pending unlock,
+        // NIE wołaj lockScroll (count by się zdublował).
+        clearTimeout(unlockTimerRef.current);
+        unlockTimerRef.current = null;
+      } else if (!isLockedRef.current) {
+        // Fresh lock — body nie jest zablokowane
+        lockScroll();
+        isLockedRef.current = true;
+      }
+    } else if (isLockedRef.current && unlockTimerRef.current === null) {
+      // Schedule unlock dopiero gdy faktycznie zablokowane i nie ma już pending
+      unlockTimerRef.current = window.setTimeout(() => {
+        unlockScroll();
+        isLockedRef.current = false;
+        unlockTimerRef.current = null;
+      }, 320);
     }
-    return () => {
-      unlockScroll();
-    };
   }, [isOpen]);
 
-  // Focus trap
-  const trapRef = useFocusTrap(isOpen);
+  // Cleanup na unmount — natychmiastowy unlock
+  useEffect(() => {
+    return () => {
+      if (unlockTimerRef.current !== null) {
+        clearTimeout(unlockTimerRef.current);
+        unlockTimerRef.current = null;
+      }
+      if (isLockedRef.current) {
+        unlockScroll();
+        isLockedRef.current = false;
+      }
+    };
+  }, []);
 
-  // Escape key
+  // Focus trap + Escape
+  const trapRef = useFocusTrap(isOpen);
   const handleEscape = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === "Escape" && isOpen) closeCart();
     },
     [isOpen],
   );
-
   useEffect(() => {
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
@@ -210,170 +279,154 @@ function CartDrawerInner() {
   const isEmpty = lines.length === 0;
 
   return (
-    <div aria-live="polite">
+    <div aria-live="polite" className="dd-cart-root">
       {/* Backdrop */}
       <div
-        className={`fixed inset-0 z-50 bg-black/40 transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+        className={`dd-cart-backdrop ${isOpen ? "dd-cart-backdrop--open" : ""}`}
         onClick={closeCart}
         aria-hidden="true"
       />
 
-      {/* Drawer panel */}
-      <div
+      {/* Drawer panel — Stitch design */}
+      <aside
         ref={trapRef}
-        className={`fixed z-50 bg-white shadow-xl flex flex-col transition-transform duration-300 ease-out
-          inset-x-0 bottom-0 max-h-[85vh] rounded-t-2xl sm:rounded-t-none
-          sm:inset-y-0 sm:left-auto sm:right-0 sm:w-[420px] sm:max-w-full sm:max-h-full
-          ${isOpen ? "translate-y-0 sm:translate-x-0" : "translate-y-full sm:translate-y-0 sm:translate-x-full"}`}
+        className={`dd-cart-drawer ${isOpen ? "dd-cart-drawer--open" : ""}`}
         role="dialog"
         aria-modal="true"
         aria-label="Koszyk"
+        aria-hidden={!isOpen}
       >
-        {/* Loading overlay */}
+        {/* Loading bar */}
         {loading && (
-          <div className="absolute inset-0 z-10 bg-white/60 flex items-center justify-center">
-            <div className="w-6 h-6 border-2 border-gray-300 border-t-gray-900 rounded-full animate-spin" />
+          <div className="dd-cart-loading" aria-hidden="true">
+            <div className="dd-cart-loading-bar" />
           </div>
         )}
 
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 shrink-0">
-          <h2 className="text-base font-semibold text-gray-900">
-            Koszyk
-            {order && order.totalQuantity > 0
-              ? ` (${order.totalQuantity})`
-              : ""}
+        <header className="dd-cart-header">
+          <h2 className="dd-cart-title">
+            Twój koszyk
+            {order && order.totalQuantity > 0 && (
+              <span className="dd-cart-badge">{order.totalQuantity}</span>
+            )}
           </h2>
           <button
             type="button"
             onClick={closeCart}
-            className="min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 hover:text-gray-900 transition-colors"
+            className="dd-cart-close"
             aria-label="Zamknij koszyk"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
+            <span
+              className="material-symbols-outlined"
+              style={{ fontSize: 22 }}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+              close
+            </span>
           </button>
-        </div>
+        </header>
 
         {isEmpty ? (
           /* Empty state */
-          <div className="flex-1 flex flex-col items-center justify-center px-4 py-12 text-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-12 w-12 text-gray-300 mb-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={1}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
-              />
-            </svg>
-            <p className="text-sm font-medium text-gray-700 mb-1">
-              Twój koszyk jest jeszcze pusty
+          <div className="dd-cart-empty">
+            <div className="dd-cart-empty-icon">
+              <span
+                className="material-symbols-outlined"
+                style={{ fontSize: 36 }}
+              >
+                shopping_bag
+              </span>
+            </div>
+            <p className="dd-cart-empty-title">Koszyk jest pusty</p>
+            <p className="dd-cart-empty-text">
+              Wróć do sklepu i wybierz coś dla siebie.
             </p>
-            <p className="text-xs text-gray-400 mb-4">
-              Odkryj nasz bestseller i zyskaj darmową dostawę
-            </p>
-            <a
-              href="/"
-              onClick={closeCart}
-              className="text-sm font-medium text-gray-900 underline hover:text-gray-700"
-            >
-              Wróć do sklepu
+            <a href="/sklep" onClick={closeCart} className="dd-cart-empty-cta">
+              Przejdź do sklepu
+              <span
+                className="material-symbols-outlined"
+                style={{ fontSize: 18 }}
+              >
+                arrow_forward
+              </span>
             </a>
           </div>
         ) : (
           <>
-            {/* Free shipping progress */}
+            {/* Shipping progress */}
             <ShippingProgress subtotal={order?.subTotalWithTax ?? 0} />
 
             {/* Error message */}
-            {error && (
-              <div className="px-4 py-2 bg-red-50 text-sm text-red-700">
-                {error}
-              </div>
-            )}
+            {error && <div className="dd-cart-error">{error}</div>}
 
-            {/* Line items */}
-            <div className="flex-1 overflow-y-auto px-4">
+            {/* Line items scroll area */}
+            <div className="dd-cart-list">
               {lines.map((line) => (
                 <CartLineItem key={line.id} line={line} />
               ))}
             </div>
 
-            {/* Summary + CTA */}
-            <div className="shrink-0 border-t border-gray-200 px-4 py-4 space-y-3">
-              {order?.discounts?.map((d, i) => {
-                return (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between gap-3 py-1 text-sm"
-                  >
-                    <span className="flex items-center gap-2 text-gray-700 min-w-0">
-                      <svg
-                        className="w-4 h-4 shrink-0 text-emerald-600"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        aria-hidden="true"
-                      >
-                        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
-                        <line x1="7" y1="7" x2="7.01" y2="7" />
-                      </svg>
-                      <span className="truncate">{d.description}</span>
-                    </span>
-                    <span className="shrink-0 font-semibold text-emerald-700 tabular-nums">
-                      -{formatPrice(Math.abs(d.amountWithTax))}
-                    </span>
-                  </div>
-                );
-              })}
-              {(order?.shippingWithTax ?? 0) > 0 && (
-                <div className="flex justify-between text-sm text-gray-600">
-                  <span>Dostawa</span>
-                  <span>{formatPrice(order?.shippingWithTax ?? 0)}</span>
-                </div>
-              )}
-              <div className="flex justify-between text-base font-semibold text-gray-900 pt-2 border-t border-gray-100">
+            {/* Sticky bottom — summary + CTA */}
+            <div className="dd-cart-bottom">
+              {/* Discounts — pomijamy internal coupony oznaczone jako ukryte
+                  w coupon-labels.ts (np. FREE_SHIP_99 — duplikat "Dostawy Gratis").
+                  Pozostałe pokazujemy pod friendly name (MOODLES_GIFT → "Miniprzewodnik..."). */}
+              {order?.discounts
+                ?.filter((d) => !isHiddenCoupon(d.description))
+                .map((d, i) => {
+                  const displayName = getCouponDisplayName(d.description);
+                  const isGift = /ebook|gratis/i.test(displayName);
+                  return (
+                    <div key={i} className="dd-cart-discount-row">
+                      <span className="dd-cart-discount-label">
+                        <span
+                          className="material-symbols-outlined"
+                          style={{
+                            fontSize: 16,
+                            color: "var(--brand-primary)",
+                          }}
+                        >
+                          {isGift ? "redeem" : "local_offer"}
+                        </span>
+                        {displayName}
+                      </span>
+                      <span className="dd-cart-discount-value">
+                        −{formatPrice(Math.abs(d.amountWithTax))}
+                      </span>
+                    </div>
+                  );
+                })}
+
+              {/* Razem (final total, no separate shipping/tax disclaimer) */}
+              <div className="dd-cart-subtotal">
                 <span>Razem</span>
-                <span>{formatPrice(order?.totalWithTax ?? 0)}</span>
+                <span className="dd-cart-subtotal-value">
+                  {formatPrice(order?.totalWithTax ?? 0)}
+                </span>
               </div>
-              <a
-                href="/checkout"
-                className="block w-full rounded-lg bg-gray-900 px-6 py-3 text-center text-sm font-semibold text-white hover:bg-gray-800 transition-colors no-underline min-h-[44px] leading-[44px]"
-              >
-                Przejdz do kasy
+
+              {/* Checkout CTA — Stitch primary pill */}
+              <a href="/checkout" className="dd-cart-checkout-btn">
+                Przejdź do kasy
+                <span
+                  className="material-symbols-outlined"
+                  style={{ fontSize: 20 }}
+                >
+                  arrow_forward
+                </span>
               </a>
+
               <button
                 type="button"
                 onClick={closeCart}
-                className="block w-full text-center text-sm text-gray-500 hover:text-gray-700 transition-colors py-1"
+                className="dd-cart-continue"
               >
                 Kontynuuj zakupy
               </button>
             </div>
           </>
         )}
-      </div>
+      </aside>
     </div>
   );
 }

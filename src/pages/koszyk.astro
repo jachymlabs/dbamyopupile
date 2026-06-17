@@ -2,24 +2,15 @@
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import Breadcrumbs from '@/components/Breadcrumbs.astro';
 import Price from '@/components/Price.astro';
-import Button from '@/components/Button.astro';
 import { shopApi, shopApiRaw, redirectWithToken } from '@/lib/vendure';
 import { GET_ACTIVE_ORDER } from '@/lib/queries';
 import { ADJUST_CART_ITEM, REMOVE_FROM_CART } from '@/lib/mutations';
 import type { VendureOrder } from '@/types/vendure';
 import { buildAssetUrl } from '@/lib/utils';
+import { getStoreConfig } from '@/lib/store-config';
 
-// Handle POST actions (adjust quantity, remove)
-//
-// C3 (Sprint 1): legacy form POST flow — obsługuje TYLKO `action=adjust`
-// i `action=remove`. NIE ma tutaj `action=add`.
-//
-// Ten kod redirectuje z powrotem do /koszyk, więc UX no-JS (form fallback)
-// pozostaje spójny.
-//
-// CSRF: ten endpoint to klasyczny <form method="POST"> renderowany
-// w tym samym dokumencie — chroniony SameSite=Lax cookie + brak narażenia
-// na cross-origin form submissions zmieniających stan poza koszykiem.
+const config = await getStoreConfig(Astro.request);
+
 if (Astro.request.method === 'POST') {
   let lastToken: string | undefined;
   try {
@@ -37,89 +28,111 @@ if (Astro.request.method === 'POST') {
       lastToken = result.authToken;
     }
   } catch {
-    // Continue rendering — cart will show current state
+    // continue render
   }
   return redirectWithToken('/koszyk', lastToken);
 }
 
-// Fetch active order
 let order: VendureOrder | null = null;
 try {
   const data = await shopApi<any>(GET_ACTIVE_ORDER, {}, Astro.request);
   order = data.activeOrder;
 } catch {
-  // Silently fail
+  // silently fail
 }
 
 const lines = order?.lines ?? [];
+const subtotal = order?.subTotalWithTax ?? 0;
+const threshold = config.freeShippingThreshold;
+const remaining = Math.max(0, threshold - subtotal);
+const progress = threshold > 0 ? Math.min(100, (subtotal / threshold) * 100) : 0;
+const isFree = remaining === 0 && subtotal > 0;
+
+const fmt = (grosze: number) =>
+  new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(grosze / 100);
 ---
 
 <BaseLayout title="Koszyk" noindex>
-  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
-    <Breadcrumbs items={[
-      { label: 'Strona główna', href: '/' },
-      { label: 'Koszyk' },
-    ]} />
+  <div class="dd-cart">
+    <div class="dd-cart-wrap">
+      <Breadcrumbs items={[
+        { label: 'Strona główna', href: '/' },
+        { label: 'Koszyk' },
+      ]} />
 
-    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mt-2 mb-8">Koszyk</h1>
+      <header class="dd-cart-header">
+        <h1 class="dd-cart-h1">Koszyk</h1>
+        {lines.length > 0 && (
+          <p class="dd-cart-count">
+            {order?.totalQuantity ?? 0} {(order?.totalQuantity ?? 0) === 1 ? 'produkt' : 'produktów'}
+          </p>
+        )}
+      </header>
 
-    {lines.length > 0 ? (
-      <div class="lg:grid lg:grid-cols-12 lg:gap-8">
-        <!-- Cart items -->
-        <div class="lg:col-span-8">
-          <ul class="divide-y divide-gray-200">
-            {lines.map((line: any) => {
-              const productImage = line.productVariant?.product?.featuredAsset?.preview;
-              const productSlug = line.productVariant?.product?.slug;
-              const productName = line.productVariant?.product?.name || line.productVariant?.name;
-              const variantName = line.productVariant?.name;
-              const productHref = `/produkty/${productSlug}`;
+      {lines.length > 0 ? (
+        <div class="dd-cart-grid">
+          <!-- Items -->
+          <div class="dd-cart-items">
+            {/* Free shipping bar */}
+            <div class={`dd-shipping-bar ${isFree ? 'dd-shipping-bar--free' : ''}`}>
+              <div class="dd-shipping-text">
+                {isFree ? (
+                  <>✓ Gratulacje! Masz <strong>darmową dostawę!</strong></>
+                ) : (
+                  <>🚚 Do darmowej dostawy brakuje <strong>{fmt(remaining)}</strong></>
+                )}
+              </div>
+              <div class="dd-shipping-track">
+                <div class="dd-shipping-fill" style={`width: ${progress}%`}></div>
+              </div>
+            </div>
 
-              return (
-                <li class="flex gap-4 py-5">
-                  {/* Image */}
-                  <div class="h-20 w-20 sm:h-24 sm:w-24 shrink-0 overflow-hidden rounded-lg bg-gray-100">
-                    {productImage ? (
-                      <a href={productHref}>
-                        <img
-                          src={buildAssetUrl(productImage, 'thumb')}
-                          alt={productName}
-                          width="96"
-                          height="96"
-                          class="h-full w-full object-cover"
-                        />
-                      </a>
-                    ) : (
-                      <div class="flex h-full w-full items-center justify-center text-gray-300">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                      </div>
-                    )}
-                  </div>
+            <ul class="dd-cart-list">
+              {lines.map((line: any) => {
+                const productImage = line.productVariant?.product?.featuredAsset?.preview;
+                const productSlug = line.productVariant?.product?.slug;
+                const productName = line.productVariant?.product?.name || line.productVariant?.name;
+                const variantName = line.productVariant?.name;
+                const isBonus = String(line.productVariant?.id) === '-1';
+                const productHref = isBonus ? '/' : `/produkty/${productSlug}`;
 
-                  {/* Info */}
-                  <div class="flex flex-1 flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                    <div class="min-w-0">
-                      <a href={productHref} class="text-sm font-medium text-gray-900 hover:text-gray-600 no-underline line-clamp-2">
+                return (
+                  <li class="dd-cart-item">
+                    <div class="dd-cart-item-img">
+                      {productImage ? (
+                        <a href={productHref}>
+                          <img
+                            src={buildAssetUrl(productImage, 'thumb')}
+                            alt={productName}
+                            width="96"
+                            height="96"
+                            loading="lazy"
+                          />
+                        </a>
+                      ) : (
+                        <div class="dd-cart-item-img-empty" aria-hidden="true"></div>
+                      )}
+                    </div>
+
+                    <div class="dd-cart-item-info">
+                      <a href={productHref} class="dd-cart-item-name">
                         {productName}
                       </a>
                       {variantName !== productName && (
-                        <p class="mt-0.5 text-xs text-gray-500">{variantName}</p>
+                        <p class="dd-cart-item-variant">{variantName}</p>
                       )}
-                      <Price price={line.unitPriceWithTax} class="mt-1 text-sm" />
+                      <Price price={line.unitPriceWithTax} class="dd-cart-item-price" />
                     </div>
 
-                    <div class="flex items-center gap-3 shrink-0">
-                      {/* Quantity form */}
-                      <form method="POST" class="flex items-center gap-1.5">
+                    <div class="dd-cart-item-actions">
+                      <form method="POST" class="dd-qty-form">
                         <input type="hidden" name="action" value="adjust" />
                         <input type="hidden" name="lineId" value={line.id} />
                         <label for={`qty-${line.id}`} class="sr-only">Ilość</label>
                         <select
                           name="quantity"
                           id={`qty-${line.id}`}
-                          class="rounded border border-gray-300 bg-white px-2 py-1 text-sm focus:border-gray-900 focus:ring-1 focus:ring-gray-900 focus:outline-none"
+                          class="dd-qty-select"
                           onchange="this.form.submit()"
                         >
                           {[1,2,3,4,5,6,7,8,9,10].map((n) => (
@@ -128,123 +141,473 @@ const lines = order?.lines ?? [];
                         </select>
                       </form>
 
-                      {/* Line total */}
-                      <Price price={line.linePriceWithTax} class="text-sm w-20 text-right" />
+                      <Price price={line.linePriceWithTax} class="dd-cart-line-total" />
 
-                      {/* Remove */}
                       <form method="POST">
                         <input type="hidden" name="action" value="remove" />
                         <input type="hidden" name="lineId" value={line.id} />
                         <button
                           type="submit"
-                          class="text-gray-400 hover:text-red-500 transition-colors p-1"
+                          class="dd-cart-remove"
                           aria-label={`Usuń ${productName}`}
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 6h18"/>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
+                            <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
                           </svg>
                         </button>
                       </form>
                     </div>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
 
-        <!-- Summary -->
-        <div class="lg:col-span-4 mt-8 lg:mt-0">
-          <div class="rounded-lg bg-gray-50 p-6 sticky top-20">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">Podsumowanie</h2>
+          <!-- Summary -->
+          <aside class="dd-cart-summary">
+            <h2 class="dd-summary-title">Podsumowanie</h2>
 
-            <dl class="space-y-3 text-sm">
-              <div class="flex justify-between">
-                <dt class="text-gray-500">Produkty ({order?.totalQuantity ?? 0})</dt>
+            <dl class="dd-summary-list">
+              <div class="dd-summary-row">
+                <dt>Produkty ({order?.totalQuantity ?? 0})</dt>
                 <dd><Price price={order?.subTotalWithTax ?? 0} /></dd>
               </div>
 
               {(order?.shippingWithTax ?? 0) > 0 && (
-                <div class="flex justify-between">
-                  <dt class="text-gray-500">Dostawa</dt>
+                <div class="dd-summary-row">
+                  <dt>Dostawa</dt>
                   <dd><Price price={order!.shippingWithTax} /></dd>
                 </div>
               )}
 
-              {order?.discounts?.length && order.discounts.length > 0 && order.discounts.map((d: any) => {
-                return (
-                  <div class="flex items-center justify-between gap-3 py-1">
-                    <dt class="flex items-center gap-2 text-gray-700 min-w-0">
-                      <svg class="w-4 h-4 shrink-0 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-                      <span class="truncate">{d.description}</span>
-                    </dt>
-                    <dd class="shrink-0 font-semibold text-emerald-700 tabular-nums">-<Price price={Math.abs(d.amountWithTax)} /></dd>
-                  </div>
-                );
-              })}
+              {order?.discounts?.length && order.discounts.length > 0 && order.discounts.map((d: any) => (
+                <div class="dd-summary-row dd-summary-row-discount">
+                  <dt>{d.description}</dt>
+                  <dd>−<Price price={Math.abs(d.amountWithTax)} /></dd>
+                </div>
+              ))}
 
-              <div class="flex justify-between pt-3 border-t border-gray-200 text-base font-semibold">
+              <div class="dd-summary-row dd-summary-total">
                 <dt>Razem</dt>
-                <dd><Price price={order?.totalWithTax ?? 0} class="text-base" /></dd>
+                <dd><Price price={order?.totalWithTax ?? 0} /></dd>
               </div>
             </dl>
 
-            <div class="mt-6">
-              <Button href="/checkout" variant="primary" size="lg" class="w-full">
-                Przejdź do kasy
-              </Button>
-            </div>
+            <a href="/checkout" class="btn btn-sage dd-summary-cta">
+              Przejdź do kasy
+              <span class="arrow">→</span>
+            </a>
 
-            <div class="mt-4">
-              <Button href="/" variant="outline" size="sm" class="w-full">
-                Kontynuuj zakupy
-              </Button>
+            <a href="/sklep" class="dd-summary-back">
+              ← Kontynuuj zakupy
+            </a>
+
+            <div class="dd-summary-trust">
+              <span>🔒 Bezpieczna płatność</span>
+              <span>↩ 30 dni na zwrot</span>
+              <span>📦 Wysyłka 24h</span>
             </div>
+          </aside>
+        </div>
+      ) : (
+        <div class="dd-cart-empty">
+          <div class="dd-cart-empty-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="9" cy="21" r="1"/>
+              <circle cx="20" cy="21" r="1"/>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+            </svg>
           </div>
+          <h2>Twój koszyk świeci pustkami</h2>
+          <p>Ale gwarantujemy, że nie potrwa to długo. Zobacz co inni najczęściej wybierają.</p>
+          <a href="/sklep" class="btn btn-sage">
+            Przejdź do sklepu
+            <span class="arrow">→</span>
+          </a>
         </div>
-      </div>
-    ) : (
-      <div class="py-16 text-center">
-        <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-        </svg>
-        <h2 class="mt-4 text-lg font-medium text-gray-900">Koszyk jest pusty</h2>
-        <p class="mt-2 text-sm text-gray-500">Dodaj produkty, żeby kontynuować zakupy.</p>
-        <div class="mt-6">
-          <Button href="/produkty/bryza" variant="primary">
-            Zobacz Bryzę
-          </Button>
-        </div>
-      </div>
-    )}
+      )}
+    </div>
   </div>
-  {/* Loading state: disable forms on submit, prevent double-submit */}
+
   <script>
     function initCartForms() {
       const forms = document.querySelectorAll<HTMLFormElement>('form[method="POST"]');
       forms.forEach((form) => {
         form.addEventListener('submit', () => {
-          // Disable all buttons and selects in this form
           form.querySelectorAll<HTMLButtonElement | HTMLSelectElement>('button, select').forEach((el) => {
             el.disabled = true;
           });
-          // If it has a submit button (remove), add visual feedback
-          const btn = form.querySelector<HTMLButtonElement>('button[type="submit"]');
-          if (btn) {
-            btn.classList.add('opacity-50');
-          }
         });
       });
-
-      // Selects with onchange submit — also handle
       const selects = document.querySelectorAll<HTMLSelectElement>('select[onchange]');
       selects.forEach((select) => {
         select.addEventListener('change', () => {
           select.disabled = true;
-          select.classList.add('opacity-50');
         });
       });
     }
     initCartForms();
   </script>
 </BaseLayout>
+
+<style is:global>
+  /* ============================================ */
+  /* CART PAGE — dbamyopupile sage palette               */
+  /* ============================================ */
+  .dd-cart {
+    background: var(--brand-bg);
+    min-height: 60vh;
+    padding: 24px 0 80px;
+  }
+  .dd-cart-wrap {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 16px;
+  }
+  @media (min-width: 640px) { .dd-cart-wrap { padding: 0 24px; } }
+
+  .dd-cart-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin: 24px 0 32px;
+    gap: 16px;
+  }
+  .dd-cart-h1 {
+    font-family: 'Outfit', system-ui, sans-serif;
+    font-size: clamp(28px, 4vw, 36px);
+    font-weight: 800;
+    color: var(--brand-heading);
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+  .dd-cart-count {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--brand-muted);
+    margin: 0;
+  }
+
+  .dd-cart-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  @media (min-width: 1024px) {
+    .dd-cart-grid {
+      grid-template-columns: 1.6fr 1fr;
+      gap: 32px;
+    }
+  }
+
+  /* Free shipping bar */
+  .dd-shipping-bar {
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-radius: var(--r-md);
+    padding: 14px 20px;
+    margin-bottom: 16px;
+  }
+  .dd-shipping-bar--free {
+    background: var(--brand-primary-soft);
+    border-color: var(--brand-primary);
+  }
+  .dd-shipping-text {
+    font-size: 14px;
+    color: var(--brand-heading);
+    margin: 0 0 10px;
+    text-align: center;
+  }
+  .dd-shipping-text strong {
+    color: var(--brand-primary-hover);
+    font-weight: 700;
+  }
+  .dd-shipping-bar--free .dd-shipping-text strong {
+    color: var(--brand-success);
+  }
+  .dd-shipping-track {
+    width: 100%;
+    height: 6px;
+    background: var(--brand-surface-2);
+    border-radius: var(--r-pill);
+    overflow: hidden;
+  }
+  .dd-shipping-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--brand-primary), var(--brand-primary-hover));
+    border-radius: var(--r-pill);
+    transition: width 400ms ease;
+  }
+  .dd-shipping-bar--free .dd-shipping-fill {
+    background: linear-gradient(90deg, var(--brand-success), var(--brand-primary));
+  }
+
+  /* List */
+  .dd-cart-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+  }
+  .dd-cart-item {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 14px;
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--brand-border);
+  }
+  .dd-cart-item:last-child { border-bottom: none; }
+  @media (min-width: 640px) {
+    .dd-cart-item {
+      grid-template-columns: 96px 1fr auto;
+      gap: 18px;
+      align-items: center;
+    }
+  }
+
+  .dd-cart-item-img {
+    width: 80px;
+    height: 80px;
+    border-radius: var(--r-sm);
+    overflow: hidden;
+    background: var(--brand-bg);
+    grid-row: span 2;
+  }
+  @media (min-width: 640px) {
+    .dd-cart-item-img {
+      width: 96px;
+      height: 96px;
+      grid-row: auto;
+    }
+  }
+  .dd-cart-item-img a { display: block; height: 100%; }
+  .dd-cart-item-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .dd-cart-item-img-empty {
+    width: 100%;
+    height: 100%;
+    background: var(--brand-bg);
+  }
+
+  .dd-cart-item-info {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .dd-cart-item-name {
+    font-family: 'Outfit', system-ui, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--brand-heading);
+    text-decoration: none;
+    line-height: 1.35;
+    transition: color 200ms ease;
+  }
+  .dd-cart-item-name:hover { color: var(--brand-primary-hover); }
+  .dd-cart-item-variant {
+    font-size: 12px;
+    color: var(--brand-muted);
+    margin: 0;
+  }
+  .dd-cart-item-info :global(.dd-cart-item-price) {
+    font-family: 'Outfit', system-ui, sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--brand-text);
+    margin-top: 2px;
+  }
+
+  .dd-cart-item-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    grid-column: 2;
+  }
+  @media (min-width: 640px) {
+    .dd-cart-item-actions {
+      grid-column: 3;
+      gap: 14px;
+    }
+  }
+
+  .dd-qty-select {
+    border: 1px solid var(--brand-border);
+    background: var(--brand-surface);
+    border-radius: var(--r-sm);
+    padding: 6px 10px;
+    font-size: 14px;
+    font-family: 'Outfit', system-ui, sans-serif;
+    color: var(--brand-heading);
+    cursor: pointer;
+    transition: border-color 200ms ease;
+  }
+  .dd-qty-select:hover, .dd-qty-select:focus {
+    border-color: var(--brand-primary);
+    outline: none;
+  }
+
+  .dd-cart-item-actions :global(.dd-cart-line-total) {
+    font-family: 'Outfit', system-ui, sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--brand-heading);
+    min-width: 70px;
+    text-align: right;
+  }
+
+  .dd-cart-remove {
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid var(--brand-border);
+    border-radius: var(--r-sm);
+    color: var(--brand-muted);
+    cursor: pointer;
+    transition: all 200ms ease;
+  }
+  .dd-cart-remove:hover {
+    background: var(--brand-accent-soft);
+    border-color: var(--brand-accent);
+    color: var(--brand-accent);
+  }
+
+  /* Summary */
+  .dd-cart-summary {
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-radius: var(--r-lg);
+    padding: 24px;
+  }
+  @media (min-width: 1024px) {
+    .dd-cart-summary {
+      position: sticky;
+      top: 100px;
+      align-self: start;
+    }
+  }
+
+  .dd-summary-title {
+    font-family: 'Outfit', system-ui, sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--brand-heading);
+    margin: 0 0 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--brand-border);
+  }
+
+  .dd-summary-list {
+    margin: 0 0 20px;
+  }
+  .dd-summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding: 8px 0;
+    font-size: 14px;
+  }
+  .dd-summary-row dt { color: var(--brand-text); margin: 0; }
+  .dd-summary-row dd { margin: 0; color: var(--brand-heading); font-weight: 600; }
+  .dd-summary-row-discount dt { color: var(--brand-primary-hover); font-weight: 600 }
+  .dd-summary-row-discount dd { color: var(--brand-primary-hover); font-weight: 700; }
+
+  .dd-summary-total {
+    margin-top: 8px;
+    padding-top: 14px;
+    border-top: 1px solid var(--brand-border);
+    font-size: 16px;
+    font-weight: 800;
+  }
+  .dd-summary-total dt, .dd-summary-total dd {
+    color: var(--brand-heading);
+    font-size: 18px;
+    font-weight: 800;
+  }
+
+  .dd-summary-cta {
+    width: 100%;
+    margin-bottom: 12px;
+  }
+
+  .dd-summary-back {
+    display: block;
+    text-align: center;
+    color: var(--brand-muted);
+    font-size: 14px;
+    text-decoration: none;
+    padding: 8px;
+    transition: color 200ms ease;
+  }
+  .dd-summary-back:hover { color: var(--brand-primary); }
+
+  .dd-summary-trust {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--brand-border);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--brand-muted);
+  }
+
+  /* Empty cart */
+  .dd-cart-empty {
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-radius: var(--r-lg);
+    padding: 60px 32px;
+    text-align: center;
+    margin-top: 24px;
+  }
+  .dd-cart-empty-icon {
+    color: var(--brand-muted);
+    margin-bottom: 18px;
+    display: inline-flex;
+    padding: 16px;
+    background: var(--brand-surface-2);
+    border-radius: 50%;
+  }
+  .dd-cart-empty h2 {
+    font-family: 'Outfit', system-ui, sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--brand-heading);
+    margin: 0 0 10px;
+  }
+  .dd-cart-empty p {
+    color: var(--brand-text);
+    font-size: 15px;
+    line-height: 1.55;
+    margin: 0 0 28px;
+    max-width: 420px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+</style>

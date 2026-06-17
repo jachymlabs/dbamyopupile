@@ -17,6 +17,13 @@ export const ORDER_FRAGMENT = `
     description
     amountWithTax
   }
+  shippingLines {
+    priceWithTax
+    shippingMethod {
+      id
+      name
+    }
+  }
   lines {
     id
     quantity
@@ -26,6 +33,20 @@ export const ORDER_FRAGMENT = `
       id
       name
       sku
+      featuredAsset {
+        id
+        preview
+      }
+      options {
+        id
+        code
+        name
+        group {
+          id
+          code
+          name
+        }
+      }
       product {
         id
         name

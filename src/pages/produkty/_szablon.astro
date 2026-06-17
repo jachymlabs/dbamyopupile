@@ -1,6 +1,6 @@
 ---
 /**
- * SZABLON STRONY PRODUKTOWEJ — DbamyOPupile.pl
+ * SZABLON STRONY PRODUKTOWEJ — BezSmugi.pl
  *
  * Jak uzyc:
  * 1. Skopiuj ten plik: cp src/pages/produkty/_szablon.astro src/pages/produkty/<slug>.astro
@@ -47,23 +47,20 @@ if (Astro.request.method === 'POST') {
     if (variantId) {
       const result = await shopApiRaw<any>(ADD_TO_CART, { variantId, quantity }, Astro.request);
 
-      const cookies = Astro.request.headers.get('cookie') || '';
-      if (cookies.includes('cookie_consent=accepted')) {
-        const userData = await buildUserData(Astro.request);
-        sendCAPIEvent({
-          event_name: 'AddToCart',
-          event_time: Math.floor(Date.now() / 1000),
-          event_id: generateEventId(),
-          event_source_url: Astro.url.href,
-          action_source: 'website',
-          user_data: userData,
-          custom_data: {
-            content_ids: [variantId],
-            content_type: 'product',
-            currency: 'PLN',
-          },
-        }, storeConfig.metaDatasetId);
-      }
+      const userData = await buildUserData(Astro.request);
+      await sendCAPIEvent({
+        event_name: 'AddToCart',
+        event_time: Math.floor(Date.now() / 1000),
+        event_id: generateEventId(),
+        event_source_url: Astro.url.href,
+        action_source: 'website',
+        user_data: userData,
+        custom_data: {
+          content_ids: [variantId],
+          content_type: 'product',
+          currency: 'PLN',
+        },
+      }, storeConfig.metaDatasetId);
       return redirectWithToken('/koszyk', result.authToken);
     }
     return Astro.redirect('/koszyk');
@@ -89,25 +86,22 @@ const ogImageUrl = mainImage?.preview ? buildAssetUrl(mainImage.preview, 'large'
 
 // CAPI ViewContent
 const viewContentEventId = generateEventId();
-const vcCookies = Astro.request.headers.get('cookie') || '';
-if (vcCookies.includes('cookie_consent=accepted')) {
-  const vcUserData = await buildUserData(Astro.request);
-  sendCAPIEvent({
-    event_name: 'ViewContent',
-    event_time: Math.floor(Date.now() / 1000),
-    event_id: viewContentEventId,
-    event_source_url: Astro.url.href,
-    action_source: 'website',
-    user_data: vcUserData,
-    custom_data: {
-      content_ids: [firstVariant?.sku || product.id],
-      content_name: product.name,
-      content_type: 'product',
-      value: lowestPrice / 100,
-      currency: 'PLN',
-    },
-  }, storeConfig.metaDatasetId);
-}
+const vcUserData = await buildUserData(Astro.request);
+sendCAPIEvent({
+  event_name: 'ViewContent',
+  event_time: Math.floor(Date.now() / 1000),
+  event_id: viewContentEventId,
+  event_source_url: Astro.url.href,
+  action_source: 'website',
+  user_data: vcUserData,
+  custom_data: {
+    content_ids: [firstVariant?.sku || product.id],
+    content_name: product.name,
+    content_type: 'product',
+    value: lowestPrice / 100,
+    currency: 'PLN',
+  },
+}, storeConfig.metaDatasetId);
 
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -276,16 +270,16 @@ const jsonLd = {
   {/* Async ATC form */}
   <script>
     (function() {
-      const form = document.querySelector('form[method="POST"]');
+      const form = document.querySelector<HTMLFormElement>('form[method="POST"]');
       if (!form) return;
-      const btn = form.querySelector('button[type="submit"]');
+      const btn = form.querySelector<HTMLButtonElement>('button[type="submit"]');
       if (!btn) return;
 
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const formData = new FormData(form);
         const variantId = formData.get('variantId');
-        const quantity = parseInt(formData.get('quantity') || '1', 10);
+        const quantity = parseInt(String(formData.get('quantity') || '1'), 10);
         if (!variantId) return;
 
         btn.disabled = true;

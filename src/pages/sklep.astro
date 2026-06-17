@@ -1,0 +1,226 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Breadcrumbs from '@/components/Breadcrumbs.astro';
+import ProductCard from '@/components/ProductCard.astro';
+import { shopApi } from '@/lib/vendure';
+import { SEARCH_PRODUCTS } from '@/lib/queries';
+import { getRegularPrice } from '@/lib/prices';
+
+const perPage = 24;
+const pageParam = Astro.url.searchParams.get('page');
+const page = Math.max(1, parseInt(pageParam || '1', 10) || 1);
+const skip = (page - 1) * perPage;
+
+let products: any[] = [];
+let totalItems = 0;
+let error: string | null = null;
+
+try {
+  const productsData = await shopApi<any>(SEARCH_PRODUCTS, {
+    input: {
+      groupByProduct: true,
+      take: perPage,
+      skip,
+    },
+  }, Astro.request);
+  products = productsData.search?.items ?? [];
+  totalItems = productsData.search?.totalItems ?? 0;
+} catch (e: any) {
+  error = 'Nie udało się załadować produktów. Spróbuj ponownie za chwilę.';
+}
+
+const totalPages = Math.ceil(totalItems / perPage);
+
+function pageUrl(p: number): string {
+  const url = new URL(Astro.url);
+  if (p <= 1) {
+    url.searchParams.delete('page');
+  } else {
+    url.searchParams.set('page', String(p));
+  }
+  return url.pathname + url.search;
+}
+
+function getPageNumbers(current: number, total: number): (number | '...')[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const pages: (number | '...')[] = [];
+  pages.push(1);
+  if (current > 3) pages.push('...');
+  for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) {
+    pages.push(i);
+  }
+  if (current < total - 2) pages.push('...');
+  pages.push(total);
+  return pages;
+}
+
+const pageNumbers = getPageNumbers(page, totalPages);
+---
+
+<BaseLayout
+  title="Sklep, wszystkie produkty"
+  description="Akcesoria dla psów: miski spowalniające jedzenie, chłodzące bandany i więcej. Wszystko na stanie, wysyłka 24h InPost. Darmowa dostawa od 99 zł."
+>
+  <div class="dd-shop">
+    <div class="dd-shop-wrap">
+      <Breadcrumbs items={[
+        { label: 'Strona główna', href: '/' },
+        { label: 'Sklep' },
+      ]} />
+
+      {error && (
+        <div class="dd-shop-error" role="alert">
+          <p>{error}</p>
+        </div>
+      )}
+
+      {products.length > 0 ? (
+        <div class="dd-shop-grid">
+          {products.map((p: any) => (
+            <ProductCard
+              name={p.productName}
+              slug={p.slug}
+              imageUrl={p.productAsset?.preview}
+              priceWithTax={p.priceWithTax}
+              currencyCode={p.currencyCode}
+              regularPrice={getRegularPrice(p.slug) ?? undefined}
+            />
+          ))}
+        </div>
+      ) : !error ? (
+        <div class="dd-shop-empty">
+          <p>Wkrótce zapełnimy katalog. Wróć za chwilę albo napisz na <a href="mailto:sklep@dbamyopupile.pl">sklep@dbamyopupile.pl</a>.</p>
+        </div>
+      ) : null}
+
+      {totalPages > 1 && (
+        <nav class="dd-shop-pagination" aria-label="Paginacja">
+          {page > 1 ? (
+            <a href={pageUrl(page - 1)} class="dd-page-btn" aria-label="Poprzednia strona">←</a>
+          ) : (
+            <span class="dd-page-btn dd-page-btn-disabled" aria-hidden="true">←</span>
+          )}
+
+          {pageNumbers.map((p) =>
+            p === '...' ? (
+              <span class="dd-page-dots">…</span>
+            ) : p === page ? (
+              <span class="dd-page-active" aria-current="page">{p}</span>
+            ) : (
+              <a href={pageUrl(p as number)} class="dd-page-btn">{p}</a>
+            )
+          )}
+
+          {page < totalPages ? (
+            <a href={pageUrl(page + 1)} class="dd-page-btn" aria-label="Następna strona">→</a>
+          ) : (
+            <span class="dd-page-btn dd-page-btn-disabled" aria-hidden="true">→</span>
+          )}
+        </nav>
+      )}
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .dd-shop {
+    background: var(--brand-bg);
+    min-height: 60vh;
+    padding: 24px 0 80px;
+  }
+  .dd-shop-wrap {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 16px;
+  }
+  @media (min-width: 640px) { .dd-shop-wrap { padding: 0 24px; } }
+  @media (min-width: 1024px) { .dd-shop-wrap { padding: 0 32px; } }
+
+  .dd-shop-error {
+    background: var(--brand-accent-soft);
+    border: 1px solid var(--brand-accent);
+    border-radius: var(--r-md);
+    padding: 14px 18px;
+    margin: 24px 0;
+  }
+  .dd-shop-error p {
+    margin: 0;
+    color: var(--brand-accent-hover);
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .dd-shop-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-top: 24px;
+  }
+  @media (min-width: 768px) { .dd-shop-grid { grid-template-columns: repeat(3, 1fr); gap: 24px; } }
+  @media (min-width: 1100px) { .dd-shop-grid { grid-template-columns: repeat(4, 1fr); gap: 28px; } }
+
+  .dd-shop-empty {
+    padding: 60px 32px;
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-radius: var(--r-lg);
+    text-align: center;
+  }
+  .dd-shop-empty p {
+    color: var(--brand-text);
+    font-size: 16px;
+    line-height: 1.5;
+    margin: 0;
+  }
+  .dd-shop-empty a {
+    color: var(--brand-primary);
+    font-weight: 600;
+  }
+  .dd-shop-empty a:hover { color: var(--brand-primary-hover); }
+
+  .dd-shop-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 48px;
+  }
+  .dd-page-btn,
+  .dd-page-active {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
+    padding: 0 12px;
+    border-radius: var(--r-sm);
+    font-family: 'Outfit', system-ui, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 200ms ease, border-color 200ms ease, color 200ms ease;
+  }
+  .dd-page-btn {
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    color: var(--brand-heading);
+  }
+  .dd-page-btn:hover {
+    background: var(--brand-primary-soft);
+    border-color: var(--brand-primary);
+  }
+  .dd-page-btn-disabled {
+    color: var(--brand-muted);
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+  .dd-page-active {
+    background: var(--brand-primary);
+    color: var(--brand-inverse);
+    border: 1px solid var(--brand-primary);
+  }
+  .dd-page-dots {
+    color: var(--brand-muted);
+    padding: 0 6px;
+  }
+</style>

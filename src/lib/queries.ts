@@ -1,5 +1,5 @@
 // Plain string GraphQL queries — adapted from Next.js reference (gql.tada → plain strings)
-import { ORDER_FRAGMENT } from './fragments';
+import { ORDER_FRAGMENT } from "./fragments";
 
 export const GET_STORE_CONFIG = /* GraphQL */ `
   query GetStoreConfig {
@@ -93,10 +93,12 @@ export const GET_PRODUCT_DETAIL = /* GraphQL */ `
       }
       featuredAsset {
         id
+        name
         preview
       }
       assets {
         id
+        name
         preview
         source
       }
@@ -108,6 +110,11 @@ export const GET_PRODUCT_DETAIL = /* GraphQL */ `
         stockLevel
         customFields {
           lowestPrice30d
+        }
+        featuredAsset {
+          id
+          name
+          preview
         }
         options {
           id
@@ -242,6 +249,20 @@ export const GET_ORDER_BY_CODE = /* GraphQL */ `
           name
           sku
           productId
+          featuredAsset {
+            id
+            preview
+          }
+          options {
+            id
+            code
+            name
+            group {
+              id
+              code
+              name
+            }
+          }
           product {
             id
             name
@@ -259,6 +280,11 @@ export const GET_ORDER_BY_CODE = /* GraphQL */ `
       discounts {
         description
         amountWithTax
+      }
+      payments {
+        id
+        state
+        method
       }
     }
   }

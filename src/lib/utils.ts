@@ -27,7 +27,7 @@ export function formatPriceRange(
     if (priceWithTax.min === priceWithTax.max) {
       return formatPrice(priceWithTax.min, currencyCode);
     }
-    return `od ${formatPrice(priceWithTax.min, currencyCode)}`;
+    return formatPrice(priceWithTax.min, currencyCode);
   }
   return '';
 }

@@ -1,98 +1,189 @@
 ---
 /**
- * PromoBar — announcement bar na górze sklepu.
- * Konfigurowalny tekst, link, kolor. Zamykalny z localStorage persistence.
+ * PromoBar — sticky announcement bar z auto-rotującymi wiadomościami.
+ * Sage primary tło, biały tekst, BEZ dismiss button (zawsze widoczny).
+ *
+ * Wiadomości rotują co ~4s z fade crossfade.
  *
  * Użycie w BaseLayout:
- *   <PromoBar text="Darmowa dostawa od 150 zł!" />
- *   <PromoBar text="Kod LATO15 = -15%" href="/produkty" linkText="Kup teraz" />
- *   <PromoBar text="Ostatnie sztuki!" theme="warning" />
- *   <PromoBar text="" /> ← ukryty gdy pusty text
+ *   <PromoBar /> — domyślne 4 wiadomości
+ *   <PromoBar messages={["custom 1", "custom 2"]} interval={5000} theme="accent" />
  */
 
 interface Props {
-  text: string;
-  href?: string;
-  linkText?: string;
-  theme?: 'dark' | 'accent' | 'warning';
-  dismissible?: boolean;
-  id?: string; // unique ID for localStorage dismiss key
+  /** Lista wiadomości do rotacji. Domyślnie: 4 brand messages. */
+  messages?: string[];
+  /** Single message — backward compat (jeśli podane, użyte zamiast messages). */
+  text?: string;
+  /** Interwał rotacji w ms (domyślnie 4000 = 4s). */
+  interval?: number;
+  theme?: 'primary' | 'accent' | 'dark';
+  id?: string;
 }
 
+const DEFAULT_MESSAGES = [
+  'Darmowa dostawa od 99 zł',
+  'Wysyłka w 24h',
+  '14 dni na zwrot',
+  'Promocja -30%',
+];
+
 const {
+  messages,
   text,
-  href,
-  linkText,
-  theme = 'dark',
-  dismissible = true,
+  interval = 4000,
+  theme = 'primary',
   id = 'promo-bar',
 } = Astro.props;
 
-if (!text) return null;
-
-const themeClasses: Record<string, string> = {
-  dark: 'bg-gray-900 text-white',
-  accent: 'bg-indigo-600 text-white',
-  warning: 'bg-amber-500 text-gray-900',
-};
+// Priorytet: messages prop > text prop > defaults
+const items: string[] = messages && messages.length > 0
+  ? messages
+  : text
+    ? [text]
+    : DEFAULT_MESSAGES;
 ---
 
 <div
   id={id}
-  class:list={[
-    'relative flex items-center justify-center px-4 py-2 text-center text-sm font-medium',
-    themeClasses[theme] || themeClasses.dark,
-  ]}
+  class:list={['dd-promo-bar', `dd-promo-bar--${theme}`]}
   data-promo-id={id}
+  data-interval={interval}
 >
-  <p class="flex items-center gap-2 flex-wrap justify-center">
-    <span>{text}</span>
-    {href && linkText && (
-      <a href={href} class="underline underline-offset-2 font-semibold hover:opacity-80 transition-opacity">
-        {linkText}
-      </a>
-    )}
-  </p>
-
-  {dismissible && (
-    <button
-      type="button"
-      class="absolute right-2 top-1/2 -translate-y-1/2 p-1 opacity-70 hover:opacity-100 transition-opacity min-w-[44px] min-h-[44px] flex items-center justify-center"
-      aria-label="Zamknij"
-      data-dismiss-promo={id}
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-      </svg>
-    </button>
-  )}
+  <div class="dd-promo-bar-track" data-promo-track>
+    {items.map((msg, i) => (
+      <span
+        class:list={['dd-promo-bar-msg', i === 0 && 'dd-promo-bar-msg--active']}
+        data-index={i}
+      >
+        {msg}
+      </span>
+    ))}
+  </div>
 </div>
 
+<style is:global>
+  /* PromoBar fixed top:0 (zamiast sticky) — eliminuje rendering glitche
+     na Chrome mobile podczas address bar collapse. Fixed = zawsze relative
+     do visual viewport, brak layout viewport conflicts.
+     env(safe-area-inset-top) dodaje przestrzeń pod iPhone notch / status
+     bar — bar rozszerza się góra, content (message) zostaje wycentrowany
+     w usable area (poniżej notch). Na non-iOS env() = 0, bez zmian. */
+  .dd-promo-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: calc(36px + env(safe-area-inset-top, 0px));
+    padding-top: env(safe-area-inset-top, 0px);
+    text-align: center;
+    font-family: 'Outfit', system-ui, sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    z-index: 60;
+    color: #FFFFFF;
+    overflow: hidden;
+    transition: height 240ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  @media (min-width: 768px) {
+    .dd-promo-bar {
+      height: calc(38px + env(safe-area-inset-top, 0px));
+      font-size: 14px;
+    }
+    body.is-scrolled .dd-promo-bar {
+      height: calc(30px + env(safe-area-inset-top, 0px));
+    }
+  }
+
+  .dd-promo-bar--primary { background: var(--brand-primary); }
+  .dd-promo-bar--accent { background: var(--brand-accent); }
+  .dd-promo-bar--dark { background: var(--brand-heading); }
+
+  /* Track — wszystkie wiadomości w jednym miejscu, fade between */
+  .dd-promo-bar-track {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  .dd-promo-bar-msg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) translateY(8px);
+    width: 100%;
+    padding: 0 16px;
+    opacity: 0;
+    transition: opacity 400ms ease, transform 400ms ease;
+    pointer-events: none;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+  .dd-promo-bar-msg--active {
+    opacity: 1;
+    transform: translate(-50%, -50%) translateY(0);
+  }
+  .dd-promo-bar-msg--leaving {
+    opacity: 0;
+    transform: translate(-50%, -50%) translateY(-8px);
+  }
+</style>
+
 <script>
-  // Dismiss promo bar + persist in localStorage
-  document.querySelectorAll<HTMLButtonElement>('[data-dismiss-promo]').forEach((btn) => {
-    const id = btn.dataset.dismissPromo;
-    if (!id) return;
+  document.querySelectorAll<HTMLElement>('[data-promo-id]').forEach((bar) => {
+    const interval = parseInt(bar.dataset.interval || '4000', 10);
+    const track = bar.querySelector<HTMLElement>('[data-promo-track]');
+    if (!track) return;
 
-    const bar = document.getElementById(id);
-    if (!bar) return;
+    const messages = Array.from(track.querySelectorAll<HTMLElement>('.dd-promo-bar-msg'));
+    if (messages.length <= 1) return; // tylko jedna wiadomość — nie rotuj
 
-    // Check if already dismissed
-    if (localStorage.getItem(`promo-dismissed-${id}`) === '1') {
-      bar.remove();
-      return;
+    let currentIndex = 0;
+
+    function rotate() {
+      const current = messages[currentIndex];
+      const nextIndex = (currentIndex + 1) % messages.length;
+      const next = messages[nextIndex];
+
+      // Current → leaving (slide up + fade out)
+      current.classList.remove('dd-promo-bar-msg--active');
+      current.classList.add('dd-promo-bar-msg--leaving');
+
+      // Next → active (slide in from below + fade in)
+      next.classList.remove('dd-promo-bar-msg--leaving');
+      next.classList.add('dd-promo-bar-msg--active');
+
+      // Po animacji wyczyść leaving class
+      setTimeout(() => {
+        current.classList.remove('dd-promo-bar-msg--leaving');
+      }, 400);
+
+      currentIndex = nextIndex;
     }
 
-    btn.addEventListener('click', () => {
-      bar.style.transition = 'max-height 0.3s ease, opacity 0.3s ease';
-      bar.style.maxHeight = bar.offsetHeight + 'px';
-      requestAnimationFrame(() => {
-        bar.style.maxHeight = '0';
-        bar.style.opacity = '0';
-        bar.style.overflow = 'hidden';
-      });
-      setTimeout(() => bar.remove(), 300);
-      localStorage.setItem(`promo-dismissed-${id}`, '1');
+    // Pause rotation gdy karta nie jest aktywna (oszczędza CPU)
+    let timer: ReturnType<typeof setInterval> | null = null;
+    function start() {
+      if (timer) return;
+      timer = setInterval(rotate, interval);
+    }
+    function stop() {
+      if (timer) {
+        clearInterval(timer);
+        timer = null;
+      }
+    }
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) stop();
+      else start();
     });
+
+    start();
   });
 </script>

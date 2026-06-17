@@ -6,32 +6,170 @@
  */
 ---
 
-<div id="cookie-consent-banner" class="fixed bottom-0 inset-x-0 z-50 hidden">
-  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-4">
-    <div class="rounded-lg bg-white border border-gray-200 shadow-lg p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
-      <p class="text-sm text-gray-700 flex-1">
-        Ta strona uzywa plikow cookies do celow analitycznych i reklamowych.
-        <a href="/polityka-prywatnosci" class="underline hover:text-gray-900">Dowiedz się więcej</a>.
+<div id="cookie-consent-banner" class="dop-cookie-banner hidden">
+  <div class="dop-cookie-inner">
+    <div class="dop-cookie-message">
+      <span class="dop-cookie-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"/><path d="M8.5 8.5v.01"/><path d="M16 15.5v.01"/><path d="M12 12v.01"/><path d="M11 17v.01"/><path d="M7 14v.01"/></svg>
+      </span>
+      <p class="dop-cookie-text">
+        <strong>Małe ciasteczko, duża pomoc.</strong>
+        Używamy plików cookies, żeby pokazywać Ci to, co naprawdę Cię interesuje. <a href="/polityka-prywatnosci">Polityka prywatności</a>
       </p>
-      <div class="flex gap-2 shrink-0">
-        <button
-          id="cookie-reject"
-          type="button"
-          class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-        >
-          Odrzucam
-        </button>
-        <button
-          id="cookie-accept"
-          type="button"
-          class="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 transition-colors"
-        >
-          Akceptuje
-        </button>
-      </div>
+    </div>
+    <div class="dop-cookie-actions">
+      <button id="cookie-reject" type="button" class="dop-cookie-btn dop-cookie-btn--reject">
+        Odrzuć
+      </button>
+      <button id="cookie-accept" type="button" class="dop-cookie-btn dop-cookie-btn--accept">
+        Akceptuję
+      </button>
     </div>
   </div>
 </div>
+
+<style is:global>
+  /* Compact cookie banner — krótszy tekst, single row na mobile, mniej dominuje
+     viewport. Dodatkowo: hide sticky ATC bar gdy banner widoczny żeby nie nakładały
+     się na siebie i nie pochłaniały połowy ekranu. */
+  .dop-cookie-banner {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    padding: 0 12px 12px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+    font-family: 'Outfit', system-ui, sans-serif;
+  }
+  .dop-cookie-banner.hidden { display: none; }
+  /* Mobile: layout kolumnowy — tekst u góry, guziki na dole, każdy guzik
+     pełnej szerokości po połowie. Czytelniejsze niż wraping flex-row gdzie
+     guziki latały do trzeciego rzędu. Desktop (>=640px): flex-row jak wcześniej. */
+  .dop-cookie-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: #FFFCF7;
+    border: 1px solid var(--brand-border);
+    border-radius: 16px;
+    padding: 14px 16px;
+    box-shadow: 0 12px 32px rgba(15, 22, 32, 0.16);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+  @media (min-width: 640px) {
+    .dop-cookie-inner {
+      flex-direction: row;
+      align-items: center;
+      padding: 16px 20px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+  }
+  /* Message row — ikona + tekst zawsze w jednej linii (mobile i desktop), żeby
+     ikona była ozdobnym akcentem przy tekście, nie samodzielnym blokiem nad.
+     Mobile inner zwija się column → message row + actions row. */
+  .dop-cookie-message {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+  }
+  @media (min-width: 640px) {
+    .dop-cookie-message { align-items: center; gap: 14px; }
+  }
+  .dop-cookie-icon {
+    color: var(--brand-primary);
+    background: var(--brand-primary-soft);
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .dop-cookie-icon svg {
+    width: 22px;
+    height: 22px;
+  }
+  .dop-cookie-text {
+    flex: 1;
+    margin: 0;
+    font-size: 13px;
+    color: var(--brand-text);
+    line-height: 1.45;
+    min-width: 0;
+  }
+  .dop-cookie-text strong {
+    color: var(--brand-heading);
+    font-weight: 700;
+    margin-right: 4px;
+  }
+  @media (min-width: 640px) {
+    .dop-cookie-text { font-size: 14px; }
+  }
+  .dop-cookie-text a {
+    color: var(--brand-primary-hover);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .dop-cookie-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+    width: 100%;
+  }
+  @media (min-width: 640px) {
+    .dop-cookie-actions { width: auto; gap: 6px; }
+  }
+  /* Mobile: guziki 50/50 po szerokości, czytelniejsze tap targets */
+  .dop-cookie-actions .dop-cookie-btn { flex: 1; }
+  @media (min-width: 640px) {
+    .dop-cookie-actions .dop-cookie-btn { flex: 0 0 auto; }
+  }
+  .dop-cookie-btn {
+    padding: 8px 16px;
+    border-radius: 9999px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    border: 1.5px solid;
+    transition: all 200ms;
+  }
+  .dop-cookie-btn--reject {
+    border-color: var(--brand-border);
+    background: transparent;
+    color: var(--brand-text);
+  }
+  .dop-cookie-btn--reject:hover {
+    border-color: var(--brand-border-strong);
+    background: var(--brand-surface-2);
+  }
+  .dop-cookie-btn--accept {
+    border-color: var(--brand-primary);
+    background: var(--brand-primary);
+    color: #fff;
+  }
+  .dop-cookie-btn--accept:hover {
+    background: var(--brand-primary-hover);
+    border-color: var(--brand-primary-hover);
+  }
+
+  /* Hide sticky ATC bar dopóki cookie banner widoczny — żeby nie nakładały się
+     na siebie na mobile. */
+  body.cookie-banner-visible .dop-sticky-atc {
+    visibility: hidden;
+    pointer-events: none;
+  }
+</style>
 
 <script is:inline>
   (function() {
@@ -45,14 +183,37 @@
 
     if (hasConsent) return;
 
-    // Show banner
+    // Show banner + push body content up żeby footer i nav links się nie chowały pod
+    // bannerem. Padding aktualizujemy do realnej wysokości banner'a (mobile flex-col
+    // jest wyższy niż desktop flex-row).
     banner.classList.remove('hidden');
+
+    function applyBodyPadding() {
+      var h = banner.offsetHeight;
+      if (h > 0) {
+        document.body.style.paddingBottom = h + 'px';
+        document.documentElement.style.setProperty('--cookie-banner-h', h + 'px');
+      }
+    }
+    function clearBodyPadding() {
+      document.body.style.paddingBottom = '';
+      document.documentElement.style.removeProperty('--cookie-banner-h');
+      // Usuń klasę z body żeby sticky ATC mogło się pojawić
+      document.body.classList.remove('cookie-banner-visible');
+    }
+
+    // Klasa na body sygnalizuje że banner jest widoczny — sticky ATC bar
+    // ukrywa się przez CSS, żeby nie zatłaczać dolnej części viewportu na mobile.
+    document.body.classList.add('cookie-banner-visible');
+    applyBodyPadding();
+    window.addEventListener('resize', applyBodyPadding);
 
     function setCookie(value) {
       var d = new Date();
       d.setTime(d.getTime() + 365 * 24 * 60 * 60 * 1000); // 1 year
       document.cookie = 'cookie_consent=' + value + ';expires=' + d.toUTCString() + ';path=/;SameSite=Lax;Secure';
       banner.classList.add('hidden');
+      clearBodyPadding();
 
       // If accepted, reload to trigger pixel load
       if (value === 'accepted') {

@@ -118,7 +118,8 @@ export async function shopApiRaw<T>(
  */
 function buildAuthCookie(authToken: string): string {
   const maxAge = 60 * 60 * 24 * 365;
-  const isProduction = !API_URL.includes('localhost');
+  // LOW-1: import.meta.env.PROD zamiast localhost-substring check (Astro/Vite-builtin).
+  const isProduction = import.meta.env.PROD;
   const secure = isProduction ? ' Secure;' : '';
   const cookieDomain = (process.env.PUBLIC_COOKIE_DOMAIN || import.meta.env.PUBLIC_COOKIE_DOMAIN || '').trim();
   const domain = isProduction && cookieDomain ? ` Domain=${cookieDomain};` : '';

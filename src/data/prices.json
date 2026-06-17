@@ -1,0 +1,65 @@
+{
+  "_meta": {
+    "description": "Per-product ceny regularne (przed promocją) w GROSZACH. Frontend odczytuje bezpośrednio bez ruszania Vendure backendu. Jeśli regularPrice > current priceWithTax → renderuje strikethrough + sale badge w UI.",
+    "schema": {
+      "regularPrice": "int (grosze, zawsze X9,99 = X999)",
+      "note": "opcjonalny — wewnętrzna notatka, nie pokazywana w UI"
+    },
+    "ruleOfThumb": "Regular = current * 1.4-1.6, zaokrąglić do najbliższego X9,99 w górę. Cel: badge -30% do -40%."
+  },
+
+  "moodles": {
+    "regularPrice": 7999,
+    "variants": {
+      "mini-4": 7999,
+      "mini-8": 9999,
+      "maxi-4": 11999,
+      "maxi-8": 13999
+    },
+    "note": "Per-variant: mini-4 79,99 / mini-8 99,99 / maxi-4 119,99 / maxi-8 139,99"
+  },
+  "wibblo": {
+    "regularPrice": 7999,
+    "note": "Current 49,99 → 79,99 = -38%"
+  },
+  "snapstones": {
+    "regularPrice": 9999,
+    "note": "Current 69,99 → 99,99 = -30%"
+  },
+  "gorly": {
+    "regularPrice": 6999,
+    "note": "Current od 39,99 → 69,99 = -43%"
+  },
+  "brelok-fasola": {
+    "regularPrice": 3999,
+    "note": "Current 24,99 → 39,99 = -37%"
+  },
+  "neurocube": {
+    "regularPrice": 8999,
+    "note": "Current 59,99 → 89,99 = -33%"
+  },
+  "clicky": {
+    "regularPrice": 7999,
+    "note": "Current 49,99 → 79,99 = -38%"
+  },
+  "flicko": {
+    "regularPrice": 5999,
+    "note": "Current 39,99 → 59,99 = -33%"
+  },
+  "formi": {
+    "regularPrice": 9999,
+    "note": "Current 69,99 → 99,99 = -30%"
+  },
+  "gniotek-pingwinek": {
+    "regularPrice": 4999,
+    "note": "Current 34,99 → 49,99 = -30%"
+  },
+  "crocky": {
+    "regularPrice": 7999,
+    "note": "Current 49,99 → 79,99 = -38%"
+  },
+  "loomo": {
+    "regularPrice": 7999,
+    "note": "Current 49,99 → 79,99 = -38%"
+  }
+}

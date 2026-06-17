@@ -1,43 +1,229 @@
 @import "tailwindcss";
 
 /* ============================================ */
-/* BRAND COLORS — DbamyOPupile.pl                */
+/* BRAND COLORS — dbamyopupile (Sage + Strawberry)    */
+/* Refresh 2026-05-04: post-rebrand palette     */
 /* ============================================ */
-/* CSS custom properties (dla stylow inline / dynamicznych) */
 :root {
-  --brand-primary: #B8D8E8;    /* akcenty, ikony — pastelowy blekit */
-  --brand-secondary: #1E3A5F;  /* guziki, pogrubienia — granatowy */
-  --brand-canvas: #FAF7F2;     /* tlo strony — kremowy off-white */
-  --brand-text: #1A1A1A;       /* body, naglowki — prawie czarny */
+  /* Surfaces */
+  --brand-bg: #F5F1EA;          /* warm cream — body bg */
+  --brand-surface: #FFFCF7;     /* card / panel */
+  --brand-surface-2: #EFE9DD;   /* secondary surface, tracks */
+  --brand-border: #E5DFD2;
+  --brand-border-strong: #D6CEBE;
+
+  /* Primary — sage (calm, wellness) */
+  --brand-primary: #7B9075;
+  --brand-primary-hover: #5E7359;
+  --brand-primary-soft: #E1E8DD;
+
+  /* Accent — strawberry (CTAs only) */
+  --brand-accent: #E63946;
+  --brand-accent-hover: #C82A36;
+  --brand-accent-soft: #FCE4E6;
+
+  /* Text */
+  --brand-heading: #2A2D27;
+  --brand-text: #5C6058;
+  --brand-muted: #8A8E84;
+  --brand-inverse: #FFFCF7;
+
+  /* Variants (Moodles colors) */
+  --v-forest: #4A7A52;
+  --v-forest-soft: #DDE8DD;
+  --v-lavender: #A78BCC;
+  --v-lavender-soft: #ECE3F5;
+  --v-strawberry: #E63946;
+  --v-strawberry-soft: #FCE4E6;
+
+  /* State */
+  --brand-success: #3F7D52;
+  --brand-warning: #C8924A;
+  --brand-error: #C8202E;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(42,45,39,.06);
+  --shadow-md: 0 6px 18px rgba(42,45,39,.08);
+  --shadow-lg: 0 18px 40px rgba(42,45,39,.12);
+
+  /* Radii */
+  --r-xs: 6px;
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --r-pill: 999px;
+
+  /* Legacy aliases (some components nadal odwołują się do starych nazw — mapujemy bezpiecznie) */
+  --brand-secondary: var(--brand-heading);
+  --brand-canvas: var(--brand-bg);
 }
 
 /* Tailwind 4 theme tokens */
 @theme {
-  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
-  --color-brand-primary: #B8D8E8;
-  --color-brand-secondary: #1E3A5F;
-  --color-brand-canvas: #FAF7F2;
-  --color-brand-text: #1A1A1A;
+  --font-sans: "Outfit", system-ui, -apple-system, sans-serif;
+
+  /* === DOODIE STITCH "Sensory Calm System" design tokens === */
+  /* dbamyopupile brand tokens (legacy bg-brand-*) */
+  --color-brand-bg: #F5F1EA;
+  --color-brand-surface: #FFFCF7;
+  --color-brand-surface-2: #EFE9DD;
+  --color-brand-border: #E5DFD2;
+  --color-brand-border-strong: #D6CEBE;
+
+  --color-brand-primary: #7B9075;
+  --color-brand-primary-hover: #5E7359;
+  --color-brand-primary-soft: #E1E8DD;
+
+  --color-brand-accent: #E63946;
+  --color-brand-accent-hover: #C82A36;
+  --color-brand-accent-soft: #FCE4E6;
+
+  --color-brand-heading: #2A2D27;
+  --color-brand-text: #5C6058;
+  --color-brand-muted: #8A8E84;
+
+  /* === Stitch Material 3 naming (bg-surface, text-on-surface, border-outline-variant…) === */
+  --color-background: #F5F1EA;
+  --color-on-background: #1B1C1A;
+  --color-surface: #FFFCF7;
+  --color-on-surface: #1B1C1A;
+  --color-on-surface-variant: #434841;
+  --color-surface-container-lowest: #FFFCF7;
+  --color-surface-container-low: #FFFCF7;
+  --color-surface-container: #F5F1EA;
+  --color-surface-container-high: #EFEEEA;
+  --color-surface-container-highest: #E5DFD2;
+  --color-surface-bright: #FFFCF7;
+  --color-surface-dim: #DBDAD6;
+  --color-surface-variant: #E4E2DF;
+
+  --color-primary: #7B9075;
+  --color-on-primary: #FFFFFF;
+  --color-primary-container: #667A60;
+  --color-on-primary-container: #F7FFF0;
+  --color-primary-fixed: #D2E9CA;
+  --color-primary-fixed-dim: #B7CDAF;
+
+  --color-secondary: #E63946;
+  --color-on-secondary: #FFFFFF;
+  --color-secondary-container: #DB313F;
+
+  --color-tertiary: #74535E;
+  --color-on-tertiary: #FFFFFF;
+
+  --color-error: #E63946;
+  --color-on-error: #FFFFFF;
+  --color-error-container: #FDE8E9;
+  --color-on-error-container: #E63946;
+
+  --color-outline: #747870;
+  --color-outline-variant: #E5DFD2;
+
+  --color-inverse-surface: #30312E;
+  --color-inverse-on-surface: #F2F1ED;
+  --color-inverse-primary: #B7CDAF;
+
+  /* === Stitch spacing scale === */
+  --spacing-unit: 4px;
+  --spacing-xs: 8px;
+  --spacing-sm: 16px;
+  --spacing-md: 24px;
+  --spacing-lg: 48px;
+  --spacing-xl: 80px;
+  --spacing-gutter: 24px;
+  --spacing-margin-mobile: 20px;
+  --spacing-container-max: 1200px;
+
+  /* === Stitch radius scale (pill-focused) === */
+  --radius-sm: 0.5rem;       /* 8px */
+  --radius-md: 1rem;         /* 16px (DEFAULT) */
+  --radius-lg: 1.5rem;       /* 24px */
+  --radius-xl: 2rem;         /* 32px */
+  --radius-2xl: 3rem;        /* 48px */
+  --radius-full: 9999px;
+
+  /* === Stitch typography (Outfit-only) === */
+  --text-h1-desktop: 56px;
+  --text-h1-mobile: 42px;
+  --text-h2-desktop: 40px;
+  --text-h2-mobile: 28px;
+  --text-h3: 20px;
+  --text-body-lg: 16px;
+  --text-body-sm: 14px;
+  --text-button: 14px;
+
+  --tracking-h1: -0.025em;
+  --tracking-h2: -0.01em;
+  --tracking-button: 0.04em;
+
+  /* Legacy aliases (komponenty nadal odwołują się do starych nazw) */
+  --color-brand-secondary: #2A2D27;
+  --color-brand-canvas: #F5F1EA;
 }
 
 /* Base styles */
 @layer base {
   html {
-    scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow-x: clip;
+    /* Mobile Chrome bug fix: html background pokrywa visible viewport zawsze,
+       nawet gdy body content krótszy niż viewport po address bar collapse.
+       Bez tego "dziura" (white gap) pojawiała się na dole gdy chrome bar
+       się chował, bo body kończył się przed dolnym brzegiem viewport'u. */
+    background: var(--brand-bg);
+  }
+  /* scroll-behavior: smooth TYLKO na desktop. Na mobile (a zwłaszcza w
+     Facebook in-app browser / WKWebView) smooth scroll interpolował touch
+     gestures co dawało "śliski" feel niezgodny z palcem. User feedback:
+     "z reklamy FB otwiera się webview i tam scroll dziwnie działa".
+     Chrome normalny ignoruje smooth dla user input, ale FB webview ma bug. */
+  @media (min-width: 1024px) {
+    html { scroll-behavior: smooth; }
   }
 
   body {
-    @apply bg-brand-canvas text-brand-text font-sans;
-    min-height: 100dvh;
+    @apply bg-brand-bg text-brand-text font-sans;
+    min-height: 100vh;
+    min-height: 100lvh;
     display: flex;
     flex-direction: column;
     width: 100%;
+    overflow-x: clip;
+    line-height: 1.5;
+    /* Legacy iOS momentum scrolling — dla starszych WKWebView (Facebook
+       in-app browser na iOS) wymusza native inertia scroll zamiast
+       interpolowanego. Modern Safari ignoruje (default behavior). */
+    -webkit-overflow-scrolling: touch;
+  }
+  /* Padding-top TYLKO gdy PromoBar+Header są renderowane (fixed top:0).
+     Checkout używa hideHeader — body NIE ma .has-fixed-nav i nie dostaje padding. */
+  /* env(safe-area-inset-top) dodaje przestrzeń pod iPhone notch — bez tego
+     content na iOS lądował pod fixed nav (Promo + Header były wyższe
+     wizualnie niż padding-top body, content wjeżdżał pod). */
+  body.has-fixed-nav {
+    padding-top: calc(98px + env(safe-area-inset-top, 0px));
+    transition: padding-top 240ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  @media (min-width: 768px) {
+    body.has-fixed-nav {
+      padding-top: calc(104px + env(safe-area-inset-top, 0px));
+    }
+    /* Scroll shrink — TYLKO PromoBar 38→30 (delta 8px). */
+    body.has-fixed-nav.is-scrolled {
+      padding-top: calc(96px + env(safe-area-inset-top, 0px));
+    }
   }
 
   main {
     flex: 1;
+  }
+
+  h1, h2, h3, h4 {
+    color: var(--brand-heading);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
   }
 
   img {
@@ -46,50 +232,188 @@
   }
 
   a {
-    @apply text-gray-900 underline-offset-2;
+    color: var(--brand-heading);
+    text-underline-offset: 2px;
   }
 
   /* Focus visible for accessibility */
   :focus-visible {
-    @apply outline-2 outline-offset-2 outline-gray-900;
+    outline: 2px solid var(--brand-primary);
+    outline-offset: 2px;
+    border-radius: 4px;
   }
+}
+
+/* ============================================ */
+/* STITCH TYPOGRAPHY UTILITY CLASSES             */
+/* "Sensory Calm System" — Outfit-only           */
+/* ============================================ */
+
+/* H1 — hero headlines */
+.text-h1 {
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  color: var(--brand-heading);
+}
+@media (min-width: 768px) {
+  .text-h1 { font-size: 56px; }
+}
+
+/* H2 — section headlines */
+.text-h2 {
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  color: var(--brand-heading);
+}
+@media (min-width: 768px) {
+  .text-h2 { font-size: 40px; }
+}
+
+/* H3 — card titles */
+.text-h3 {
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--brand-heading);
+}
+
+/* Body — long-form paragraph */
+.text-body-lg {
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--brand-text);
+}
+
+.text-body-sm {
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--brand-text);
+}
+
+/* Button — uppercase tracking */
+.text-button {
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+/* Eyebrow — uppercase muted label above section H2 */
+.text-eyebrow {
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--brand-muted);
+}
+
+/* ============================================ */
+/* STITCH SECTION HELPERS                        */
+/* ============================================ */
+.section-stitch {
+  padding: 56px 16px;
+}
+@media (min-width: 768px) {
+  .section-stitch { padding: 88px 24px; }
+}
+
+.section-stitch--soft {
+  background: #F1F3F0; /* Stitch "section-soft" subtle green-tinted cream */
+}
+
+.section-stitch--surface {
+  background: var(--brand-surface);
+}
+
+.container-stitch {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ============================================ */
+/* STITCH PILL BUTTONS                           */
+/* ============================================ */
+.btn-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 32px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 200ms, transform 100ms, box-shadow 200ms;
+  min-height: 48px;
+}
+.btn-pill:active { transform: scale(0.98); }
+.btn-pill--primary {
+  background: var(--brand-primary);
+  color: #fff;
+  box-shadow: var(--shadow-sm);
+}
+.btn-pill--primary:hover {
+  background: var(--brand-primary-hover);
+  box-shadow: var(--shadow-md);
+}
+.btn-pill--ghost {
+  background: transparent;
+  color: var(--brand-heading);
+  border-color: var(--brand-border-strong);
+}
+.btn-pill--ghost:hover {
+  background: var(--brand-surface);
+  border-color: var(--brand-heading);
+}
+.btn-pill--accent {
+  background: var(--brand-accent);
+  color: #fff;
+  box-shadow: var(--shadow-sm);
+}
+.btn-pill--accent:hover {
+  background: var(--brand-accent-hover);
 }
 
 /* Rich text content from Vendure (shortDescription, description) */
 .rich-text strong,
-.rich-text b {
-  @apply font-semibold text-gray-900;
-}
+.rich-text b { font-weight: 700; color: var(--brand-heading); }
 .rich-text em,
-.rich-text i {
-  font-style: italic;
-}
-.rich-text ul {
-  @apply list-disc pl-5 my-2 space-y-1;
-}
-.rich-text ol {
-  @apply list-decimal pl-5 my-2 space-y-1;
-}
-.rich-text p {
-  @apply my-1.5;
-}
-.rich-text a {
-  @apply underline text-gray-900 hover:text-gray-600;
-}
-.rich-text h3, .rich-text h4 {
-  @apply font-semibold text-gray-900 mt-3 mb-1;
-}
+.rich-text i { font-style: italic; }
+.rich-text ul { list-style: disc; padding-left: 1.25rem; margin: 0.5rem 0; }
+.rich-text ul > li + li { margin-top: 0.25rem; }
+.rich-text ol { list-style: decimal; padding-left: 1.25rem; margin: 0.5rem 0; }
+.rich-text p { margin: 0.375rem 0; }
+.rich-text a { text-decoration: underline; color: var(--brand-primary); }
+.rich-text a:hover { color: var(--brand-primary-hover); }
+.rich-text h3, .rich-text h4 { font-weight: 700; color: var(--brand-heading); margin: 0.75rem 0 0.25rem; }
 
 /* Gallery horizontal scroll — hide scrollbar */
 .gallery-scroll {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
-.gallery-scroll::-webkit-scrollbar {
-  display: none;
-}
+.gallery-scroll::-webkit-scrollbar { display: none; }
 
-/* Overlay animations (ExitIntentOverlay, SMSCaptureOverlay) */
+/* Overlay animations */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -112,338 +436,679 @@
     to { opacity: 1; transform: translateY(0); }
   }
 }
-.animate-fadeIn {
-  animation: fadeIn 0.2s ease-out both;
-}
-.animate-slideUp {
-  animation: slideUp 0.3s ease-out both;
-}
-.animate-smsFadeIn {
-  animation: smsFadeIn 0.2s ease-out both;
-}
-.animate-smsSlideUp {
-  animation: smsSlideUp 0.3s ease-out both;
-}
+.animate-fadeIn { animation: fadeIn 0.2s ease-out both; }
+.animate-slideUp { animation: slideUp 0.3s ease-out both; }
+.animate-smsFadeIn { animation: smsFadeIn 0.2s ease-out both; }
+.animate-smsSlideUp { animation: smsSlideUp 0.3s ease-out both; }
 
 /* Anti-FOUC: ukryj PromoBar od razu gdy localStorage flag set (set w BaseLayout head) */
 .promo-dismissed #promo-bar { display: none !important; }
 
-/* ============================================ */
-/* HEADER + MOBILE DRAWER (load-blocking, no FOUC) */
-/* ============================================ */
-.dop-header {
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: saturate(180%) blur(18px);
-  -webkit-backdrop-filter: saturate(180%) blur(18px);
-  border-bottom: 1px solid rgba(184, 216, 232, 0.55);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.6) inset, 0 1px 12px rgba(30, 58, 95, 0.04);
-}
-.dop-header::after {
-  content: "";
-  position: absolute;
-  left: 0; right: 0; bottom: -1px;
-  height: 1px;
-  background: linear-gradient(90deg, transparent 0%, rgba(184, 216, 232, 0.7) 50%, transparent 100%);
-  pointer-events: none;
-}
-.dop-header-inner {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 0 16px;
-  height: 68px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-}
-@media (min-width: 640px) { .dop-header-inner { padding: 0 24px; height: 74px; } }
+/* Header + Mobile Drawer CSS przeniesione do src/components/Header.astro
+   <style is:global> — single source of truth, eliminuje duplikat reguł
+   które po zmianie is:global powodowały konflikt position: sticky vs fixed
+   i psuły layout nav baru. */
 
-/* Logo */
-.dop-logo {
-  display: inline-flex;
-  align-items: center;
-  text-decoration: none;
-  flex-shrink: 0;
-  transition: transform 250ms cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-.dop-logo:hover { transform: scale(1.03); }
-.dop-logo:active { transform: scale(0.98); }
-.dop-logo img {
-  height: 36px;
-  width: auto;
-  display: block;
-}
-@media (min-width: 640px) { .dop-logo img { height: 44px; } }
-
-/* Desktop nav */
-.dop-nav-desktop {
-  display: none;
-  align-items: center;
-  gap: 6px;
-  flex: 1;
-  justify-content: center;
-}
-@media (min-width: 900px) { .dop-nav-desktop { display: flex; } }
-.dop-nav-link {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  font-family: 'Inter', system-ui, sans-serif;
-  font-size: 14.5px;
-  font-weight: 500;
-  color: #4B5563;
-  text-decoration: none;
-  padding: 10px 16px;
-  border-radius: 10px;
+/* ============================================ */
+/* BRAND MARK — wzmacnia nazwę marki w copy      */
+/* ============================================ */
+.brand-mark {
+  font-weight: 800 !important;
+  color: var(--brand-primary) !important;
   letter-spacing: -0.005em;
-  transition: color 220ms ease, background 220ms ease;
 }
-.dop-nav-badge {
-  display: inline-block;
-  padding: 2px 7px;
-  background: linear-gradient(135deg, #1E3A5F, #2A4F7E);
-  color: #fff;
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  border-radius: 4px;
-  text-transform: uppercase;
-  box-shadow: 0 2px 6px rgba(30, 58, 95, 0.25);
-  line-height: 1.4;
-}
-.dop-drawer-link-label {
+
+/* ============================================ */
+/* GLOBAL BUTTONS — dbamyopupile                       */
+/* ============================================ */
+.btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
-}
-.dop-drawer-link-badge {
-  display: inline-block;
-  padding: 3px 8px;
-  background: linear-gradient(135deg, #1E3A5F, #2A4F7E);
-  color: #fff;
-  font-size: 9.5px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  border-radius: 5px;
-  text-transform: uppercase;
-  box-shadow: 0 2px 6px rgba(30, 58, 95, 0.22);
-  line-height: 1.4;
-}
-.dop-nav-link::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: 4px;
-  width: 0;
-  height: 2px;
-  background: linear-gradient(90deg, #B8D8E8, #1E3A5F);
-  border-radius: 2px;
-  transform: translateX(-50%);
-  transition: width 280ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-.dop-nav-link:hover {
-  color: #1E3A5F;
-  background: rgba(184, 216, 232, 0.18);
-}
-.dop-nav-link:hover::before { width: 22px; }
-.dop-nav-link.is-active {
-  color: #1E3A5F;
+  padding: 14px 24px;
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-size: 15px;
   font-weight: 700;
-}
-.dop-nav-link.is-active::before { width: 28px; }
-
-/* Actions */
-.dop-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex-shrink: 0;
-}
-
-/* Cart slot — rezerwacja miejsca dla React component (no layout shift) */
-.dop-cart-slot {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 44px;
-  min-height: 44px;
-}
-@media (min-width: 640px) {
-  .dop-cart-slot { min-width: 88px; }
-}
-
-/* Hamburger */
-.dop-hamburger {
-  display: inline-flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  width: 44px;
-  height: 44px;
-  padding: 0;
-  background: rgba(184, 216, 232, 0.16);
-  border: 1px solid rgba(184, 216, 232, 0.4);
-  border-radius: 12px;
+  letter-spacing: 0.01em;
+  border-radius: var(--r-md);
+  text-decoration: none;
   cursor: pointer;
-  gap: 5px;
-  transition: background 200ms ease, border-color 200ms ease;
+  border: 1px solid transparent;
+  transition: background-color 200ms ease, color 200ms ease, transform 100ms ease, box-shadow 200ms ease;
+  min-height: 48px;
 }
-.dop-hamburger:hover {
-  background: rgba(184, 216, 232, 0.28);
-  border-color: rgba(184, 216, 232, 0.7);
-}
-@media (min-width: 900px) { .dop-hamburger { display: none; } }
-.dop-hamburger span {
-  display: block;
-  width: 20px;
-  height: 2px;
-  background: #1E3A5F;
-  border-radius: 2px;
-  transform-origin: center;
-  transition: transform 280ms cubic-bezier(0.4, 0, 0.2, 1), opacity 200ms ease;
-}
-.dop-hamburger[aria-expanded="true"] span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
-.dop-hamburger[aria-expanded="true"] span:nth-child(2) { opacity: 0; transform: scaleX(0); }
-.dop-hamburger[aria-expanded="true"] span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+.btn:active { transform: translateY(1px); }
 
-/* Drawer backdrop */
-.dop-drawer-backdrop {
+/* PRIMARY = sage (default dla większości CTA — wellness vibe) */
+.btn-primary,
+.btn-sage {
+  background: var(--brand-primary);
+  color: var(--brand-inverse);
+  box-shadow: var(--shadow-sm);
+}
+.btn-primary:hover,
+.btn-sage:hover {
+  background: var(--brand-primary-hover);
+  box-shadow: var(--shadow-md);
+}
+
+/* ACCENT = strawberry (RZADKO — tylko dla ważnych momentów: promo, scarcity, place-order, announcement bar) */
+.btn-accent {
+  background: var(--brand-accent);
+  color: var(--brand-inverse);
+  box-shadow: var(--shadow-sm);
+}
+.btn-accent:hover {
+  background: var(--brand-accent-hover);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--brand-heading);
+  border-color: var(--brand-border-strong);
+}
+.btn-ghost:hover {
+  border-color: var(--brand-heading);
+  background: var(--brand-surface);
+}
+
+.btn .arrow {
+  font-size: 18px;
+  font-weight: 300;
+  transition: transform 200ms ease;
+}
+
+/* ============================================ */
+/* CART DRAWER — Stitch "Twój koszyk" design     */
+/* ============================================ */
+
+.dd-cart-root {
+  font-family: 'Outfit', system-ui, sans-serif;
+}
+
+/* Backdrop — transparentny (tło strony bez zmian, tylko click-to-close).
+   touch-action: none na otwartym backdrop blokuje scroll body gdy user swipuje
+   nad obszarem nieprzykrytym drawerem (na mobile drawer to 92vh, więc 8vh
+   nad nim to backdrop — tam touch propagował do body i scrollował stronę). */
+.dd-cart-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.55);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
-  opacity: 0;
+  z-index: 190;
+  background: transparent;
+  visibility: hidden;
   pointer-events: none;
-  transition: opacity 280ms ease;
-  z-index: 60;
 }
-.dop-drawer-backdrop.is-open { opacity: 1; pointer-events: auto; }
+.dd-cart-backdrop--open {
+  visibility: visible;
+  pointer-events: auto;
+  touch-action: none;
+}
 
-/* Drawer */
-.dop-drawer {
+/* Drawer panel — pełna wysokość, NAD wszystkim (z-index 200 > Header 90 > PromoBar 60).
+   touch-action: none na całym drawer — blokuje touch-driven scroll body gdy user
+   swipuje w obszarach drawer'a, które nie są scrollowalne (header, bottom CTA).
+   Klikanie/tapy buttonów nadal działają. .dd-cart-list overrides z touch-action:
+   pan-y żeby scroll wewnątrz listy był OK. */
+.dd-cart-drawer {
   position: fixed;
-  top: 0;
+  z-index: 200;
   right: 0;
+  top: 0;
   bottom: 0;
-  width: min(86vw, 380px);
-  background: linear-gradient(180deg, #FFFFFF 0%, #FAF7F2 100%);
-  z-index: 70;
-  transform: translateX(100%);
-  transition: transform 360ms cubic-bezier(0.32, 0.72, 0, 1);
+  width: 100%;
+  max-width: 450px;
+  background: var(--brand-surface);
   display: flex;
   flex-direction: column;
-  box-shadow: -16px 0 48px rgba(15, 23, 42, 0.18);
+  overflow: hidden;
+  transform: translateX(100%);
+  transition: transform 320ms cubic-bezier(0.32, 0.72, 0, 1), box-shadow 320ms;
+  border-top-left-radius: 24px;
+  box-shadow: none;
+  visibility: hidden;
+  touch-action: none;
+  overscroll-behavior: contain;
 }
-.dop-drawer.is-open { transform: translateX(0); }
+.dd-cart-drawer--open {
+  transform: translateX(0);
+  box-shadow: -24px 0 60px rgba(42, 45, 39, 0.25);
+  visibility: visible;
+}
 
-.dop-drawer-head {
+/* Loading bar */
+.dd-cart-loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 20;
+  overflow: hidden;
+  pointer-events: none;
+}
+.dd-cart-loading-bar {
+  height: 100%;
+  width: 50%;
+  background: linear-gradient(90deg, transparent 0%, var(--brand-primary) 50%, transparent 100%);
+  animation: dd-cart-loading 1.2s ease-in-out infinite;
+}
+@keyframes dd-cart-loading {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+/* Header */
+.dd-cart-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 18px;
-  border-bottom: 1px solid rgba(184, 216, 232, 0.5);
-  background: #FFFFFF;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--brand-border);
+  flex-shrink: 0;
 }
-.dop-drawer-logo img {
-  height: 34px;
-  width: auto;
-  display: block;
+.dd-cart-title {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--brand-heading);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
-.dop-drawer-close {
+.dd-cart-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--brand-primary);
+  color: #fff;
+  border-radius: 9999px;
+  letter-spacing: 0;
+}
+.dd-cart-close {
   width: 40px;
   height: 40px;
-  background: rgba(184, 216, 232, 0.18);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--brand-surface-2);
   border: none;
+  border-radius: 9999px;
+  color: var(--brand-heading);
   cursor: pointer;
-  color: #1E3A5F;
-  border-radius: 10px;
-  transition: background 200ms ease;
+  transition: background 200ms;
 }
-.dop-drawer-close:hover { background: rgba(184, 216, 232, 0.35); }
+.dd-cart-close:hover {
+  background: var(--brand-primary-soft);
+}
 
-.dop-drawer-nav {
+/* Shipping progress bar */
+.dd-cart-shipping {
+  padding: 16px 24px 20px;
+  background: var(--brand-surface);
+  border-bottom: 1px solid var(--brand-border);
+  flex-shrink: 0;
+}
+.dd-cart-shipping-text p {
+  font-size: 14px;
+  color: var(--brand-text);
+  margin: 0 0 8px;
+}
+.dd-cart-shipping-text strong {
+  color: var(--brand-primary);
+  font-weight: 700;
+}
+.dd-cart-shipping-track {
+  width: 100%;
+  height: 8px;
+  background: var(--brand-surface-2);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+.dd-cart-shipping-fill {
+  height: 100%;
+  background: var(--brand-primary);
+  border-radius: 9999px;
+  transition: width 500ms ease-out;
+}
+.dd-cart-shipping-threshold {
+  font-size: 12px;
+  color: var(--brand-muted);
+  text-align: right;
+  margin: 4px 0 0;
+}
+.dd-cart-shipping--free .dd-cart-shipping-fill {
+  background: linear-gradient(90deg, var(--brand-success), var(--brand-primary));
+}
+.dd-cart-shipping--free .dd-cart-shipping-text strong {
+  color: var(--brand-success);
+}
+
+/* Error */
+.dd-cart-error {
+  padding: 12px 24px;
+  background: var(--brand-accent-soft);
+  color: var(--brand-accent-hover);
+  font-size: 13px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--brand-accent);
+}
+
+/* List */
+.dd-cart-list {
   flex: 1;
-  padding: 16px 12px;
+  overflow-y: auto;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--brand-border) transparent;
+  /* override parent drawer's touch-action: none — w liście pozwalamy na vertical
+     pan. overscroll-behavior: contain blokuje scroll-chaining do body gdy user
+     dojdzie do końca listy i scrolluje dalej. */
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.dd-cart-list::-webkit-scrollbar { width: 6px; }
+.dd-cart-list::-webkit-scrollbar-track { background: transparent; }
+.dd-cart-list::-webkit-scrollbar-thumb {
+  background: var(--brand-border);
+  border-radius: 9999px;
+}
+
+/* Item */
+.dd-cart-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px;
+  background: var(--brand-surface);
+  border: 1px solid var(--brand-border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+}
+.dd-cart-item-img {
+  width: 96px;
+  height: 96px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--brand-bg);
+  display: block;
+}
+.dd-cart-item-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.dd-cart-item-img-empty {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--brand-muted);
+}
+.dd-cart-item-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 96px;
+}
+.dd-cart-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+.dd-cart-item-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--brand-heading);
+  line-height: 1.3;
+  text-decoration: none;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.dd-cart-item-name:hover { color: var(--brand-primary-hover); }
+
+.dd-cart-item-remove {
+  background: transparent;
+  border: none;
+  padding: 4px;
+  color: var(--brand-muted);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: color 200ms, background 200ms;
+}
+.dd-cart-item-remove:hover {
+  color: var(--brand-accent);
+  background: var(--brand-accent-soft);
+}
+
+.dd-cart-item-variant {
+  font-size: 13px;
+  color: var(--brand-muted);
+  margin: 4px 0 0;
+}
+
+/* Variant options listing — "Kolor: Niebieski", "Rozmiar: M" */
+.dd-cart-item-options {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
-.dop-drawer-link {
+.dd-cart-item-option {
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--brand-muted);
+}
+.dd-cart-item-option-label {
+  font-weight: 600;
+  color: var(--brand-muted);
+  margin-right: 4px;
+}
+.dd-cart-item-option-value {
+  color: var(--brand-heading);
+  font-weight: 500;
+}
+
+.dd-cart-item-bonus {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.dd-cart-item-bonus-pill {
+  background: var(--brand-primary);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.dd-cart-item-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 16px;
-  font-family: 'Inter', system-ui, sans-serif;
-  font-size: 16px;
-  font-weight: 500;
-  color: #1A1A1A;
-  text-decoration: none;
-  border-radius: 12px;
-  transition: background 200ms ease, color 200ms ease, transform 200ms ease;
-  position: relative;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 12px;
 }
-.dop-drawer-link::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 3px;
-  height: 0;
-  background: #1E3A5F;
-  border-radius: 0 3px 3px 0;
-  transition: height 250ms ease;
+.dd-cart-item-price {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--brand-heading);
+  letter-spacing: -0.01em;
+  margin: 0;
 }
-.dop-drawer-link:hover {
-  background: rgba(184, 216, 232, 0.22);
-  color: #1E3A5F;
-}
-.dop-drawer-link:active { transform: scale(0.98); }
-.dop-drawer-link.is-active {
-  background: rgba(184, 216, 232, 0.32);
-  color: #1E3A5F;
-  font-weight: 700;
-}
-.dop-drawer-link.is-active::before { height: 22px; }
-.dop-drawer-link svg { color: #9CA3AF; transition: color 200ms ease, transform 200ms ease; }
-.dop-drawer-link:hover svg { color: #1E3A5F; transform: translateX(2px); }
-.dop-drawer-link.is-active svg { color: #1E3A5F; }
 
-.dop-drawer-contact {
-  padding: 18px 22px 26px;
-  border-top: 1px solid rgba(184, 216, 232, 0.5);
-  background: rgba(184, 216, 232, 0.08);
+/* Qty pill — Stitch toggle */
+.dd-cart-qty-pill {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 4px;
+  background: var(--brand-surface-2);
+  border: 1px solid var(--brand-border);
+  border-radius: 9999px;
 }
-.dop-drawer-contact-label {
-  margin: 0 0 10px;
-  font-family: 'Inter', system-ui, sans-serif;
-  font-size: 11px;
+.dd-cart-qty-pill button {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--brand-text);
+  cursor: pointer;
+  transition: color 200ms;
+  border-radius: 9999px;
+}
+.dd-cart-qty-pill button:hover:not(:disabled) {
+  color: var(--brand-primary);
+}
+.dd-cart-qty-pill button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+.dd-cart-qty-value {
+  min-width: 24px;
+  text-align: center;
+  font-size: 14px;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: #6B7280;
+  color: var(--brand-heading);
 }
-.dop-drawer-contact-link {
+
+/* Bottom sticky checkout */
+.dd-cart-bottom {
+  flex-shrink: 0;
+  padding: 20px 24px;
+  background: var(--brand-surface);
+  border-top: 1px solid var(--brand-border);
+  box-shadow: 0 -10px 30px rgba(42, 45, 39, 0.05);
+}
+
+.dd-cart-discount-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+.dd-cart-discount-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--brand-primary-hover);
+  font-weight: 600;
+}
+.dd-cart-discount-value {
+  color: var(--brand-primary-hover);
+  font-weight: 700;
+}
+
+.dd-cart-shipping-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--brand-text);
+  margin-bottom: 4px;
+}
+
+.dd-cart-subtotal {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--brand-border);
+}
+.dd-cart-subtotal span:first-child {
+  font-size: 14px;
+  color: var(--brand-text);
+  font-weight: 500;
+}
+.dd-cart-subtotal-value {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--brand-heading);
+  letter-spacing: -0.015em;
+}
+
+.dd-cart-disclaimer {
+  font-size: 12px;
+  color: var(--brand-muted);
+  text-align: center;
+  margin: 8px 0 16px;
+}
+
+/* Checkout button — Stitch primary pill */
+.dd-cart-checkout-btn {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 0;
-  font-family: 'Inter', system-ui, sans-serif;
-  font-size: 14.5px;
-  font-weight: 600;
-  color: #1E3A5F;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 16px;
+  background: var(--brand-primary);
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   text-decoration: none;
-  transition: color 200ms ease;
+  border-radius: 9999px;
+  transition: background 200ms, transform 100ms, box-shadow 200ms;
+  box-shadow: 0 4px 16px rgba(123, 144, 117, 0.25);
 }
-.dop-drawer-contact-link:hover { color: #152C48; }
-.dop-drawer-contact-link svg { color: #1E3A5F; flex-shrink: 0; }
+.dd-cart-checkout-btn:hover {
+  background: var(--brand-primary-hover);
+  box-shadow: 0 6px 20px rgba(123, 144, 117, 0.35);
+}
+.dd-cart-checkout-btn:active {
+  transform: scale(0.98);
+}
 
-body.dop-drawer-open { overflow: hidden; }
+.dd-cart-continue {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 8px;
+  background: transparent;
+  border: none;
+  color: var(--brand-muted);
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 200ms;
+}
+.dd-cart-continue:hover { color: var(--brand-heading); }
+
+/* Empty state */
+.dd-cart-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 32px;
+  text-align: center;
+}
+.dd-cart-empty-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 9999px;
+  background: var(--brand-primary-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--brand-primary);
+  margin-bottom: 24px;
+}
+.dd-cart-empty-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--brand-heading);
+  letter-spacing: -0.01em;
+  margin: 0 0 8px;
+}
+.dd-cart-empty-text {
+  font-size: 14px;
+  color: var(--brand-text);
+  line-height: 1.55;
+  max-width: 280px;
+  margin: 0 0 28px;
+}
+.dd-cart-empty-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 28px;
+  background: var(--brand-primary);
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-radius: 9999px;
+  transition: background 200ms, transform 100ms;
+  box-shadow: 0 4px 16px rgba(123, 144, 117, 0.25);
+}
+.dd-cart-empty-cta:hover {
+  background: var(--brand-primary-hover);
+}
+.dd-cart-empty-cta:active { transform: scale(0.98); }
+
+/* Mobile responsive — bottom sheet instead of side drawer.
+   max-height używa dvh (dynamic viewport height) zamiast vh — iOS Safari liczy
+   vh jako NAJWIĘKSZY viewport (gdy address bar schowany), więc 92vh przy
+   widocznym address barze obcinał górę drawera. dvh tracksuje aktualny viewport. */
+@media (max-width: 640px) {
+  .dd-cart-drawer {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-width: 100%;
+    max-height: 92vh; /* fallback dla browsers bez dvh */
+    max-height: 92dvh;
+    transform: translateY(100%);
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+  .dd-cart-drawer--open {
+    transform: translateY(0);
+    box-shadow: 0 -24px 60px rgba(42, 45, 39, 0.25);
+  }
+}
+
+.btn:hover .arrow { transform: translateX(3px); }
+
+/* ============================================ */
+/* STICKY ATC BAR — mobile-tuned background      */
+/* ============================================ */
+/* Desktop: blur + saturate dla glassmorphism feel.
+   Mobile (<768px): solid opaque background — backdrop-filter z blur(20px)
+   saturate(180%) na iOS Safari jankuje cały viewport podczas scrolla.
+   bottom: var(--cookie-banner-h) — bar siedzi NAD cookie bannerem gdy widoczny,
+   inaczej przy 0. CookieConsent JS ustawia/usuwa zmienną. */
+.dop-sticky-atc {
+  bottom: var(--cookie-banner-h, 0px);
+  transition: bottom 200ms ease, transform 300ms ease;
+  background: rgba(255, 252, 247, 0.96);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+}
+@media (max-width: 767.98px) {
+  .dop-sticky-atc {
+    background: #FFFCF7; /* solid, opacity 1 — żadnego backdrop-filter na mobile */
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}

@@ -24,6 +24,7 @@ export interface VendureVariant {
     sku: string;
     priceWithTax: number;
     stockLevel: string;
+    featuredAsset?: VendureAsset;
     options?: Array<{
         id: string;
         code: string;
