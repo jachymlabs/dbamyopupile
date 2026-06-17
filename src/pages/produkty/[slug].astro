@@ -659,55 +659,137 @@ const isOptionOos = (id: string): boolean => optionHasStock[id] !== true;
                   w koszyku domyka promocja w Vendure (front pokazuje ofertę). */}
               {slug === 'bryza' && (
                 <Fragment>
-                <div class="pdp-bundle" role="radiogroup" aria-label="Wybierz zestaw">
+                <div class="pdp-bundle">
                   <span class="pdp-bundle-title">Wybierz zestaw</span>
-                  <button type="button" class="pdp-bundle-tile" data-bundle-qty="1" aria-pressed="true">
-                    <span class="pdp-bundle-radio" aria-hidden="true"></span>
-                    <span class="pdp-bundle-info">
-                      <span class="pdp-bundle-name">1 sztuka</span>
-                      <span class="pdp-bundle-sub">Na start</span>
-                    </span>
-                    <span class="pdp-bundle-price">59,99 zł</span>
-                  </button>
-                  <button type="button" class="pdp-bundle-tile pdp-bundle-tile--popular" data-bundle-qty="3" aria-pressed="false">
-                    <span class="pdp-bundle-flag">Najpopularniejszy</span>
-                    <span class="pdp-bundle-radio" aria-hidden="true"></span>
-                    <span class="pdp-bundle-info">
-                      <span class="pdp-bundle-name">2 + 1 gratis <em>(3 szt.)</em></span>
-                      <span class="pdp-bundle-sub">Darmowa dostawa · taniej o 79,98 zł</span>
-                    </span>
-                    <span class="pdp-bundle-price">99,99 zł</span>
-                  </button>
-                  <button type="button" class="pdp-bundle-tile" data-bundle-qty="5" aria-pressed="false">
-                    <span class="pdp-bundle-radio" aria-hidden="true"></span>
-                    <span class="pdp-bundle-info">
-                      <span class="pdp-bundle-name">3 + 2 gratis <em>(5 szt.)</em></span>
-                      <span class="pdp-bundle-sub">Darmowa dostawa · taniej o 149,96 zł</span>
-                    </span>
-                    <span class="pdp-bundle-price">149,99 zł</span>
-                  </button>
+                  <div class="pdp-bundle-tiers" role="radiogroup" aria-label="Wybierz zestaw">
+                    <button type="button" class="pdp-bundle-tile" data-bundle-qty="1" aria-pressed="true">
+                      <span class="pdp-bundle-radio" aria-hidden="true"></span>
+                      <span class="pdp-bundle-info">
+                        <span class="pdp-bundle-name">1 sztuka</span>
+                        <span class="pdp-bundle-sub">Na start</span>
+                      </span>
+                      <span class="pdp-bundle-price">59,99 zł</span>
+                    </button>
+                    <button type="button" class="pdp-bundle-tile pdp-bundle-tile--popular" data-bundle-qty="3" aria-pressed="false">
+                      <span class="pdp-bundle-flag">Najpopularniejszy</span>
+                      <span class="pdp-bundle-radio" aria-hidden="true"></span>
+                      <span class="pdp-bundle-info">
+                        <span class="pdp-bundle-name">2 + 1 gratis <em>(3 szt.)</em></span>
+                        <span class="pdp-bundle-sub">Darmowa dostawa · taniej o 79,98 zł</span>
+                      </span>
+                      <span class="pdp-bundle-price">99,99 zł</span>
+                    </button>
+                    <button type="button" class="pdp-bundle-tile" data-bundle-qty="5" aria-pressed="false">
+                      <span class="pdp-bundle-radio" aria-hidden="true"></span>
+                      <span class="pdp-bundle-info">
+                        <span class="pdp-bundle-name">3 + 2 gratis <em>(5 szt.)</em></span>
+                        <span class="pdp-bundle-sub">Darmowa dostawa · taniej o 149,96 zł</span>
+                      </span>
+                      <span class="pdp-bundle-price">149,99 zł</span>
+                    </button>
+                  </div>
+                  <div class="pdp-bundle-colors" id="pdp-bundle-colors" aria-label="Wybór kolorów"></div>
                 </div>
                 <script is:inline>
                   (function () {
-                    const bundle = document.querySelector('.pdp-bundle');
-                    if (!bundle) return;
-                    const qtyInput = document.getElementById('quantity');
-                    const qtyControl = document.querySelector('.pdp-qty-control');
-                    if (qtyControl) qtyControl.style.display = 'none';
-                    const tiles = bundle.querySelectorAll('.pdp-bundle-tile');
-                    function select(t) {
-                      tiles.forEach((x) => x.setAttribute('aria-pressed', x === t ? 'true' : 'false'));
-                      const q = parseInt(t.getAttribute('data-bundle-qty'), 10) || 1;
-                      if (qtyInput) {
-                        qtyInput.value = String(q);
-                        qtyInput.dispatchEvent(new Event('input', { bubbles: true }));
-                        qtyInput.dispatchEvent(new Event('change', { bubbles: true }));
+                    function initBundle() {
+                      const bundle = document.querySelector('.pdp-bundle');
+                      if (!bundle) return;
+                      const form = document.querySelector('form.pdp-form');
+                      const qtyControl = document.querySelector('.pdp-qty-control');
+                      const colorsWrap = document.getElementById('pdp-bundle-colors');
+                      const atcBtn = document.getElementById('primary-atc-btn');
+
+                      // Kolory z istniejących swatchy Vendure + variantId z variantLookup.
+                      let lookup = {};
+                      try { lookup = JSON.parse(form.getAttribute('data-variant-lookup') || '{}'); } catch (e) {}
+                      const colors = Array.prototype.slice.call(document.querySelectorAll('.pdp-swatch-wrap')).map(function (el) {
+                        const optId = el.getAttribute('data-option-id');
+                        const v = lookup[optId] || {};
+                        return {
+                          name: el.getAttribute('data-option-name') || '',
+                          color: el.getAttribute('data-option-color') || '#E5DFD2',
+                          oos: el.getAttribute('data-option-oos') === '1',
+                          variantId: v.id || ''
+                        };
+                      }).filter(function (c) { return c.variantId; });
+
+                      // Ukryj oryginalny selektor koloru + stepper ilości + sticky bar (bundle przejmuje wybór).
+                      document.querySelectorAll('.pdp-variant-block').forEach(function (b) { b.style.display = 'none'; });
+                      if (qtyControl) qtyControl.style.display = 'none';
+                      const hint = document.getElementById('pdp-variant-hint');
+                      if (hint) hint.style.display = 'none';
+                      const sticky = document.querySelector('.dop-sticky-atc');
+                      if (sticky) sticky.style.display = 'none';
+
+                      const firstAvail = (colors.find(function (c) { return !c.oos; }) || colors[0] || {}).variantId || '';
+                      let tierQty = 1;
+                      let slots = [];
+
+                      function renderRows() {
+                        if (!colorsWrap || !colors.length) { if (colorsWrap) colorsWrap.innerHTML = ''; return; }
+                        let html = '';
+                        for (let i = 0; i < tierQty; i++) {
+                          if (!slots[i]) slots[i] = firstAvail;
+                          html += '<div class="pdp-bundle-color-row"><span class="pdp-bundle-color-label">Kolor ' + (i + 1) + ':</span><div class="pdp-bundle-color-opts" role="radiogroup">';
+                          colors.forEach(function (c) {
+                            const active = String(slots[i]) === String(c.variantId);
+                            html += '<button type="button" class="pdp-bundle-color-sw' + (active ? ' is-active' : '') + (c.oos ? ' is-oos' : '') + '" data-slot="' + i + '" data-variant="' + c.variantId + '" title="' + c.name + '" aria-label="' + c.name + '"' + (c.oos ? ' disabled' : '') + ' style="background:' + c.color + '"></button>';
+                          });
+                          html += '</div></div>';
+                        }
+                        colorsWrap.innerHTML = html;
+                        colorsWrap.querySelectorAll('.pdp-bundle-color-sw').forEach(function (sw) {
+                          sw.addEventListener('click', function () {
+                            if (sw.classList.contains('is-oos')) return;
+                            slots[parseInt(sw.getAttribute('data-slot'), 10)] = sw.getAttribute('data-variant');
+                            const opts = sw.parentNode;
+                            opts.querySelectorAll('.pdp-bundle-color-sw').forEach(function (x) { x.classList.toggle('is-active', x === sw); });
+                          });
+                        });
                       }
-                      window.dispatchEvent(new CustomEvent('wm-bundle-change', { detail: { qty: q } }));
+
+                      const tiles = bundle.querySelectorAll('.pdp-bundle-tile');
+                      function selectTier(t) {
+                        tiles.forEach(function (x) { x.setAttribute('aria-pressed', x === t ? 'true' : 'false'); });
+                        tierQty = parseInt(t.getAttribute('data-bundle-qty'), 10) || 1;
+                        slots = slots.slice(0, tierQty);
+                        renderRows();
+                      }
+                      tiles.forEach(function (t) { t.addEventListener('click', function () { selectTier(t); }); });
+                      selectTier(bundle.querySelector('.pdp-bundle-tile[aria-pressed="true"]') || tiles[0]);
+
+                      if (form && atcBtn) {
+                        form.addEventListener('submit', async function (e) {
+                          e.preventDefault();
+                          e.stopImmediatePropagation();
+                          if (!slots.length) return;
+                          const counts = {};
+                          slots.forEach(function (v) { if (v) counts[v] = (counts[v] || 0) + 1; });
+                          const textEl = atcBtn.querySelector('.pdp-atc-text');
+                          const base = atcBtn.getAttribute('data-base-text') || 'Dodaj do koszyka';
+                          atcBtn.disabled = true;
+                          if (textEl) textEl.textContent = 'Dodawanie...';
+                          let lastOrder = null;
+                          try {
+                            for (const variantId in counts) {
+                              const res = await fetch('/api/cart', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                credentials: 'include',
+                                body: JSON.stringify({ variantId: variantId, quantity: counts[variantId] })
+                              });
+                              if (res.ok) { const d = await res.json(); lastOrder = d.order; }
+                            }
+                            if (lastOrder) window.dispatchEvent(new CustomEvent('cart-updated', { detail: lastOrder }));
+                          } catch (err) {}
+                          atcBtn.disabled = false;
+                          if (textEl) textEl.textContent = base;
+                        });
+                      }
                     }
-                    tiles.forEach((t) => t.addEventListener('click', () => select(t)));
-                    const init = bundle.querySelector('.pdp-bundle-tile[aria-pressed="true"]') || tiles[0];
-                    if (init) select(init);
+                    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initBundle);
+                    else initBundle();
                   })();
                 </script>
                 </Fragment>
@@ -1158,6 +1240,8 @@ const isOptionOos = (id: string): boolean => optionHasStock[id] !== true;
     function initAddToCartForm() {
       const form = document.querySelector('form[method="POST"]') as HTMLFormElement | null;
       if (!form) return;
+      // Bryza: bundle z wyborem koloru per sztuka ma własny handler ATC (multi-wariant).
+      if (form.querySelector('.pdp-bundle')) return;
       const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement | null;
       if (!btn) return;
       // BUG FIX: btn.textContent wipes child spans (icon!) → target only .pdp-atc-text span.
@@ -2479,6 +2563,32 @@ const isOptionOos = (id: string): boolean => optionHasStock[id] !== true;
       padding: 3px 10px;
       border-radius: 999px;
     }
+    .pdp-bundle-tiers { display: flex; flex-direction: column; gap: 10px; }
+    .pdp-bundle-colors { display: flex; flex-direction: column; gap: 12px; margin-top: 14px; }
+    .pdp-bundle-color-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .pdp-bundle-color-label {
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--brand-text);
+      min-width: 64px;
+    }
+    .pdp-bundle-color-opts { display: flex; gap: 10px; flex-wrap: wrap; }
+    .pdp-bundle-color-sw {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 2px solid var(--brand-border);
+      cursor: pointer;
+      padding: 0;
+      transition: transform 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+    }
+    .pdp-bundle-color-sw:hover { transform: scale(1.08); }
+    .pdp-bundle-color-sw.is-active {
+      border-color: var(--brand-heading);
+      box-shadow: 0 0 0 3px var(--brand-primary-soft);
+    }
+    .pdp-bundle-color-sw.is-oos { opacity: 0.35; cursor: not-allowed; }
 
     /* --- Stitch SWATCHES (color circles + label) --- */
     .pdp-swatches {
