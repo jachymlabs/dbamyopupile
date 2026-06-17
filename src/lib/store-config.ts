@@ -20,7 +20,7 @@ export interface StoreConfig {
 
 const DEFAULTS: StoreConfig = {
   storeName: 'dbamyopupile',
-  storeTagline: 'Akcesoria dla psów, które realnie ułatwiają codzienność — spokojniejsze posiłki, lepsze spacery, mniej stresu u pupila.',
+  storeTagline: 'Miski, które spowalniają posiłek. Szale na upalne spacery. Testujemy na własnych psach.',
   contactEmail: 'sklep@dbamyopupile.pl',
   contactPhone: '+48 577 723 506',
   freeShippingThreshold: 9900, // 99 zł
