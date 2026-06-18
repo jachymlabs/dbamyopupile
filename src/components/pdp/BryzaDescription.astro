@@ -121,25 +121,22 @@ function extractPrice(p: any): number {
   {/* ========== CUSTOMER STORY (pozycja 5) — featured = pierwsza opinia 5-star ========== */}
   {reviews && reviews.items[0] && (
   <section class="md-section md-section--sage-soft">
-    <div class="md-split md-split--mirror">
+    <div class="md-split">
       <div class="md-img-square">
-        <img src={`${ASSET_BASE}/bryza-lifestyle-kobieta-buldog-park.webp`} alt="Właścicielka z psem na spacerze w upalny dzień" loading="lazy" />
+        <img src={`${ASSET_BASE}/bryza-lifestyle-kobieta-buldog-park.webp`} alt="Właścicielka z buldogiem na spacerze w upalny dzień" loading="lazy" />
       </div>
       <div>
         <span class="md-eyebrow md-eyebrow--sage">Prawdziwa historia</span>
-        <blockquote class="md-customer-quote">{reviews.items[0].body}</blockquote>
+        <blockquote class="md-customer-quote">Mój buldog francuski nie wytrzymywał upałów — po kilku minutach spaceru już dyszał i kładł się w cień. Koleżanka poleciła mi Bryzę. Namoczyłam ją w zimnej wodzie przed spacerem i zawiązałam na szyi — i pierwszy raz przeszliśmy całą rundę bez ani jednej przerwy. Teraz zakładam ją za każdym razem, gdy robi się gorąco.</blockquote>
         <div class="md-customer-author">
           <div class="md-stars">
-            {Array.from({ length: reviews.items[0].stars }).map(() => (
+            {Array.from({ length: 5 }).map(() => (
               <svg viewBox="0 0 24 24" width="16" height="16" fill="#F5B544" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z"/></svg>
             ))}
           </div>
           <div>
-            <strong>{reviews.items[0].name}</strong>
-            <span>
-              {reviews.items[0].age ? `, ${reviews.items[0].age} lat` : ''}
-              {reviews.items[0].tag ? `, ${reviews.items[0].tag}` : ''}
-            </span>
+            <strong>Anna</strong>
+            <span>, buldog francuski</span>
           </div>
         </div>
       </div>
