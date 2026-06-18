@@ -263,7 +263,7 @@ function extractPrice(p: any): number {
       <div class="md-tab-content">
         <div class="md-tab-grid">
           <div class="md-img-square">
-            <img src={`${ASSET_BASE}/bryza-balkon-kawa-golden-czarna.webp`} alt="Pies odpoczywa w cieniu w upalny dzień" loading="lazy" />
+            <img src={`${ASSET_BASE}/bryza-lifestyle-kobieta-buldog-park.webp`} alt="Buldog w upalny dzień z szalem chłodzącym" loading="lazy" />
           </div>
           <div>
             <h3 style="font-size: 22px;">Buldogi, mopsy i inne krótkie pyski</h3>
@@ -368,16 +368,6 @@ function extractPrice(p: any): number {
       <div class="md-reviews-header">
         <div class="md-reviews-big-rating">
           <div class="md-reviews-big-num">{formatRating(reviews.averageRating)}</div>
-          <div class="md-reviews-big-stars">
-            {[1, 2, 3, 4, 5].map((i) => {
-              const k = starKind(i, reviews.averageRating);
-              return k === 'full'
-                ? <svg viewBox="0 0 24 24" width="24" height="24" fill="#F5B544" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z"/></svg>
-                : k === 'half'
-                ? <svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><linearGradient id={`md-big-half-${i}`}><stop offset="50%" stop-color="#F5B544"/><stop offset="50%" stop-color="#D6CEBE"/></linearGradient></defs><path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z" fill={`url(#md-big-half-${i})`}/></svg>
-                : <svg viewBox="0 0 24 24" width="24" height="24" fill="#D6CEBE" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2l2.9 6.9L22 9.27l-5.5 4.77L18.18 22 12 18.27 5.82 22l1.68-7.96L2 9.27l7.1-.37L12 2z"/></svg>;
-            })}
-          </div>
           <div class="md-reviews-big-meta">z {reviews.totalCount} {opiniiPlural(reviews.totalCount)}, zakup zweryfikowany</div>
         </div>
         <div class="md-reviews-bars">
