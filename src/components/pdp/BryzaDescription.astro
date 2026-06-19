@@ -13,6 +13,9 @@ import { getRegularPrice } from '@/lib/prices';
 
 const ASSET_BASE = '/bryza-pdp';
 
+// "Polecane produkty" — UKRYTE do czasu odpalenia bidonu (ustaw na true, aby przywrócić)
+const SHOW_RELATED: boolean = false;
+
 // Reviews — z osobnego JSON per produkt (bryza; jeśli brak danych → sekcje opinii się ukryją)
 const reviews = getProductReviews('bryza');
 const ratingPct = reviews ? ratingPercentages(reviews) : null;
@@ -274,8 +277,8 @@ function extractPrice(p: any): number {
     </div>
   </section>
 
-  {/* ========== POLECANE PRODUKTY (pozycja 8) ========== */}
-  {relatedProducts.length > 0 && (
+  {/* ========== POLECANE PRODUKTY (pozycja 8) — UKRYTE do czasu odpalenia bidonu (SHOW_RELATED) ========== */}
+  {SHOW_RELATED && relatedProducts.length > 0 && (
     <section class="md-section md-section--sage-soft">
       <div class="md-container">
         <div class="md-center" style="margin-bottom: 36px;">
