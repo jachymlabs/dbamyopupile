@@ -16,6 +16,7 @@ import GorlyDescription from '@/components/pdp/GorlyDescription.astro';
 import CrockyDescription from '@/components/pdp/CrockyDescription.astro';
 import MoodlesKidsDescription from '@/components/pdp/MoodlesKidsDescription.astro';
 import BryzaDescription from '@/components/pdp/BryzaDescription.astro';
+import BidonDescription from '@/components/pdp/BidonDescription.astro';
 import PostATCBlock from '@/components/pdp/PostATCBlock.astro';
 import AllReviewsSection from '@/components/pdp/AllReviewsSection.astro';
 import { shopApi, shopApiRaw, redirectWithToken } from '@/lib/vendure';
@@ -1005,6 +1006,8 @@ const isOptionOos = (id: string): boolean => optionHasStock[id] !== true;
            ================================================== */}
         {product.slug === 'bryza' ? (
           <BryzaDescription />
+        ) : product.slug === 'bidon' ? (
+          <BidonDescription />
         ) : product.slug === 'formi' ? (
           <FormiDescription />
         ) : product.slug === 'neurocube' ? (
