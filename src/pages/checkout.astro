@@ -487,8 +487,8 @@ if (!order || !order.lines?.length) {
   return Astro.redirect('/koszyk');
 }
 
-// Fetch upsell products (brelok-fasola + gniotek-pingwinek) — pokazywane pod
-// "Złóż zamówienie" jako last-minute add-on. Filter slugs which już są w koszyku.
+// Fetch upsell products (bidon — komplementarny add-on do każdego zamówienia) — pokazywane pod
+// "Złóż zamówienie" jako last-minute add-on. Filter slugs które już są w koszyku.
 const UPSELL_QUERY = `query Upsell($slug: String!) {
   product(slug: $slug) {
     id slug name
@@ -499,7 +499,7 @@ const UPSELL_QUERY = `query Upsell($slug: String!) {
 const cartSlugs = new Set((order.lines || []).map((l: any) => l.productVariant?.product?.slug));
 let upsellProducts: any[] = [];
 try {
-  const slugs = ['brelok-fasola', 'gniotek-pingwinek'].filter((s) => !cartSlugs.has(s));
+  const slugs = ['bidon'].filter((s) => !cartSlugs.has(s));
   if (slugs.length > 0) {
     const results = await Promise.all(
       slugs.map((slug) => shopApi<any>(UPSELL_QUERY, { slug }, Astro.request).catch(() => null)),
