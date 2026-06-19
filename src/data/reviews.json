@@ -12,11 +12,16 @@
       "date": "DD.MM.YYYY"
     }
   },
-
   "bryza": {
     "averageRating": 4.68,
     "totalCount": 289,
-    "distribution": { "5": 208, "4": 74, "3": 4, "2": 1, "1": 2 },
+    "distribution": {
+      "5": 208,
+      "4": 74,
+      "3": 4,
+      "2": 1,
+      "1": 2
+    },
     "items": [
       {
         "name": "Magdalena W.",
@@ -236,11 +241,263 @@
       }
     ]
   },
-
+  "bidon-poidlo": {
+    "averageRating": 4.71,
+    "totalCount": 160,
+    "distribution": {
+      "5": 122,
+      "4": 32,
+      "3": 4,
+      "2": 1,
+      "1": 1
+    },
+    "items": [
+      {
+        "name": "Kasia M.",
+        "tag": "golden retriever",
+        "stars": 5,
+        "title": "koniec z noszeniem osobnej miski",
+        "body": "na spacerach nad Wisłą po prostu rozkładam korytko i pies pije od razu. wcześniej dźwigałam butelkę i składaną miskę osobno, ciągle coś się rozlewało. teraz jedna rzecz w kieszeni i mam spokój. golden wtypija dużo, więc dolewam po drodze, ale to kwestia sekund.",
+        "verified": true,
+        "date": "14.07.2025"
+      },
+      {
+        "name": "Marek P.",
+        "tag": "labrador",
+        "stars": 5,
+        "title": "idealny na wycieczki autem",
+        "body": "jeździmy na działkę godzinę drogi i na każdym postoju daję psu się napić. składa się na płasko i leży w kieszeni drzwi, nie zajmuje miejsca. labrador w upał chłepta jak szalony, a tu nic się nie wylewa po aucie. bardzo praktyczne.",
+        "verified": true,
+        "date": "22.06.2025"
+      },
+      {
+        "name": "Ola",
+        "tag": "border collie",
+        "stars": 5,
+        "title": "pies ogarnął po jednym razie",
+        "body": "bałam się, że nie zrozumie picia z korytka, ale wystarczył jeden spacer. teraz sam podchodzi, jak tylko usłyszy plusk wody. dla aktywnego psa, który non stop biega, woda pod ręką to podstawa.",
+        "verified": true,
+        "date": "03.08.2025"
+      },
+      {
+        "name": "Tomasz W.",
+        "tag": "beagle",
+        "stars": 5,
+        "title": "lekki, przypinam do plecaka",
+        "body": "karabińczyk trzyma na pasku plecaka i w ogóle nie czuję, że go niosę. w upał to ratunek, beagle ciągnie nosem po krzakach i szybko mu się chce pić. ściskam, woda leci do korytka, pies pije i idziemy dalej.",
+        "verified": true,
+        "date": "19.07.2025"
+      },
+      {
+        "name": "Patrycja K.",
+        "tag": "mops",
+        "stars": 5,
+        "title": "dla krótkiego pyska konieczność",
+        "body": "mój mops latem dyszy okropnie i szybko się przegrzewa. teraz co kilka minut daję mu łyk wody i widać, że jest spokojniejszy. nie zastąpi rozsądku i cienia, ale realnie pomaga przejść spacer bez dramatów.",
+        "verified": true,
+        "date": "28.06.2025"
+      },
+      {
+        "name": "Anna Zielińska",
+        "tag": "kundelek",
+        "stars": 5,
+        "title": "prosty i robi swoje",
+        "body": "nie ma co kombinować. ściskasz butelkę, woda leci do korytka, pies pije, a resztę wlewasz z powrotem przechylając. żadnej elektroniki, nic się nie psuje. za tę cenę naprawdę dobry pomysł.",
+        "verified": true,
+        "date": "11.08.2025"
+      },
+      {
+        "name": "Grzegorz",
+        "tag": "owczarek niemiecki",
+        "stars": 5,
+        "title": "duży pies, a starcza na spacer",
+        "body": "na godzinny spacer w sam raz. na dłuższe trasy po prostu dolewam wody z kranu albo źródełka po drodze, bo owczarek pije sporo. korytko wygodne, nie musi schylać głowy do ziemi jak przy misce.",
+        "verified": true,
+        "date": "05.07.2025"
+      },
+      {
+        "name": "Natalia R.",
+        "tag": "jack russell",
+        "stars": 5,
+        "title": "wreszcie pije w trasie",
+        "body": "mój jack nie tykał wody z dłoni ani z butelki, a z korytka pije bez problemu. rewelacja na bieganie i dłuższe wyjścia. mały, lekki, mieści się w nerce. żałuję, że nie kupiłam wcześniej.",
+        "verified": true,
+        "date": "30.05.2025"
+      },
+      {
+        "name": "Piotr S.",
+        "tag": "cocker spaniel",
+        "stars": 5,
+        "title": "świetny stosunek ceny do jakości",
+        "body": "za te pieniądze działa lepiej niż droższe poidła z marketu, które mam w szafce. proste rozwiązanie i po prostu spełnia swoją rolę. cocker pije bez ociągania, a ja nie noszę dodatkowej miski.",
+        "verified": true,
+        "date": "16.08.2025"
+      },
+      {
+        "name": "Magda",
+        "tag": "yorkshire terrier",
+        "stars": 5,
+        "title": "mała, lekka, idealna do torebki",
+        "body": "yorka noszę w torbie i bidon mieści się obok bez problemu. na mieście w upał używam codziennie, bo na chodniku nigdzie nie ma czystej wody. korytko akurat na małego psa, nic się nie marnuje.",
+        "verified": true,
+        "date": "24.06.2025"
+      },
+      {
+        "name": "Łukasz B.",
+        "tag": "amstaff",
+        "stars": 5,
+        "title": "mocny plastik, nie odkształcił się",
+        "body": "lata po bagażniku razem z całym sprzętem i dalej jak nowy. korytko sztywne, nie ugina się, kiedy duży pies wpycha pysk. spodziewałem się taniochy, a jest naprawdę solidnie zrobione.",
+        "verified": true,
+        "date": "09.07.2025"
+      },
+      {
+        "name": "Dorota",
+        "tag": "labrador",
+        "stars": 5,
+        "title": "na plażę i nad jezioro",
+        "body": "nad wodą pies zawsze chciał pić z jeziora, a teraz ma swoją czystą wodę i mam spokój głowy. lekki, szybko się rozkłada. labrador przyzwyczaił się od razu i sam dopomina się przerwy na łyk.",
+        "verified": true,
+        "date": "01.08.2025"
+      },
+      {
+        "name": "Sebastian",
+        "tag": "husky",
+        "stars": 5,
+        "title": "husky pije dużo, dolewam po drodze",
+        "body": "pojemność na takiego psa raczej mała, ale że szybko nalewam wodę z każdego kranu, to dla mnie nie problem. ważne, że pies w końcu pije w trasie. wcześniej z butelki nie umiał, lał mu się po pysku.",
+        "verified": true,
+        "date": "12.07.2025"
+      },
+      {
+        "name": "Ewelina M.",
+        "tag": "shih tzu",
+        "stars": 5,
+        "title": "korytko łatwo umyć",
+        "body": "wystarczy przepłukać pod kranem i nic się nie trzyma. higiena dla mnie ważna, bo pies pije codziennie. lekkie, ładne, niebieskie. spokojnie polecam każdemu, kto chodzi z psem na dłuższe spacery.",
+        "verified": true,
+        "date": "27.07.2025"
+      },
+      {
+        "name": "Kamil",
+        "tag": "mieszaniec",
+        "stars": 5,
+        "title": "biorę na każdy spacer",
+        "body": "wisi przy smyczy na karabińczyku i jest zawsze pod ręką. pies już wie, że to jego i sam się zatrzymuje przy ławce na łyk. proste, lekkie, robi dokładnie to, co ma robić.",
+        "verified": true,
+        "date": "06.06.2025"
+      },
+      {
+        "name": "Justyna P.",
+        "tag": "border terrier",
+        "stars": 5,
+        "title": "spokój na upalne dni",
+        "body": "od kiedy mam, nie boję się dłuższych spacerów w lipcu. wcześniej zawracałam w połowie, bo pies się męczył. teraz przerwa na wodę co jakiś czas i idziemy dalej. drobiazg, a robi dużą różnicę.",
+        "verified": true,
+        "date": "18.08.2025"
+      },
+      {
+        "name": "Robert",
+        "tag": "golden retriever",
+        "stars": 5,
+        "title": "działa od pierwszego dnia",
+        "body": "nic nie cieknie, woda zostaje w butelce, dopóki sam jej nie ścisnę. prosto i sensownie pomyślane. golden pije spokojnie, nie rozchlapuje, a ja nie muszę dźwigać dodatkowej miski. dobry zakup.",
+        "verified": true,
+        "date": "21.06.2025"
+      },
+      {
+        "name": "Aleksandra",
+        "tag": "chihuahua",
+        "stars": 5,
+        "title": "malutka psina, a pije jak duży",
+        "body": "w upał wychodzimy częściej i krócej, więc woda przy sobie to podstawa. korytko spokojnie wystarcza dla tak małego psa, a butelka leży w każdej torebce. ładny niebieski kolor, wygląda lepiej niż na zdjęciach.",
+        "verified": true,
+        "date": "04.09.2025"
+      },
+      {
+        "name": "Bartek",
+        "tag": "labrador",
+        "stars": 4,
+        "title": "dobre, ale przydałaby się większa pojemność",
+        "body": "na dużego psa 250 ml schodzi szybko i na dłuższy spacer trzeba dolewać. poza tym bez zarzutu, korytko wygodne i pies pije od razu. gdyby była wersja większa, wziąłbym od ręki.",
+        "verified": true,
+        "date": "15.07.2025"
+      },
+      {
+        "name": "Monika K.",
+        "tag": "beagle",
+        "stars": 4,
+        "title": "trzeba trzymać prosto",
+        "body": "jak przechylisz za bardzo, to kapnie kilka kropel z dziubka. drobnostka, ale wspomnę, bo na początku mnie to zaskoczyło. jak złapiesz, jak trzymać, to wszystko gra. pies zadowolony, ja też.",
+        "verified": true,
+        "date": "25.06.2025"
+      },
+      {
+        "name": "Daniel",
+        "tag": "cocker spaniel",
+        "stars": 4,
+        "title": "spoko, pies musiał się przyzwyczaić",
+        "body": "pierwsze dwa razy patrzył na korytko podejrzliwie i nie chciał pić, ale potem załapał i jest ok. solidnie zrobione, nic się nie psuje. na cenę nie ma co narzekać, robi swoje.",
+        "verified": true,
+        "date": "08.08.2025"
+      },
+      {
+        "name": "Iwona",
+        "tag": "mops",
+        "stars": 4,
+        "title": "fajny, tylko korytko trzeba dobrze rozłożyć",
+        "body": "jak nie dopnie się go do końca, to lekko się składa w trakcie picia. jak załapiesz, jak ma wskoczyć na miejsce, to już bez problemu. mops pije chętnie, w upał codzienne użycie. ogólnie zadowolona.",
+        "verified": true,
+        "date": "13.09.2025"
+      },
+      {
+        "name": "Marcin",
+        "tag": "owczarek niemiecki",
+        "stars": 3,
+        "title": "ok na krótkie spacery",
+        "body": "dla mojego dużego psa wody jest za mało, na dłuższą trasę zdecydowanie nie wystarcza. na szybkie wyjście pod blok nadaje się i tyle. samo korytko i pomysł dobre, tylko pojemność mnie zawiodła.",
+        "verified": true,
+        "date": "02.07.2025"
+      },
+      {
+        "name": "Sylwia",
+        "tag": "labrador",
+        "stars": 3,
+        "title": "przydatne, ale plastik dość cienki",
+        "body": "działa, woda leci, pies pije, więc funkcję spełnia. tylko butelka jest miękka i trzeba uważać przy nalewaniu, żeby nie ścisnąć za mocno. na tę cenę pewnie nie ma co wymagać więcej, ale wspominam.",
+        "verified": true,
+        "date": "29.08.2025"
+      },
+      {
+        "name": "Andrzej",
+        "tag": "amstaff",
+        "stars": 2,
+        "title": "na dużego psa za mało",
+        "body": "pojemność symboliczna, mój pies wypija to w pół minuty i dalej chce. dla małych psów pewnie ok, ale przy takim gabarycie ciągle muszę dolewać. pomysł dobry, wykonanie nie dla dużych ras.",
+        "verified": true,
+        "date": "20.07.2025"
+      },
+      {
+        "name": "krzysztof",
+        "tag": "mieszaniec",
+        "stars": 1,
+        "title": "u mnie przeciekało",
+        "body": "po tygodniu zaczęło kapać przy dziubku i woda schodziła w torbie. być może trafił mi się wadliwy egzemplarz, bo opinie generalnie dobre, ale u mnie niestety musiałem odłożyć. szkoda, bo pomysł sensowny.",
+        "verified": true,
+        "date": "31.05.2025"
+      }
+    ]
+  },
   "moodles": {
     "averageRating": 4.72,
     "totalCount": 310,
-    "distribution": { "5": 264, "4": 32, "3": 8, "2": 4, "1": 2 },
+    "distribution": {
+      "5": 264,
+      "4": 32,
+      "3": 8,
+      "2": 4,
+      "1": 2
+    },
     "items": [
       {
         "name": "Julia E.",
@@ -503,11 +760,16 @@
       }
     ]
   },
-
   "wibblo": {
     "averageRating": 4.65,
     "totalCount": 142,
-    "distribution": { "5": 110, "4": 22, "3": 6, "2": 3, "1": 1 },
+    "distribution": {
+      "5": 110,
+      "4": 22,
+      "3": 6,
+      "2": 3,
+      "1": 1
+    },
     "items": [
       {
         "name": "ania p.",
@@ -759,11 +1021,16 @@
       }
     ]
   },
-
   "snapstones": {
     "averageRating": 4.81,
     "totalCount": 87,
-    "distribution": { "5": 75, "4": 9, "3": 2, "2": 1, "1": 0 },
+    "distribution": {
+      "5": 75,
+      "4": 9,
+      "3": 2,
+      "2": 1,
+      "1": 0
+    },
     "items": [
       {
         "name": "michał z.",
@@ -957,11 +1224,16 @@
       }
     ]
   },
-
   "brelok-fasola": {
     "averageRating": 4.56,
     "totalCount": 89,
-    "distribution": { "5": 60, "4": 22, "3": 5, "2": 1, "1": 1 },
+    "distribution": {
+      "5": 60,
+      "4": 22,
+      "3": 5,
+      "2": 1,
+      "1": 1
+    },
     "items": [
       {
         "name": "natalia k.",
@@ -1210,11 +1482,16 @@
       }
     ]
   },
-
   "neurocube": {
     "averageRating": 4.69,
     "totalCount": 65,
-    "distribution": { "5": 52, "4": 9, "3": 2, "2": 1, "1": 1 },
+    "distribution": {
+      "5": 52,
+      "4": 9,
+      "3": 2,
+      "2": 1,
+      "1": 1
+    },
     "items": [
       {
         "name": "adrian p.",
@@ -1417,11 +1694,16 @@
       }
     ]
   },
-
   "gorly": {
     "averageRating": 4.78,
     "totalCount": 124,
-    "distribution": { "5": 102, "4": 17, "3": 4, "2": 1, "1": 0 },
+    "distribution": {
+      "5": 102,
+      "4": 17,
+      "3": 4,
+      "2": 1,
+      "1": 0
+    },
     "items": [
       {
         "name": "Karolina",
@@ -1655,11 +1937,16 @@
       }
     ]
   },
-
   "clicky": {
     "averageRating": 4.58,
     "totalCount": 56,
-    "distribution": { "5": 40, "4": 12, "3": 3, "2": 1, "1": 0 },
+    "distribution": {
+      "5": 40,
+      "4": 12,
+      "3": 3,
+      "2": 1,
+      "1": 0
+    },
     "items": [
       {
         "name": "mateusz d.",
@@ -1899,11 +2186,16 @@
       }
     ]
   },
-
   "flicko": {
     "averageRating": 4.62,
     "totalCount": 43,
-    "distribution": { "5": 32, "4": 8, "3": 2, "2": 1, "1": 0 },
+    "distribution": {
+      "5": 32,
+      "4": 8,
+      "3": 2,
+      "2": 1,
+      "1": 0
+    },
     "items": [
       {
         "name": "kuba w.",
@@ -2093,11 +2385,16 @@
       }
     ]
   },
-
   "formi": {
     "averageRating": 4.71,
     "totalCount": 38,
-    "distribution": { "5": 30, "4": 6, "3": 1, "2": 1, "1": 0 },
+    "distribution": {
+      "5": 30,
+      "4": 6,
+      "3": 1,
+      "2": 1,
+      "1": 0
+    },
     "items": [
       {
         "name": "julia n.",
@@ -2261,11 +2558,16 @@
       }
     ]
   },
-
   "gniotek-pingwinek": {
     "averageRating": 4.74,
     "totalCount": 92,
-    "distribution": { "5": 74, "4": 14, "3": 3, "2": 1, "1": 0 },
+    "distribution": {
+      "5": 74,
+      "4": 14,
+      "3": 3,
+      "2": 1,
+      "1": 0
+    },
     "items": [
       {
         "name": "agnieszka m.",
@@ -2469,11 +2771,16 @@
       }
     ]
   },
-
   "crocky": {
     "averageRating": 4.66,
     "totalCount": 74,
-    "distribution": { "5": 58, "4": 12, "3": 3, "2": 1, "1": 0 },
+    "distribution": {
+      "5": 58,
+      "4": 12,
+      "3": 3,
+      "2": 1,
+      "1": 0
+    },
     "items": [
       {
         "name": "tomasz b.",
@@ -2657,11 +2964,16 @@
       }
     ]
   },
-
   "loomo": {
     "averageRating": 4.69,
     "totalCount": 51,
-    "distribution": { "5": 40, "4": 8, "3": 2, "2": 1, "1": 0 },
+    "distribution": {
+      "5": 40,
+      "4": 8,
+      "3": 2,
+      "2": 1,
+      "1": 0
+    },
     "items": [
       {
         "name": "ola w.",
